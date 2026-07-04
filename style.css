@@ -53,6 +53,20 @@ nav a,
   color: var(--text);
   text-decoration: none;
 }
+.text-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+}
+
+.text-link:hover {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+.text-link:visited {
+  color: var(--accent);
+}
 
 nav a:hover {
   color: var(--accent);
