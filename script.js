@@ -5,8 +5,9 @@
   const collections = window.GLOAMWEALD_COLLECTIONS || {};
   const CART_STORAGE_KEY = "gloamweald-cart";
   const CONTACT_EMAIL = "gloamweald@gmail.com";
-  const PAYPAL_PLACEHOLDER_URL = "#paypal-link-placeholder";
-  const CARD_PLACEHOLDER_LABEL = "Secure card checkout placeholder";
+  const PAYPAL_CLIENT_ID = "REPLACE_WITH_PAYPAL_CLIENT_ID";
+  const PAYPAL_CURRENCY = "AUD";
+  const PAYPAL_EMAIL_ENDPOINT = "";
 
   const typeLabels = {
     bracelets: "Bracelet",
@@ -48,6 +49,11 @@
     currency: "AUD",
   });
 
+  const paypalReady =
+    PAYPAL_CLIENT_ID &&
+    !PAYPAL_CLIENT_ID.includes("REPLACE_WITH") &&
+    PAYPAL_CLIENT_ID.length > 12;
+
   function escapeHtml(value) {
     return String(value)
       .replaceAll("&", "&amp;")
@@ -55,6 +61,15 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function moneyValue(amount) {
+    return Number(amount || 0).toFixed(2);
+  }
+
+  function truncate(value, length = 127) {
+    const text = String(value || "").trim();
+    return text.length > length ? `${text.slice(0, length - 1)}…` : text;
   }
 
   function productPrice(product) {
@@ -535,6 +550,8 @@
         }
       });
     }
+
+    updatePayPalStatus();
   }
 
   function checkoutLineSummary(items) {
@@ -557,56 +574,332 @@
       .join("\n");
   }
 
+  function currentCheckoutDetails(form) {
+    const formData = new FormData(form);
+    const shipping = currentShippingRate();
+    const items = cartLineItems();
+    const subtotal = cartSubtotal();
+    const total = shipping.amount === null ? null : subtotal + shipping.amount;
+
+    return {
+      formData,
+      items,
+      shipping,
+      subtotal,
+      total,
+      needsQuote: shipping.amount === null,
+    };
+  }
+
+  function paypalReference() {
+    return `GLOAM-${Date.now().toString(36).toUpperCase()}`;
+  }
+
+  function checkoutEmailText(details, paypalDetails = {}) {
+    const { formData, items, shipping, subtotal, total } = details;
+
+    return [
+      "GLOAMWEALD order",
+      "",
+      paypalDetails.orderId ? `PayPal order ID: ${paypalDetails.orderId}` : null,
+      paypalDetails.captureId ? `PayPal capture ID: ${paypalDetails.captureId}` : null,
+      paypalDetails.status ? `PayPal status: ${paypalDetails.status}` : null,
+      paypalDetails.payerEmail ? `PayPal payer email: ${paypalDetails.payerEmail}` : null,
+      "",
+      checkoutLineSummary(items),
+      "",
+      `Subtotal: ${money.format(subtotal)}`,
+      `Shipping: ${shipping.amount === null ? "quote required" : money.format(shipping.amount)} (${shipping.label})`,
+      `Total: ${total === null ? "quote required" : money.format(total)}`,
+      "",
+      "Delivery details",
+      checkoutAddressSummary(formData),
+      "",
+      "Customer notes",
+      formData.get("notes") || "None",
+    ]
+      .filter((line) => line !== null)
+      .join("\n");
+  }
+
+  function checkoutMailto(details, paypalDetails = {}) {
+    const subject = encodeURIComponent(
+      paypalDetails.orderId
+        ? `GLOAMWEALD PayPal order ${paypalDetails.orderId}`
+        : "GLOAMWEALD order request",
+    );
+    const body = encodeURIComponent(checkoutEmailText(details, paypalDetails));
+    return `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+  }
+
+  function paypalOrderPayload(details, reference) {
+    const { formData, items, shipping, subtotal, total } = details;
+    const notes = formData.get("notes") || "None";
+    const purchaseUnit = {
+      reference_id: reference,
+      invoice_id: reference,
+      custom_id: reference,
+      description: truncate(`GLOAMWEALD order. Notes: ${notes}`),
+      amount: {
+        currency_code: PAYPAL_CURRENCY,
+        value: moneyValue(total),
+        breakdown: {
+          item_total: {
+            currency_code: PAYPAL_CURRENCY,
+            value: moneyValue(subtotal),
+          },
+          shipping: {
+            currency_code: PAYPAL_CURRENCY,
+            value: moneyValue(shipping.amount),
+          },
+        },
+      },
+      items: items.map((item) => ({
+        name: truncate(item.product.name),
+        quantity: String(item.quantity),
+        category: "PHYSICAL_GOODS",
+        unit_amount: {
+          currency_code: PAYPAL_CURRENCY,
+          value: moneyValue(item.price),
+        },
+      })),
+    };
+
+    if (shipping.amount > 0) {
+      purchaseUnit.shipping = {
+        name: {
+          full_name: truncate(formData.get("name"), 300),
+        },
+        address: {
+          address_line_1: truncate(formData.get("address1"), 300),
+          address_line_2: truncate(formData.get("address2"), 300),
+          admin_area_2: truncate(formData.get("city"), 120),
+          admin_area_1: truncate(formData.get("state"), 300),
+          postal_code: truncate(formData.get("postcode"), 60),
+          country_code: formData.get("country") === "AU" ? "AU" : "",
+        },
+      };
+    }
+
+    return {
+      intent: "CAPTURE",
+      purchase_units: [purchaseUnit],
+      payment_source: {
+        paypal: {
+          experience_context: {
+            payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+            payment_method_selected: "PAYPAL",
+            brand_name: "GLOAMWEALD",
+            shipping_preference: shipping.amount === 0 ? "NO_SHIPPING" : "SET_PROVIDED_ADDRESS",
+            user_action: "PAY_NOW",
+          },
+        },
+      },
+    };
+  }
+
+  function paypalCaptureSummary(orderData = {}, approvalData = {}) {
+    const purchaseUnit = orderData.purchase_units?.[0] || {};
+    const capture = purchaseUnit.payments?.captures?.[0] || {};
+
+    return {
+      orderId: orderData.id || approvalData.orderID || "",
+      captureId: capture.id || "",
+      status: capture.status || orderData.status || "",
+      payerEmail: orderData.payment_source?.paypal?.email_address || "",
+    };
+  }
+
+  async function sendOrderEmail(details, paypalDetails) {
+    if (!PAYPAL_EMAIL_ENDPOINT) return false;
+
+    const response = await fetch(PAYPAL_EMAIL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: CONTACT_EMAIL,
+        subject: paypalDetails.orderId
+          ? `GLOAMWEALD PayPal order ${paypalDetails.orderId}`
+          : "GLOAMWEALD order",
+        text: checkoutEmailText(details, paypalDetails),
+        paypal: paypalDetails,
+      }),
+    });
+
+    return response.ok;
+  }
+
+  function renderCheckoutResult(details, paypalDetails = {}, emailSent = false) {
+    const result = document.querySelector("[data-checkout-result]");
+    if (!result) return;
+
+    result.hidden = false;
+    result.innerHTML = `
+      <h3>${paypalDetails.orderId ? "PayPal payment received" : "Backup order email ready"}</h3>
+      <p>
+        ${
+          paypalDetails.orderId
+            ? `PayPal confirmed order <strong>${escapeHtml(paypalDetails.orderId)}</strong>${paypalDetails.captureId ? ` with capture <strong>${escapeHtml(paypalDetails.captureId)}</strong>` : ""}.`
+            : "This backup email includes the cart, delivery details, shipping and customer notes."
+        }
+      </p>
+      <p>
+        ${
+          emailSent
+            ? "The order details were sent to GLOAMWEALD through the configured email endpoint."
+            : "Automatic order email is not connected yet. Use the email backup button so the order details and notes reach GLOAMWEALD."
+        }
+      </p>
+      <div class="checkout-result-actions">
+        <a class="button button--solid" href="${checkoutMailto(details, paypalDetails)}">Email order details</a>
+      </div>
+    `;
+    result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
   function handleCheckoutSubmit(event) {
     event.preventDefault();
 
     const form = event.currentTarget;
-    const result = document.querySelector("[data-checkout-result]");
-    const items = cartLineItems();
-    if (!items.length || !result) return;
+    const details = currentCheckoutDetails(form);
+    if (!details.items.length) return;
 
-    const formData = new FormData(form);
-    const shipping = currentShippingRate();
-    const subtotal = cartSubtotal();
-    const total = shipping.amount === null ? null : subtotal + shipping.amount;
-    const paymentMethod = formData.get("payment") === "card" ? "Card" : "PayPal";
-    const subject = encodeURIComponent("GLOAMWEALD order request");
-    const body = encodeURIComponent(
-      [
-        "Order request",
-        "",
-        checkoutLineSummary(items),
-        "",
-        `Subtotal: ${money.format(subtotal)}`,
-        `Shipping: ${shipping.amount === null ? "quote required" : money.format(shipping.amount)} (${shipping.label})`,
-        `Total: ${total === null ? "quote required" : money.format(total)}`,
-        `Preferred payment: ${paymentMethod}`,
-        "",
-        "Delivery details",
-        checkoutAddressSummary(formData),
-        "",
-        "Notes",
-        formData.get("notes") || "None",
-      ].join("\n"),
-    );
+    renderCheckoutResult(details);
+  }
 
-    result.hidden = false;
-    result.innerHTML = `
-      <h3>Order request ready</h3>
-      <p>This static checkout has gathered the cart, address and shipping details. The next step is to send the order request, then replace the payment placeholders with your real PayPal/card checkout links when they are ready.</p>
-      <div class="checkout-result-actions">
-        <a class="button button--solid" href="mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}">Send order by email</a>
-        <a class="button" href="${PAYPAL_PLACEHOLDER_URL}">PayPal placeholder</a>
-        <button class="button" type="button" disabled>${CARD_PLACEHOLDER_LABEL}</button>
-      </div>
-    `;
-    result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  function updatePayPalStatus() {
+    const status = document.querySelector("[data-paypal-status]");
+    const buttonContainer = document.querySelector("[data-paypal-buttons]");
+    const checkoutForm = document.querySelector("[data-checkout-form]");
+    if (!status || !buttonContainer || !checkoutForm) return;
+
+    const details = currentCheckoutDetails(checkoutForm);
+    buttonContainer.hidden = !paypalReady || details.needsQuote || details.items.length === 0;
+
+    if (!details.items.length) {
+      status.textContent = "Add something to the cart to activate PayPal checkout.";
+      return;
+    }
+
+    if (details.needsQuote) {
+      status.textContent =
+        "International shipping needs a custom quote before PayPal payment can be taken. Use the backup email button for this order.";
+      return;
+    }
+
+    if (!paypalReady) {
+      status.innerHTML =
+        "PayPal checkout is coded, but it needs your live PayPal client ID in <code>script.js</code> before the official button can load.";
+      return;
+    }
+
+    status.textContent =
+      "Use the PayPal button below. The PayPal order will include item lines, shipping, delivery details and your notes.";
+  }
+
+  function loadPayPalSdk() {
+    if (window.paypal?.Buttons) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector("[data-paypal-sdk]");
+      if (existing) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      const params = new URLSearchParams({
+        "client-id": PAYPAL_CLIENT_ID,
+        currency: PAYPAL_CURRENCY,
+        intent: "capture",
+        components: "buttons",
+        "disable-funding": "card,credit,paylater,venmo",
+      });
+
+      script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
+      script.dataset.paypalSdk = "";
+      script.async = true;
+      script.addEventListener("load", resolve, { once: true });
+      script.addEventListener("error", reject, { once: true });
+      document.head.append(script);
+    });
+  }
+
+  async function renderPayPalButtons() {
+    const buttonContainer = document.querySelector("[data-paypal-buttons]");
+    const status = document.querySelector("[data-paypal-status]");
+    const checkoutForm = document.querySelector("[data-checkout-form]");
+    if (!buttonContainer || !status || !checkoutForm || !paypalReady || buttonContainer.dataset.rendered) return;
+
+    try {
+      await loadPayPalSdk();
+
+      window.paypal
+        .Buttons({
+          style: {
+            layout: "vertical",
+            color: "silver",
+            shape: "rect",
+            label: "paypal",
+          },
+          onClick(_data, actions) {
+            const details = currentCheckoutDetails(checkoutForm);
+
+            if (!checkoutForm.reportValidity() || !details.items.length || details.needsQuote) {
+              updatePayPalStatus();
+              return actions.reject();
+            }
+
+            return actions.resolve();
+          },
+          createOrder(_data, actions) {
+            const details = currentCheckoutDetails(checkoutForm);
+            const reference = paypalReference();
+            checkoutForm.dataset.paypalReference = reference;
+            return actions.order.create(paypalOrderPayload(details, reference));
+          },
+          async onApprove(data, actions) {
+            const details = currentCheckoutDetails(checkoutForm);
+            const orderData = await actions.order.capture();
+            const paypalDetails = paypalCaptureSummary(orderData, data);
+            let emailSent = false;
+
+            try {
+              emailSent = await sendOrderEmail(details, paypalDetails);
+            } catch (error) {
+              console.warn("GLOAMWEALD order email endpoint failed", error);
+            }
+
+            renderCheckoutResult(details, paypalDetails, emailSent);
+          },
+          onCancel() {
+            status.textContent = "PayPal checkout was cancelled. Your cart is still here.";
+          },
+          onError(error) {
+            console.error("PayPal checkout error", error);
+            status.textContent =
+              "PayPal could not complete checkout. Please try again or use the backup email button.";
+          },
+        })
+        .render(buttonContainer);
+
+      buttonContainer.dataset.rendered = "true";
+    } catch (error) {
+      console.error("PayPal SDK failed to load", error);
+      status.textContent =
+        "PayPal checkout could not load. Check the PayPal client ID, then reload the page.";
+    }
   }
 
   installCartLink();
   updateCartCount();
   renderShippingOptions();
   renderCartPage();
+  updatePayPalStatus();
+  renderPayPalButtons();
 
   document.addEventListener("click", (event) => {
     const addButton = event.target.closest("[data-add-to-cart]");

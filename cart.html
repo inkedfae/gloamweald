@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cart & Checkout | Gloamweald</title>
-  <meta name="description" content="Review your Gloamweald cart, add delivery details, choose shipping, and prepare payment." />
+  <meta name="description" content="Review your Gloamweald cart, add delivery details, choose shipping, and pay through PayPal." />
   <meta name="theme-color" content="#090b0a" />
   <link rel="icon" href="assets/images/many-eyed-raven-logo.jpg" type="image/jpeg" />
   <link rel="stylesheet" href="style.css" />
@@ -31,13 +31,13 @@
     <header class="page-hero page-hero--cart">
       <p class="eyebrow">Gathered pieces</p>
       <h1>Cart &amp; checkout</h1>
-      <p>Review your chainmail, add delivery details, choose shipping, then prepare the order for PayPal or card payment.</p>
+      <p>Review your chainmail, add delivery details, choose shipping, then pay through PayPal.</p>
     </header>
 
     <section class="section checkout-section" aria-labelledby="checkout-title">
       <div class="section-heading section-heading--compact">
         <h2 id="checkout-title">Checkout</h2>
-        <p>This is a safe static-site checkout: it calculates the cart and shipping, then prepares an order request. PayPal and card payment buttons are placeholders until real payment provider links are connected.</p>
+        <p>This checkout calculates the cart and shipping, then sends the order through PayPal. A backup email link is included so the order details and customer notes can still reach Gloamweald.</p>
       </div>
 
       <div class="checkout-layout">
@@ -100,18 +100,18 @@
           </label>
           <p class="shipping-note" data-shipping-note></p>
 
-          <fieldset class="payment-options">
-            <legend>Payment preference</legend>
-            <label><input type="radio" name="payment" value="paypal" checked /> PayPal placeholder</label>
-            <label><input type="radio" name="payment" value="card" /> Card placeholder</label>
-          </fieldset>
-
           <label class="field-full">
             Notes <span>optional</span>
             <textarea name="notes" rows="4" placeholder="Sizing, preferred clasp, gift note, or anything I should know."></textarea>
           </label>
 
-          <button class="button button--solid" type="submit">Prepare order</button>
+          <section class="paypal-checkout" aria-labelledby="paypal-title" data-paypal-checkout>
+            <h3 id="paypal-title">Pay with PayPal</h3>
+            <p data-paypal-status>Enter delivery details, choose shipping, then use the PayPal button below.</p>
+            <div id="paypal-button-container" data-paypal-buttons></div>
+          </section>
+
+          <button class="button" type="submit">Prepare backup email</button>
           <div class="checkout-result" data-checkout-result hidden></div>
         </form>
 
@@ -122,7 +122,7 @@
             <div><dt>Shipping</dt><dd data-cart-shipping>$0.00</dd></div>
             <div class="summary-total"><dt>Total</dt><dd data-cart-total>$0.00</dd></div>
           </dl>
-          <p>Replace the PayPal placeholder in <code>script.js</code> once your PayPal link is ready. Card payments should be connected through a secure hosted checkout provider rather than collecting card numbers on this site.</p>
+          <p>PayPal is the only payment option here. To make the live buttons work, add your PayPal client ID in <code>script.js</code>. Fully automatic order emails need an email endpoint or PayPal webhook.</p>
         </aside>
       </div>
     </section>

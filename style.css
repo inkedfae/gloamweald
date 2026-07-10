@@ -1295,6 +1295,35 @@ nav a[aria-current="page"]::after {
   font-size: 0.82rem;
 }
 
+.paypal-checkout {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: rgba(229, 221, 202, 0.03);
+}
+
+.paypal-checkout h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.paypal-checkout p {
+  margin: 0;
+  color: var(--bone-dim);
+  font-family: var(--sans);
+  font-size: 0.84rem;
+}
+
+.paypal-checkout code {
+  color: var(--bone);
+}
+
+#paypal-button-container {
+  min-height: 3.6rem;
+}
+
 .payment-options {
   display: grid;
   gap: 0.7rem;
