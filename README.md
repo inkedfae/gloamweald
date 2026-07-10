@@ -119,5 +119,41 @@ Then visit `http://127.0.0.1:8000/`.
 
 ## Publishing
 
-The site is suitable for GitHub Pages. It does not need a database or build
-step. Commit the files and push them to the branch used by GitHub Pages.
+The catalogue pages are static, but live PayPal checkout now needs backend
+serverless functions. The site is intended for Cloudflare Pages, which can run
+the checkout functions from the `/functions` directory.
+
+The repo includes Cloudflare Pages Functions:
+
+- `functions/api/create-paypal-order.js` → `/api/create-paypal-order`
+- `functions/api/capture-paypal-order.js` → `/api/capture-paypal-order`
+- `src/checkout-shared.js` → shared server-side checkout helpers imported by the functions
+
+Before checkout can go live, add these in Cloudflare Dashboard:
+
+`Workers & Pages` → your Pages project → `Settings` → `Variables and Secrets`
+
+```text
+PAYPAL_CLIENT_ID
+PAYPAL_CLIENT_SECRET
+RESEND_API_KEY
+CONTACT_EMAIL
+```
+
+Optional:
+
+```text
+PAYPAL_ENV=sandbox
+RESEND_FROM=Gloamweald <onboarding@resend.dev>
+```
+
+Keep `PAYPAL_CLIENT_SECRET` and `RESEND_API_KEY` out of HTML, CSS, and frontend
+JavaScript. They belong only in Cloudflare environment variables/secrets.
+
+Use PayPal sandbox first. When sandbox checkout, capture, cart clearing, and
+server-side Resend order emails all work, switch `PAYPAL_ENV` and the PayPal
+credentials to live.
+
+The public PayPal Client ID is still left as a placeholder in `script.js` until
+checkout testing is ready. Do not add the live value until you are ready to test
+the full Cloudflare + PayPal + Resend flow.
