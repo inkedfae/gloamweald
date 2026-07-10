@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cart & Checkout | Gloamweald</title>
+  <meta name="description" content="Review your Gloamweald cart, add delivery details, choose shipping, and prepare payment." />
+  <meta name="theme-color" content="#090b0a" />
+  <link rel="icon" href="assets/images/many-eyed-raven-logo.jpg" type="image/jpeg" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="products.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Gloamweald home">
+      <img class="brand-mark" src="assets/images/many-eyed-raven-logo.jpg" alt="" width="48" height="48" />
+      <span><strong>Gloamweald</strong><small>Chainmail for the gloaming</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="shop.html">Shop</a>
+      <a href="collections.html">Collections</a>
+      <a href="about.html">The maker</a>
+      <a href="care.html">Care</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <header class="page-hero page-hero--cart">
+      <p class="eyebrow">Gathered pieces</p>
+      <h1>Cart &amp; checkout</h1>
+      <p>Review your chainmail, add delivery details, choose shipping, then prepare the order for PayPal or card payment.</p>
+    </header>
+
+    <section class="section checkout-section" aria-labelledby="checkout-title">
+      <div class="section-heading section-heading--compact">
+        <h2 id="checkout-title">Checkout</h2>
+        <p>This is a safe static-site checkout: it calculates the cart and shipping, then prepares an order request. PayPal and card payment buttons are placeholders until real payment provider links are connected.</p>
+      </div>
+
+      <div class="checkout-layout">
+        <section class="cart-panel" aria-labelledby="cart-title">
+          <h2 id="cart-title">Your cart</h2>
+          <p data-cart-empty class="empty-state cart-empty">
+            Your cart is empty. Return to the shop and gather something from the weald.
+          </p>
+          <div class="cart-lines" data-cart-items hidden></div>
+        </section>
+
+        <form class="checkout-form" data-checkout-form>
+          <h2>Delivery details</h2>
+
+          <div class="form-grid">
+            <label>
+              Name
+              <input name="name" autocomplete="name" required />
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label>
+              Phone <span>optional</span>
+              <input name="phone" type="tel" autocomplete="tel" />
+            </label>
+            <label>
+              Address
+              <input name="address1" autocomplete="address-line1" required />
+            </label>
+            <label>
+              Apartment / unit <span>optional</span>
+              <input name="address2" autocomplete="address-line2" />
+            </label>
+            <label>
+              Suburb / city
+              <input name="city" autocomplete="address-level2" required />
+            </label>
+            <label>
+              State / region
+              <input name="state" autocomplete="address-level1" required />
+            </label>
+            <label>
+              Postcode
+              <input name="postcode" autocomplete="postal-code" required />
+            </label>
+            <label>
+              Country
+              <select name="country" autocomplete="country" data-checkout-country required>
+                <option value="AU">Australia</option>
+                <option value="INTL">Outside Australia</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field-full">
+            Shipping
+            <select name="shipping" data-shipping-method required></select>
+          </label>
+          <p class="shipping-note" data-shipping-note></p>
+
+          <fieldset class="payment-options">
+            <legend>Payment preference</legend>
+            <label><input type="radio" name="payment" value="paypal" checked /> PayPal placeholder</label>
+            <label><input type="radio" name="payment" value="card" /> Card placeholder</label>
+          </fieldset>
+
+          <label class="field-full">
+            Notes <span>optional</span>
+            <textarea name="notes" rows="4" placeholder="Sizing, preferred clasp, gift note, or anything I should know."></textarea>
+          </label>
+
+          <button class="button button--solid" type="submit">Prepare order</button>
+          <div class="checkout-result" data-checkout-result hidden></div>
+        </form>
+
+        <aside class="order-summary" aria-labelledby="summary-title">
+          <h2 id="summary-title">Order summary</h2>
+          <dl>
+            <div><dt>Subtotal</dt><dd data-cart-subtotal>$0.00</dd></div>
+            <div><dt>Shipping</dt><dd data-cart-shipping>$0.00</dd></div>
+            <div class="summary-total"><dt>Total</dt><dd data-cart-total>$0.00</dd></div>
+          </dl>
+          <p>Replace the PayPal placeholder in <code>script.js</code> once your PayPal link is ready. Card payments should be connected through a secure hosted checkout provider rather than collecting card numbers on this site.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="footer-brand" href="index.html">Gloamweald</a>
+    <p>Handmade chainmail jewellery &amp; accessories · Brisbane, Australia</p>
+    <p>© 2026 Gloamweald</p>
+  </footer>
+</body>
+</html>

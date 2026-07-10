@@ -121,6 +121,7 @@ a {
   top: 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 2rem;
   padding: 0.85rem max(1.25rem, calc((100vw - var(--content)) / 2));
@@ -133,7 +134,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
-  min-width: max-content;
+  min-width: 0;
   text-decoration: none;
 }
 
@@ -152,6 +153,7 @@ a {
   font-size: 1.18rem;
   letter-spacing: 0.17em;
   line-height: 1.1;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
@@ -167,8 +169,10 @@ a {
 nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: clamp(0.9rem, 2vw, 1.75rem);
+  min-width: 0;
 }
 
 nav a {
@@ -211,15 +215,35 @@ nav a[aria-current="page"]::after {
   transform: scaleX(1);
 }
 
+.cart-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cart-count {
+  display: inline-grid;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  padding: 0 0.32rem;
+  place-items: center;
+  border: 1px solid rgba(229, 221, 202, 0.3);
+  border-radius: 999px;
+  background: var(--blood-bright);
+  color: var(--bone);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
   align-items: center;
   gap: clamp(3rem, 8vw, 8rem);
   width: min(var(--content), calc(100% - 2.5rem));
-  min-height: calc(100svh - 76px);
+  min-height: clamp(29rem, 70svh, 44rem);
   margin: 0 auto;
-  padding: clamp(5rem, 10vw, 9rem) 0;
+  padding: clamp(3.5rem, 7vw, 6rem) 0;
 }
 
 .eyebrow,
@@ -235,12 +259,14 @@ nav a[aria-current="page"]::after {
 }
 
 .hero h1 {
-  max-width: 9ch;
+  max-width: min(100%, 9ch);
   margin: 0;
   font-size: clamp(3.5rem, 8vw, 7.6rem);
   font-weight: 500;
   letter-spacing: -0.055em;
-  line-height: 0.84;
+  line-height: 0.9;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .hero-intro {
@@ -425,9 +451,9 @@ nav a[aria-current="page"]::after {
 
 .page-hero {
   display: grid;
-  min-height: 56svh;
+  min-height: clamp(17rem, 36svh, 27rem);
   align-content: end;
-  padding: clamp(7rem, 14vw, 12rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(4rem, 8vw, 7rem);
+  padding: clamp(4.5rem, 8vw, 6.8rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(2.5rem, 5vw, 4rem);
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   background:
@@ -436,12 +462,14 @@ nav a[aria-current="page"]::after {
 }
 
 .page-hero h1 {
-  max-width: 10ch;
+  max-width: min(100%, 11ch);
   margin: 0;
-  font-size: clamp(4rem, 10vw, 8.5rem);
+  font-size: clamp(3.4rem, 8vw, 7rem);
   font-weight: 500;
-  letter-spacing: -0.06em;
-  line-height: 0.84;
+  letter-spacing: -0.052em;
+  line-height: 0.9;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .page-hero > p:last-child {
@@ -460,6 +488,13 @@ nav a[aria-current="page"]::after {
 .page-hero--collections {
   background:
     radial-gradient(circle at 74% 26%, rgba(125, 38, 48, 0.14), transparent 25rem),
+    linear-gradient(145deg, rgba(20, 23, 20, 0.76), rgba(9, 11, 10, 0.96));
+}
+
+.page-hero--cart {
+  background:
+    radial-gradient(circle at 74% 22%, rgba(161, 57, 69, 0.13), transparent 22rem),
+    radial-gradient(circle at 18% 18%, rgba(174, 185, 180, 0.1), transparent 18rem),
     linear-gradient(145deg, rgba(20, 23, 20, 0.76), rgba(9, 11, 10, 0.96));
 }
 
@@ -769,6 +804,25 @@ nav a[aria-current="page"]::after {
   margin-top: auto;
 }
 
+.product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.95rem;
+  margin-top: auto;
+}
+
+.product-actions .button {
+  margin-top: 0;
+}
+
+.product-actions .quiet-button {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .concept-label {
   display: inline-flex;
   min-height: 3rem;
@@ -982,6 +1036,7 @@ nav a[aria-current="page"]::after {
   height: 100%;
   flex: 0 0 100%;
   padding: clamp(1rem, 4vw, 3rem);
+  overflow: hidden;
   place-items: center;
   scroll-snap-align: start;
   touch-action: pan-x pan-y pinch-zoom;
@@ -991,7 +1046,10 @@ nav a[aria-current="page"]::after {
   display: block;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: contain;
+  object-position: center;
   user-select: none;
   -webkit-user-drag: none;
   touch-action: pan-x pan-y pinch-zoom;
@@ -1067,6 +1125,260 @@ nav a[aria-current="page"]::after {
 
 .empty-state p:last-child {
   color: var(--bone-dim);
+}
+
+.checkout-section {
+  background: rgba(16, 19, 16, 0.7);
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.55fr);
+  gap: 1.35rem;
+  align-items: start;
+}
+
+.cart-panel,
+.checkout-form,
+.order-summary,
+.checkout-result {
+  border: 1px solid var(--line);
+  background: rgba(20, 23, 20, 0.78);
+}
+
+.cart-panel,
+.checkout-form {
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+}
+
+.cart-panel {
+  grid-column: 1 / -1;
+}
+
+.cart-panel h2,
+.checkout-form h2,
+.order-summary h2 {
+  margin: 0 0 1.35rem;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.cart-empty {
+  margin: 0;
+}
+
+.cart-lines {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.cart-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: rgba(9, 11, 10, 0.44);
+}
+
+.cart-line h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.cart-line p {
+  margin: 0.25rem 0 0;
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.76rem;
+}
+
+.cart-line strong {
+  font-family: var(--sans);
+}
+
+.quantity-control {
+  display: inline-grid;
+  grid-template-columns: 2.25rem 2.2rem 2.25rem;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  font-family: var(--sans);
+  text-align: center;
+}
+
+.quantity-control button {
+  min-height: 2.35rem;
+  border: 0;
+  background: rgba(229, 221, 202, 0.06);
+  color: var(--bone);
+  cursor: pointer;
+}
+
+.quantity-control button:hover {
+  background: var(--bone);
+  color: var(--ink);
+}
+
+.cart-remove {
+  min-height: 2.35rem;
+  white-space: nowrap;
+}
+
+.checkout-form {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.checkout-form label,
+.checkout-form legend {
+  color: var(--bone);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.checkout-form label span {
+  color: var(--steel-dark);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.checkout-form input,
+.checkout-form select,
+.checkout-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.45rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: rgba(5, 6, 5, 0.82);
+  color: var(--bone);
+  font: 1rem/1.35 var(--sans);
+}
+
+.checkout-form textarea {
+  resize: vertical;
+}
+
+.checkout-form input:disabled,
+.checkout-form select:disabled,
+.checkout-form textarea:disabled,
+.checkout-form button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.field-full {
+  display: block;
+}
+
+.shipping-note {
+  margin: -0.65rem 0 0;
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+}
+
+.payment-options {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+}
+
+.payment-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  letter-spacing: 0.06em;
+}
+
+.payment-options input {
+  width: auto;
+  margin: 0;
+}
+
+.order-summary {
+  position: sticky;
+  top: 7rem;
+  padding: 1.35rem;
+}
+
+.order-summary dl {
+  margin: 0;
+}
+
+.order-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--sans);
+}
+
+.order-summary dt {
+  color: var(--steel);
+}
+
+.order-summary dd {
+  margin: 0;
+  color: var(--bone);
+  font-weight: 800;
+}
+
+.order-summary .summary-total {
+  padding-top: 1rem;
+  border-bottom: 0;
+  font-size: 1.15rem;
+}
+
+.order-summary p {
+  margin: 1rem 0 0;
+  color: var(--bone-dim);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+}
+
+.order-summary code {
+  color: var(--bone);
+}
+
+.checkout-result {
+  padding: 1.2rem;
+}
+
+.checkout-result h3 {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 500;
+}
+
+.checkout-result p {
+  color: var(--bone-dim);
+}
+
+.checkout-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
 }
 
 .collections-section {
@@ -1209,9 +1521,9 @@ nav a[aria-current="page"]::after {
 .collection-hero {
   position: relative;
   display: grid;
-  min-height: 72svh;
+  min-height: clamp(17rem, 38svh, 29rem);
   align-content: end;
-  padding: clamp(8rem, 16vw, 14rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(4rem, 9vw, 8rem);
+  padding: clamp(4.75rem, 8vw, 7rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(2.5rem, 5vw, 4.25rem);
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   isolation: isolate;
@@ -1259,12 +1571,14 @@ nav a[aria-current="page"]::after {
 }
 
 .collection-hero h1 {
-  max-width: 11ch;
+  max-width: min(100%, 12ch);
   margin: 0;
-  font-size: clamp(4rem, 11vw, 9.5rem);
+  font-size: clamp(3.5rem, 8.5vw, 7.5rem);
   font-weight: 500;
-  letter-spacing: -0.065em;
-  line-height: 0.84;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .collection-deck {
@@ -1693,7 +2007,8 @@ footer p {
   }
 
   .lore-section,
-  .contact-page {
+  .contact-page,
+  .checkout-layout {
     grid-template-columns: 1fr;
   }
 
@@ -1703,6 +2018,10 @@ footer p {
 
   .care-guide {
     grid-template-columns: 1fr;
+  }
+
+  .order-summary {
+    position: static;
   }
 
   footer {
@@ -1742,11 +2061,12 @@ footer p {
 
   .hero {
     width: min(100% - 2rem, var(--content));
-    padding: 5rem 0;
+    min-height: auto;
+    padding: 3.4rem 0;
   }
 
   .hero h1 {
-    font-size: clamp(3.3rem, 17vw, 5rem);
+    font-size: clamp(3rem, 15vw, 4.6rem);
   }
 
   .material-note {
@@ -1770,6 +2090,15 @@ footer p {
   }
 
   .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-line {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1814,7 +2143,7 @@ footer p {
   }
 
   .lightbox-slide {
-    padding: 0.75rem;
+    padding: 0.75rem 0.75rem 5.6rem;
   }
 
   .contact-links {
@@ -1828,13 +2157,16 @@ footer p {
 
   .page-hero,
   .collection-hero {
-    min-height: 62svh;
+    min-height: clamp(16rem, 34svh, 24rem);
+    padding-top: 4rem;
+    padding-bottom: 2.35rem;
   }
 
   .page-hero h1,
   .collection-hero h1,
   .contact-page h1 {
-    font-size: clamp(3.4rem, 17vw, 5.1rem);
+    font-size: clamp(3rem, 14vw, 4.7rem);
+    line-height: 0.94;
   }
 
   .collection-card {
