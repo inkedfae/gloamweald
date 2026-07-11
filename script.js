@@ -5,9 +5,20 @@
   const collections = window.GLOAMWEALD_COLLECTIONS || {};
   const CART_STORAGE_KEY = "gloamweald-cart";
   const CONTACT_EMAIL = "gloamweald@gmail.com";
-  const PAYPAL_CLIENT_ID = "REPLACE_WITH_PAYPAL_CLIENT_ID";
+  const PAYPAL_CONFIG_ENDPOINT = "/api/checkout-config";
   const PAYPAL_CURRENCY = "AUD";
-  const PAYPAL_EMAIL_ENDPOINT = "";
+  const PAYPAL_CREATE_ORDER_ENDPOINT = "/api/create-paypal-order";
+  const PAYPAL_CAPTURE_ORDER_ENDPOINT = "/api/capture-paypal-order";
+  const CHECKOUT_SUCCESS_URL = "success.html";
+  let checkoutConfig = {
+    configured: false,
+    loaded: false,
+    paypalClientId: "",
+    currency: PAYPAL_CURRENCY,
+    paypalEnv: "sandbox",
+    error: "",
+  };
+  let checkoutConfigPromise = null;
 
   const typeLabels = {
     bracelets: "Bracelet",
@@ -49,10 +60,9 @@
     currency: "AUD",
   });
 
-  const paypalReady =
-    PAYPAL_CLIENT_ID &&
-    !PAYPAL_CLIENT_ID.includes("REPLACE_WITH") &&
-    PAYPAL_CLIENT_ID.length > 12;
+  function paypalReady() {
+    return Boolean(checkoutConfig.loaded && checkoutConfig.configured && checkoutConfig.paypalClientId);
+  }
 
   function escapeHtml(value) {
     return String(value)
@@ -98,7 +108,10 @@
           id: String(item.id || ""),
           quantity: Math.max(1, Number(item.quantity) || 1),
         }))
-        .filter((item) => productById(item.id) && productPrice(productById(item.id)) !== null);
+        .filter((item) => {
+          const product = productById(item.id);
+          return product?.orderable && productPrice(product) !== null;
+        });
     } catch {
       return [];
     }
@@ -106,6 +119,12 @@
 
   function writeCart(cart) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    updateCartCount();
+    renderCartPage();
+  }
+
+  function clearCart() {
+    localStorage.removeItem(CART_STORAGE_KEY);
     updateCartCount();
     renderCartPage();
   }
@@ -474,6 +493,28 @@
     return shippingRates[select?.value] || shippingRates["au-standard"];
   }
 
+  function currentShippingId() {
+    const select = document.querySelector("[data-shipping-method]");
+    return select?.value || "au-standard";
+  }
+
+  function updatePickupRequirements() {
+    const shipping = currentShippingRate();
+    const pickup = shipping.amount === 0;
+    const addressFields = ["address1", "city", "state", "postcode"];
+
+    addressFields.forEach((name) => {
+      const field = document.querySelector(`[name="${name}"]`);
+      field?.toggleAttribute("required", !pickup);
+    });
+
+    document.querySelectorAll("[data-address-field]").forEach((label) => {
+      label.classList.toggle("is-optional", pickup);
+      const note = label.querySelector("[data-required-note]");
+      if (note) note.textContent = pickup ? "optional for pickup" : "";
+    });
+  }
+
   function renderShippingOptions() {
     const country = document.querySelector("[data-checkout-country]");
     const shipping = document.querySelector("[data-shipping-method]");
@@ -543,6 +584,8 @@
       shippingNote.textContent = shipping.detail;
     }
 
+    updatePickupRequirements();
+
     if (checkoutForm) {
       [...checkoutForm.elements].forEach((element) => {
         if (element.matches?.("button, input, select, textarea")) {
@@ -561,16 +604,24 @@
   }
 
   function checkoutAddressSummary(formData) {
+    const locality = [
+      formData.get("city"),
+      formData.get("state"),
+      formData.get("postcode"),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return [
       formData.get("name"),
       formData.get("email"),
       formData.get("phone"),
       formData.get("address1"),
       formData.get("address2"),
-      `${formData.get("city")} ${formData.get("state")} ${formData.get("postcode")}`,
+      locality,
       formData.get("country") === "AU" ? "Australia" : "International",
     ]
-      .filter(Boolean)
+      .filter((line) => String(line || "").trim())
       .join("\n");
   }
 
@@ -589,10 +640,6 @@
       total,
       needsQuote: shipping.amount === null,
     };
-  }
-
-  function paypalReference() {
-    return `GLOAM-${Date.now().toString(36).toUpperCase()}`;
   }
 
   function checkoutEmailText(details, paypalDetails = {}) {
@@ -632,128 +679,130 @@
     return `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
   }
 
-  function paypalOrderPayload(details, reference) {
-    const { formData, items, shipping, subtotal, total } = details;
-    const notes = formData.get("notes") || "None";
-    const purchaseUnit = {
-      reference_id: reference,
-      invoice_id: reference,
-      custom_id: reference,
-      description: truncate(`GLOAMWEALD order. Notes: ${notes}`),
-      amount: {
-        currency_code: PAYPAL_CURRENCY,
-        value: moneyValue(total),
-        breakdown: {
-          item_total: {
-            currency_code: PAYPAL_CURRENCY,
-            value: moneyValue(subtotal),
-          },
-          shipping: {
-            currency_code: PAYPAL_CURRENCY,
-            value: moneyValue(shipping.amount),
-          },
-        },
+  function checkoutPayload(details) {
+    const { formData, items } = details;
+    return {
+      customer: {
+        name: String(formData.get("name") || "").trim(),
+        email: String(formData.get("email") || "").trim(),
+        phone: String(formData.get("phone") || "").trim(),
+        address1: String(formData.get("address1") || "").trim(),
+        address2: String(formData.get("address2") || "").trim(),
+        city: String(formData.get("city") || "").trim(),
+        state: String(formData.get("state") || "").trim(),
+        postcode: String(formData.get("postcode") || "").trim(),
+        country: String(formData.get("country") || "AU").trim(),
       },
       items: items.map((item) => ({
-        name: truncate(item.product.name),
-        quantity: String(item.quantity),
-        category: "PHYSICAL_GOODS",
-        unit_amount: {
-          currency_code: PAYPAL_CURRENCY,
-          value: moneyValue(item.price),
-        },
+        id: item.id,
+        quantity: item.quantity,
       })),
-    };
-
-    if (shipping.amount > 0) {
-      purchaseUnit.shipping = {
-        name: {
-          full_name: truncate(formData.get("name"), 300),
-        },
-        address: {
-          address_line_1: truncate(formData.get("address1"), 300),
-          address_line_2: truncate(formData.get("address2"), 300),
-          admin_area_2: truncate(formData.get("city"), 120),
-          admin_area_1: truncate(formData.get("state"), 300),
-          postal_code: truncate(formData.get("postcode"), 60),
-          country_code: formData.get("country") === "AU" ? "AU" : "",
-        },
-      };
-    }
-
-    return {
-      intent: "CAPTURE",
-      purchase_units: [purchaseUnit],
-      payment_source: {
-        paypal: {
-          experience_context: {
-            payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-            payment_method_selected: "PAYPAL",
-            brand_name: "GLOAMWEALD",
-            shipping_preference: shipping.amount === 0 ? "NO_SHIPPING" : "SET_PROVIDED_ADDRESS",
-            user_action: "PAY_NOW",
-          },
-        },
-      },
+      shippingId: currentShippingId(),
+      notes: String(formData.get("notes") || "").trim(),
     };
   }
 
-  function paypalCaptureSummary(orderData = {}, approvalData = {}) {
-    const purchaseUnit = orderData.purchase_units?.[0] || {};
-    const capture = purchaseUnit.payments?.captures?.[0] || {};
-
-    return {
-      orderId: orderData.id || approvalData.orderID || "",
-      captureId: capture.id || "",
-      status: capture.status || orderData.status || "",
-      payerEmail: orderData.payment_source?.paypal?.email_address || "",
-    };
-  }
-
-  async function sendOrderEmail(details, paypalDetails) {
-    if (!PAYPAL_EMAIL_ENDPOINT) return false;
-
-    const response = await fetch(PAYPAL_EMAIL_ENDPOINT, {
+  async function postCheckoutJson(url, payload) {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        to: CONTACT_EMAIL,
-        subject: paypalDetails.orderId
-          ? `GLOAMWEALD PayPal order ${paypalDetails.orderId}`
-          : "GLOAMWEALD order",
-        text: checkoutEmailText(details, paypalDetails),
-        paypal: paypalDetails,
-      }),
+      body: JSON.stringify(payload),
     });
-
-    return response.ok;
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "Checkout service is not ready. Please try again later.");
+    }
+    return data;
   }
 
-  function renderCheckoutResult(details, paypalDetails = {}, emailSent = false) {
+  async function createBackendPayPalOrder(form) {
+    const details = currentCheckoutDetails(form);
+    if (!details.items.length || details.needsQuote) {
+      throw new Error("This order cannot be paid by PayPal until the cart and shipping are ready.");
+    }
+
+    const data = await postCheckoutJson(PAYPAL_CREATE_ORDER_ENDPOINT, checkoutPayload(details));
+    if (!data.id || !data.orderToken) {
+      throw new Error("Checkout service did not return a PayPal order token.");
+    }
+
+    form.dataset.paypalOrderToken = data.orderToken;
+    return data.id;
+  }
+
+  function redirectToSuccess(data = {}) {
+    clearCart();
+    const params = new URLSearchParams();
+    if (data.orderID) params.set("order", data.orderID);
+    if (data.captureID) params.set("capture", data.captureID);
+    if (data.emailSent === false) params.set("email", "failed");
+    if (data.warning) params.set("warning", data.warning);
+    window.location.href = `${CHECKOUT_SUCCESS_URL}${params.toString() ? `?${params}` : ""}`;
+  }
+
+  function renderSuccessPage() {
+    const panel = document.querySelector("[data-payment-success]");
+    if (!panel) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const order = params.get("order");
+    const capture = params.get("capture");
+    const emailFailed = params.get("email") === "failed";
+    const warning = params.get("warning");
+    const hero = document.querySelector(".page-hero--cart");
+    const heroTitle = hero?.querySelector("h1");
+    const heroCopy = hero?.querySelector("p:last-child");
+    const panelEyebrow = panel.querySelector(".eyebrow");
+    const panelTitle = panel.querySelector("#success-title");
+    const message = panel.querySelector("[data-success-message]");
+    const warningNode = panel.querySelector("[data-success-warning]");
+    const details = panel.querySelector("[data-success-details]");
+    const orderNode = panel.querySelector("[data-success-order]");
+    const captureNode = panel.querySelector("[data-success-capture]");
+
+    if (order && capture) {
+      clearCart();
+      if (heroTitle) heroTitle.textContent = "Payment confirmed";
+      if (heroCopy) heroCopy.textContent = "Your PayPal payment has been captured by the secure checkout backend.";
+      if (panelEyebrow) panelEyebrow.textContent = "Order received";
+      if (panelTitle) panelTitle.textContent = "Thank you — your chainmail is in the making queue.";
+      if (message) {
+        message.textContent =
+          "Your cart has been cleared. Keep your PayPal receipt for your records; Gloamweald has also received the order details.";
+      }
+      details.hidden = false;
+      if (orderNode) orderNode.textContent = order;
+      if (captureNode) captureNode.textContent = capture;
+
+      if (warningNode && (emailFailed || warning)) {
+        warningNode.hidden = false;
+        warningNode.textContent =
+          warning ||
+          "Payment was captured, but the order email could not be sent. Please contact Gloamweald with your PayPal order ID.";
+      }
+      return;
+    }
+
+    if (details) details.hidden = true;
+    if (warningNode) {
+      warningNode.hidden = false;
+      warningNode.textContent =
+        "No confirmed backend PayPal capture was supplied. If you have just paid and this page looks wrong, contact Gloamweald before trying again.";
+    }
+  }
+
+  function renderCheckoutResult(details, errorMessage = "") {
     const result = document.querySelector("[data-checkout-result]");
     if (!result) return;
 
     result.hidden = false;
     result.innerHTML = `
-      <h3>${paypalDetails.orderId ? "PayPal payment received" : "Backup order email ready"}</h3>
-      <p>
-        ${
-          paypalDetails.orderId
-            ? `PayPal confirmed order <strong>${escapeHtml(paypalDetails.orderId)}</strong>${paypalDetails.captureId ? ` with capture <strong>${escapeHtml(paypalDetails.captureId)}</strong>` : ""}.`
-            : "This backup email includes the cart, delivery details, shipping and customer notes."
-        }
-      </p>
-      <p>
-        ${
-          emailSent
-            ? "The order details were sent to GLOAMWEALD through the configured email endpoint."
-            : "Automatic order email is not connected yet. Use the email backup button so the order details and notes reach GLOAMWEALD."
-        }
-      </p>
+      <h3>${errorMessage ? "Checkout needs attention" : "Enquiry email ready"}</h3>
+      <p>${errorMessage ? escapeHtml(errorMessage) : "This email is only for pre-payment enquiries or quoted shipping. Paid PayPal orders are emailed automatically by the backend after capture."}</p>
       <div class="checkout-result-actions">
-        <a class="button button--solid" href="${checkoutMailto(details, paypalDetails)}">Email order details</a>
+        <a class="button button--solid" href="${checkoutMailto(details)}">Email enquiry details</a>
       </div>
     `;
     result.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -769,6 +818,50 @@
     renderCheckoutResult(details);
   }
 
+  async function loadCheckoutConfig() {
+    if (checkoutConfigPromise) return checkoutConfigPromise;
+
+    checkoutConfigPromise = fetch(PAYPAL_CONFIG_ENDPOINT, {
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.configured === false || !data.paypalClientId) {
+          checkoutConfig = {
+            ...checkoutConfig,
+            configured: false,
+            loaded: true,
+            error: data.error || "PayPal checkout configuration is missing.",
+          };
+          return checkoutConfig;
+        }
+
+        checkoutConfig = {
+          configured: true,
+          loaded: true,
+          paypalClientId: String(data.paypalClientId || "").trim(),
+          currency: String(data.currency || PAYPAL_CURRENCY).trim() || PAYPAL_CURRENCY,
+          paypalEnv: String(data.paypalEnv || "sandbox").trim() || "sandbox",
+          error: "",
+        };
+        return checkoutConfig;
+      })
+      .catch(() => {
+        checkoutConfig = {
+          ...checkoutConfig,
+          configured: false,
+          loaded: true,
+          error: "PayPal checkout configuration could not be loaded.",
+        };
+        return checkoutConfig;
+      });
+
+    return checkoutConfigPromise;
+  }
+
   function updatePayPalStatus() {
     const status = document.querySelector("[data-paypal-status]");
     const buttonContainer = document.querySelector("[data-paypal-buttons]");
@@ -776,7 +869,7 @@
     if (!status || !buttonContainer || !checkoutForm) return;
 
     const details = currentCheckoutDetails(checkoutForm);
-    buttonContainer.hidden = !paypalReady || details.needsQuote || details.items.length === 0;
+    buttonContainer.hidden = !paypalReady() || details.needsQuote || details.items.length === 0;
 
     if (!details.items.length) {
       status.textContent = "Add something to the cart to activate PayPal checkout.";
@@ -785,21 +878,31 @@
 
     if (details.needsQuote) {
       status.textContent =
-        "International shipping needs a custom quote before PayPal payment can be taken. Use the backup email button for this order.";
+        "International shipping needs a custom quote before PayPal payment can be taken. Use the enquiry email button for this order.";
       return;
     }
 
-    if (!paypalReady) {
-      status.innerHTML =
-        "PayPal checkout is coded, but it needs your live PayPal client ID in <code>script.js</code> before the official button can load.";
+    if (!checkoutConfig.loaded) {
+      status.textContent = "Checking PayPal checkout configuration...";
+      return;
+    }
+
+    if (!paypalReady()) {
+      status.textContent =
+        checkoutConfig.error ||
+        "PayPal checkout is not configured yet. Add the public PayPal client id in Cloudflare Pages environment variables.";
       return;
     }
 
     status.textContent =
-      "Use the PayPal button below. The PayPal order will include item lines, shipping, delivery details and your notes.";
+      "Use the PayPal button below. The backend creates and captures the order, then emails the order details to Gloamweald.";
   }
 
   function loadPayPalSdk() {
+    if (!paypalReady()) {
+      return Promise.reject(new Error("PayPal checkout is not configured."));
+    }
+
     if (window.paypal?.Buttons) return Promise.resolve();
 
     return new Promise((resolve, reject) => {
@@ -812,8 +915,8 @@
 
       const script = document.createElement("script");
       const params = new URLSearchParams({
-        "client-id": PAYPAL_CLIENT_ID,
-        currency: PAYPAL_CURRENCY,
+        "client-id": checkoutConfig.paypalClientId,
+        currency: checkoutConfig.currency || PAYPAL_CURRENCY,
         intent: "capture",
         components: "buttons",
         "disable-funding": "card,credit,paylater,venmo",
@@ -832,7 +935,7 @@
     const buttonContainer = document.querySelector("[data-paypal-buttons]");
     const status = document.querySelector("[data-paypal-status]");
     const checkoutForm = document.querySelector("[data-checkout-form]");
-    if (!buttonContainer || !status || !checkoutForm || !paypalReady || buttonContainer.dataset.rendered) return;
+    if (!buttonContainer || !status || !checkoutForm || !paypalReady() || buttonContainer.dataset.rendered) return;
 
     try {
       await loadPayPalSdk();
@@ -855,25 +958,22 @@
 
             return actions.resolve();
           },
-          createOrder(_data, actions) {
-            const details = currentCheckoutDetails(checkoutForm);
-            const reference = paypalReference();
-            checkoutForm.dataset.paypalReference = reference;
-            return actions.order.create(paypalOrderPayload(details, reference));
+          createOrder() {
+            return createBackendPayPalOrder(checkoutForm);
           },
           async onApprove(data, actions) {
-            const details = currentCheckoutDetails(checkoutForm);
-            const orderData = await actions.order.capture();
-            const paypalDetails = paypalCaptureSummary(orderData, data);
-            let emailSent = false;
-
             try {
-              emailSent = await sendOrderEmail(details, paypalDetails);
+              const capture = await postCheckoutJson(PAYPAL_CAPTURE_ORDER_ENDPOINT, {
+                orderID: data.orderID,
+                orderToken: checkoutForm.dataset.paypalOrderToken || "",
+              });
+              redirectToSuccess(capture);
             } catch (error) {
-              console.warn("GLOAMWEALD order email endpoint failed", error);
+              if (error.message.includes("INSTRUMENT_DECLINED") && actions?.restart) {
+                return actions.restart();
+              }
+              renderCheckoutResult(currentCheckoutDetails(checkoutForm), error.message);
             }
-
-            renderCheckoutResult(details, paypalDetails, emailSent);
           },
           onCancel() {
             status.textContent = "PayPal checkout was cancelled. Your cart is still here.";
@@ -894,12 +994,19 @@
     }
   }
 
+  async function initialisePayPalCheckout() {
+    updatePayPalStatus();
+    await loadCheckoutConfig();
+    updatePayPalStatus();
+    renderPayPalButtons();
+  }
+
   installCartLink();
   updateCartCount();
   renderShippingOptions();
   renderCartPage();
-  updatePayPalStatus();
-  renderPayPalButtons();
+  renderSuccessPage();
+  initialisePayPalCheckout();
 
   document.addEventListener("click", (event) => {
     const addButton = event.target.closest("[data-add-to-cart]");
