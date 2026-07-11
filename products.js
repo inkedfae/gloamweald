@@ -1,173 +1,50 @@
-window.GLOAMWEALD_COLLECTIONS = {
-  classics: {
-    name: "Classics",
-    url: "collection-classics.html",
-  },
-  morrigan: {
-    name: "The Morrigan",
-    url: "collection-morrigan.html",
-  },
-  tenebris: {
-    name: "Tenebris",
-    url: "collection-tenebris.html",
-  },
-  "wyrms-hoard": {
-    name: "The Wyrm's Hoard",
-    url: "collection-wyrms-hoard.html",
-  },
-};
+(() => {
+  "use strict";
 
-window.GLOAMWEALD_PRODUCTS = [
-  {
-    id: "dark-elf-bracelet",
-    name: "Dark Elf Bracelet",
-    type: "bracelets",
-    components: [],
-    collection: "classics",
-    price: "$45 AUD",
-    description: "A spinal elf-weave bracelet: flexible, textured, and easy to wear every day.",
-    material: "Stainless steel",
-    status: "Available by enquiry",
-    orderable: true,
-    visual: "classic",
-    images: [
-      {
-        src: "assets/images/dark-elf-bracelet-primary.jpg",
-        alt: "Dark Elf spinal elf-weave bracelet worn around a tattooed wrist",
-      },
-      {
-        src: "assets/images/dark-elf-bracelet-underneath.jpg",
-        alt: "Underside of the Dark Elf bracelet beside a blue prop stone",
-      },
-    ],
-  },
-  {
-    id: "small-half-persian-necklace",
-    name: "Small Half-Persian Necklace",
-    type: "necklaces",
-    components: [],
-    collection: "classics",
-    price: "Price on enquiry",
-    description: "A slim 7 mm half-Persian chain: understated, close-wearing, and easy to layer.",
-    material: "Stainless steel",
-    status: "Available by enquiry",
-    orderable: true,
-    visual: "classic",
-    images: [
-      {
-        src: "assets/images/half-persian-necklace.jpg",
-        alt: "Small half-Persian stainless steel necklace worn close around a tattooed neck",
-      },
-    ],
-  },
-  {
-    id: "bonelink-wallet-chain",
-    name: "Bonelink Wallet Chain",
-    type: "wallet-chains",
-    components: [],
-    collection: null,
-    price: "$90 AUD",
-    description: "Thick Byzantine weave joining weighty dual links in a bone-like repeating pattern.",
-    material: "Stainless steel",
-    status: "Available by enquiry",
-    orderable: true,
-    visual: "bone",
-  },
-  {
-    id: "half-persian-wallet-chain-pendant",
-    name: "Half-Persian Wallet Chain with Pendant",
-    type: "wallet-chains",
-    components: [],
-    collection: null,
-    price: "$85 AUD",
-    description: "A half-Persian wallet chain with a Byzantine charm chain and pendant.",
-    material: "Stainless steel",
-    status: "Available by enquiry",
-    orderable: true,
-    visual: "classic",
-    images: [
-      {
-        src: "assets/images/half-persian-wallet-chain-star.jpg",
-        alt: "Half-Persian wallet chain with Byzantine charm chain and pendant",
-      },
-    ],
-  },
-  {
-    id: "omen-choker",
-    name: "Omen Choker",
-    type: "necklaces",
-    components: ["bone"],
-    collection: "morrigan",
-    price: "Not yet released",
-    description: "A close-set chain with pale bone details arranged in a quiet threefold rhythm.",
-    material: "Stainless steel · bone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "morrigan",
-  },
-  {
-    id: "blackwing-earrings",
-    name: "Blackwing Earrings",
-    type: "earrings",
-    components: ["gemstone"],
-    collection: "morrigan",
-    price: "Not yet released",
-    description: "Long chain drops with dark gemstone points, made to shift like folded wings.",
-    material: "Stainless steel · gemstone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "morrigan",
-  },
-  {
-    id: "veilchain-bracelet",
-    name: "Veilchain Bracelet",
-    type: "bracelets",
-    components: ["gemstone"],
-    collection: "tenebris",
-    price: "Not yet released",
-    description: "Fine dark chain gathered around a low-lit gemstone, like a lamp behind a veil.",
-    material: "Stainless steel · gemstone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "tenebris",
-  },
-  {
-    id: "night-relic-pendant",
-    name: "Night Relic Pendant",
-    type: "necklaces",
-    components: ["fossil"],
-    collection: "tenebris",
-    price: "Not yet released",
-    description: "A small fossil fragment held inside a shadowed frame of interlinked steel.",
-    material: "Stainless steel · fossil",
-    status: "Collection concept",
-    orderable: false,
-    visual: "tenebris",
-  },
-  {
-    id: "hoardkeeper-collar",
-    name: "Hoardkeeper Collar",
-    type: "necklaces",
-    components: ["gemstone", "bone"],
-    collection: "wyrms-hoard",
-    price: "Not yet released",
-    description: "A substantial collar carrying mismatched treasures gathered into one guarded piece.",
-    material: "Stainless steel · gemstone · bone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "wyrm",
-  },
-  {
-    id: "buried-scale-chain",
-    name: "Buried Scale Chain",
-    type: "other",
-    components: ["fossil"],
-    collection: "wyrms-hoard",
-    price: "Not yet released",
-    description: "Layered steel and a fossil centrepiece suggesting something old beneath the earth.",
-    material: "Stainless steel · fossil",
-    status: "Collection concept",
-    orderable: false,
-    visual: "wyrm",
-  },
-];
+  /*
+    Product data lives in src/product-catalog.js.
+    This compatibility loader keeps the existing non-module pages working without
+    duplicating product IDs, prices, or catalogue metadata here.
+  */
+  const CATALOG_PATH = "src/product-catalog.js";
+
+  function loadCatalogSource() {
+    const request = new XMLHttpRequest();
+    request.open("GET", CATALOG_PATH, false);
+    request.send(null);
+
+    if (request.status && (request.status < 200 || request.status >= 300)) {
+      throw new Error(`Could not load ${CATALOG_PATH}.`);
+    }
+
+    return request.responseText;
+  }
+
+  function evaluateCatalog(source) {
+    const browserSource = source
+      .replaceAll("export const ", "const ")
+      .replaceAll("export function ", "function ");
+
+    return new Function(
+      `${browserSource}
+      return {
+        collections: GLOAMWEALD_COLLECTIONS,
+        products: GLOAMWEALD_PRODUCTS,
+        productDisplayPrice,
+      };`,
+    )();
+  }
+
+  try {
+    const catalog = evaluateCatalog(loadCatalogSource());
+    window.GLOAMWEALD_COLLECTIONS = catalog.collections;
+    window.GLOAMWEALD_PRODUCTS = catalog.products.map((product) => ({
+      ...product,
+      price: catalog.productDisplayPrice(product),
+    }));
+  } catch (error) {
+    console.error("Gloamweald product catalogue could not be loaded.", error);
+    window.GLOAMWEALD_COLLECTIONS = window.GLOAMWEALD_COLLECTIONS || {};
+    window.GLOAMWEALD_PRODUCTS = window.GLOAMWEALD_PRODUCTS || [];
+  }
+})();
