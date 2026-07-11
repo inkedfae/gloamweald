@@ -29,6 +29,7 @@ function frontendText() {
     "products.js",
     "script.js",
     "shop.html",
+    "src/product-catalog.js",
     "style.css",
     "success.html",
   ]
@@ -44,8 +45,15 @@ const {
   signOrder,
   verifyOrderToken,
 } = await import("../src/checkout-shared.js");
+const {
+  GLOAMWEALD_PRODUCTS,
+  checkoutProductById,
+  productDisplayPrice,
+  productPriceAmount,
+} = await import("../src/product-catalog.js");
 await import("../functions/api/create-paypal-order.js");
 await import("../functions/api/capture-paypal-order.js");
+const checkoutShared = read("src/checkout-shared.js");
 
 const configuredResponse = await checkoutConfig({
   env: {
@@ -112,6 +120,58 @@ check(
     script.includes(route),
   ) && !script.includes("/v2/checkout/orders"),
   "Frontend uses the three local API routes and does not call PayPal Orders API directly.",
+);
+
+const pricedProducts = GLOAMWEALD_PRODUCTS.filter((product) => productPriceAmount(product) !== null);
+const checkoutProducts = pricedProducts
+  .map((product) => ({
+    product,
+    checkoutProduct: checkoutProductById(product.id),
+  }))
+  .filter(({ product }) => product.orderable);
+const checkoutPricesMatchCatalog = checkoutProducts.every(
+  ({ product, checkoutProduct }) =>
+    checkoutProduct &&
+    checkoutProduct.name === product.name &&
+    checkoutProduct.unitAmount === productPriceAmount(product),
+);
+check(
+  "backend checkout prices come from product catalogue",
+  checkoutShared.includes('from "./product-catalog.js"') &&
+    !checkoutShared.includes("ORDERABLE_PRODUCTS") &&
+    checkoutPricesMatchCatalog,
+  "src/checkout-shared.js imports product-catalog and derives checkout unit amounts from catalogue prices.",
+);
+
+const productsStub = read("products.js");
+const duplicatePriceMapFound = /unitAmount:\s*(45|85|90)|"dark-elf-bracelet"\s*:\s*\{|"bonelink-wallet-chain"\s*:\s*\{|"half-persian-wallet-chain-pendant"\s*:\s*\{/.test(checkoutShared);
+const productsLoaderDuplicatesCatalogueData = /dark-elf-bracelet|bonelink-wallet-chain|half-persian-wallet-chain-pendant|amount:\s*(45|85|90)|\$(45|85|90)/.test(productsStub);
+check(
+  "only one editable source for product prices",
+  fs.existsSync(path.join(root, "src/product-catalog.js")) &&
+    !duplicatePriceMapFound &&
+    productsStub.includes("src/product-catalog.js") &&
+    !productsLoaderDuplicatesCatalogueData,
+  "Product display metadata and checkout prices live in src/product-catalog.js; products.js only loads that catalogue for existing pages.",
+);
+
+const displayedPricesMatchCheckout = checkoutProducts.every(({ product, checkoutProduct }) =>
+  productDisplayPrice(product).includes(String(checkoutProduct.unitAmount)),
+);
+check(
+  "shop display prices match backend checkout prices",
+  displayedPricesMatchCheckout,
+  "Every purchasable product display price is formatted from the same catalogue amount used by checkout.",
+);
+
+const blockedProducts = GLOAMWEALD_PRODUCTS.filter(
+  (product) => !product.orderable || productPriceAmount(product) === null,
+);
+const blockedProductsStayBlocked = blockedProducts.every((product) => checkoutProductById(product.id) === null);
+check(
+  "placeholder and concept products are blocked from checkout",
+  blockedProductsStayBlocked,
+  `${blockedProducts.length} non-purchasable/enquiry products are not available to backend checkout.`,
 );
 
 const env = {

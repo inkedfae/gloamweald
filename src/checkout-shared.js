@@ -1,3 +1,5 @@
+import { checkoutProductById } from "./product-catalog.js";
+
 /*
   Cloudflare Pages Functions checkout helper.
 
@@ -20,21 +22,6 @@
 const CURRENCY = "AUD";
 const BRAND_NAME = "GLOAMWEALD";
 const DEFAULT_RESEND_FROM = "Gloamweald <onboarding@resend.dev>";
-
-const ORDERABLE_PRODUCTS = Object.freeze({
-  "dark-elf-bracelet": {
-    name: "Dark Elf Bracelet",
-    unitAmount: 45,
-  },
-  "bonelink-wallet-chain": {
-    name: "Bonelink Wallet Chain",
-    unitAmount: 90,
-  },
-  "half-persian-wallet-chain-pendant": {
-    name: "Half-Persian Wallet Chain with Pendant",
-    unitAmount: 85,
-  },
-});
 
 const SHIPPING_RATES = Object.freeze({
   pickup: {
@@ -106,12 +93,12 @@ export function normaliseOrder(input) {
   rawItems.forEach((item) => {
     const id = safeText(item.id, 80);
     const quantity = Math.max(1, Math.min(10, Number(item.quantity) || 1));
-    if (!ORDERABLE_PRODUCTS[id]) throw new Error("Cart contains an unavailable item.");
+    if (!checkoutProductById(id)) throw new Error("Cart contains an unavailable item.");
     quantities.set(id, (quantities.get(id) || 0) + quantity);
   });
 
   const items = [...quantities.entries()].map(([id, quantity]) => {
-    const product = ORDERABLE_PRODUCTS[id];
+    const product = checkoutProductById(id);
     return {
       id,
       name: product.name,
