@@ -5,11 +5,20 @@
   const collections = window.GLOAMWEALD_COLLECTIONS || {};
   const CART_STORAGE_KEY = "gloamweald-cart";
   const CONTACT_EMAIL = "gloamweald@gmail.com";
-  const PAYPAL_CLIENT_ID = "REPLACE_WITH_PAYPAL_CLIENT_ID";
+  const PAYPAL_CONFIG_ENDPOINT = "/api/checkout-config";
   const PAYPAL_CURRENCY = "AUD";
   const PAYPAL_CREATE_ORDER_ENDPOINT = "/api/create-paypal-order";
   const PAYPAL_CAPTURE_ORDER_ENDPOINT = "/api/capture-paypal-order";
   const CHECKOUT_SUCCESS_URL = "success.html";
+  let checkoutConfig = {
+    configured: false,
+    loaded: false,
+    paypalClientId: "",
+    currency: PAYPAL_CURRENCY,
+    paypalEnv: "sandbox",
+    error: "",
+  };
+  let checkoutConfigPromise = null;
 
   const typeLabels = {
     bracelets: "Bracelet",
@@ -51,10 +60,9 @@
     currency: "AUD",
   });
 
-  const paypalReady =
-    PAYPAL_CLIENT_ID &&
-    !PAYPAL_CLIENT_ID.includes("REPLACE_WITH") &&
-    PAYPAL_CLIENT_ID.length > 12;
+  function paypalReady() {
+    return Boolean(checkoutConfig.loaded && checkoutConfig.configured && checkoutConfig.paypalClientId);
+  }
 
   function escapeHtml(value) {
     return String(value)
@@ -810,6 +818,50 @@
     renderCheckoutResult(details);
   }
 
+  async function loadCheckoutConfig() {
+    if (checkoutConfigPromise) return checkoutConfigPromise;
+
+    checkoutConfigPromise = fetch(PAYPAL_CONFIG_ENDPOINT, {
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.configured === false || !data.paypalClientId) {
+          checkoutConfig = {
+            ...checkoutConfig,
+            configured: false,
+            loaded: true,
+            error: data.error || "PayPal checkout configuration is missing.",
+          };
+          return checkoutConfig;
+        }
+
+        checkoutConfig = {
+          configured: true,
+          loaded: true,
+          paypalClientId: String(data.paypalClientId || "").trim(),
+          currency: String(data.currency || PAYPAL_CURRENCY).trim() || PAYPAL_CURRENCY,
+          paypalEnv: String(data.paypalEnv || "sandbox").trim() || "sandbox",
+          error: "",
+        };
+        return checkoutConfig;
+      })
+      .catch(() => {
+        checkoutConfig = {
+          ...checkoutConfig,
+          configured: false,
+          loaded: true,
+          error: "PayPal checkout configuration could not be loaded.",
+        };
+        return checkoutConfig;
+      });
+
+    return checkoutConfigPromise;
+  }
+
   function updatePayPalStatus() {
     const status = document.querySelector("[data-paypal-status]");
     const buttonContainer = document.querySelector("[data-paypal-buttons]");
@@ -817,7 +869,7 @@
     if (!status || !buttonContainer || !checkoutForm) return;
 
     const details = currentCheckoutDetails(checkoutForm);
-    buttonContainer.hidden = !paypalReady || details.needsQuote || details.items.length === 0;
+    buttonContainer.hidden = !paypalReady() || details.needsQuote || details.items.length === 0;
 
     if (!details.items.length) {
       status.textContent = "Add something to the cart to activate PayPal checkout.";
@@ -830,9 +882,15 @@
       return;
     }
 
-    if (!paypalReady) {
-      status.innerHTML =
-        "PayPal checkout is coded, but it stays disabled until your PayPal Client ID is added. The PayPal Client Secret must stay only in backend environment variables.";
+    if (!checkoutConfig.loaded) {
+      status.textContent = "Checking PayPal checkout configuration...";
+      return;
+    }
+
+    if (!paypalReady()) {
+      status.textContent =
+        checkoutConfig.error ||
+        "PayPal checkout is not configured yet. Add the public PayPal client id in Cloudflare Pages environment variables.";
       return;
     }
 
@@ -841,6 +899,10 @@
   }
 
   function loadPayPalSdk() {
+    if (!paypalReady()) {
+      return Promise.reject(new Error("PayPal checkout is not configured."));
+    }
+
     if (window.paypal?.Buttons) return Promise.resolve();
 
     return new Promise((resolve, reject) => {
@@ -853,8 +915,8 @@
 
       const script = document.createElement("script");
       const params = new URLSearchParams({
-        "client-id": PAYPAL_CLIENT_ID,
-        currency: PAYPAL_CURRENCY,
+        "client-id": checkoutConfig.paypalClientId,
+        currency: checkoutConfig.currency || PAYPAL_CURRENCY,
         intent: "capture",
         components: "buttons",
         "disable-funding": "card,credit,paylater,venmo",
@@ -873,7 +935,7 @@
     const buttonContainer = document.querySelector("[data-paypal-buttons]");
     const status = document.querySelector("[data-paypal-status]");
     const checkoutForm = document.querySelector("[data-checkout-form]");
-    if (!buttonContainer || !status || !checkoutForm || !paypalReady || buttonContainer.dataset.rendered) return;
+    if (!buttonContainer || !status || !checkoutForm || !paypalReady() || buttonContainer.dataset.rendered) return;
 
     try {
       await loadPayPalSdk();
@@ -932,13 +994,19 @@
     }
   }
 
+  async function initialisePayPalCheckout() {
+    updatePayPalStatus();
+    await loadCheckoutConfig();
+    updatePayPalStatus();
+    renderPayPalButtons();
+  }
+
   installCartLink();
   updateCartCount();
   renderShippingOptions();
   renderCartPage();
   renderSuccessPage();
-  updatePayPalStatus();
-  renderPayPalButtons();
+  initialisePayPalCheckout();
 
   document.addEventListener("click", (event) => {
     const addButton = event.target.closest("[data-add-to-cart]");

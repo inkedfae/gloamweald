@@ -125,6 +125,7 @@ the checkout functions from the `/functions` directory.
 
 The repo includes Cloudflare Pages Functions:
 
+- `functions/api/checkout-config.js` → `/api/checkout-config`
 - `functions/api/create-paypal-order.js` → `/api/create-paypal-order`
 - `functions/api/capture-paypal-order.js` → `/api/capture-paypal-order`
 - `src/checkout-shared.js` → shared server-side checkout helpers imported by the functions
@@ -150,10 +151,35 @@ RESEND_FROM=Gloamweald <onboarding@resend.dev>
 Keep `PAYPAL_CLIENT_SECRET` and `RESEND_API_KEY` out of HTML, CSS, and frontend
 JavaScript. They belong only in Cloudflare environment variables/secrets.
 
+The frontend loads the public PayPal Client ID from `/api/checkout-config`.
+That endpoint returns only safe public checkout config:
+
+```json
+{
+  "paypalClientId": "public PayPal client id from Cloudflare",
+  "currency": "AUD",
+  "paypalEnv": "sandbox"
+}
+```
+
+If `PAYPAL_CLIENT_ID` is not set, `/api/checkout-config` returns
+`configured: false` and the PayPal button remains disabled with a clear message.
+The endpoint must not return `PAYPAL_CLIENT_SECRET`, `RESEND_API_KEY`, or
+`CONTACT_EMAIL`.
+
 Use PayPal sandbox first. When sandbox checkout, capture, cart clearing, and
 server-side Resend order emails all work, switch `PAYPAL_ENV` and the PayPal
 credentials to live.
 
-The public PayPal Client ID is still left as a placeholder in `script.js` until
-checkout testing is ready. Do not add the live value until you are ready to test
-the full Cloudflare + PayPal + Resend flow.
+## Checkout safety checks
+
+Run this before pushing checkout changes:
+
+```powershell
+node scripts/checkout-safety-check.mjs
+```
+
+It verifies that `/api/checkout-config` exposes only public config, frontend
+code does not contain server-only environment variable names, the PayPal SDK is
+loaded only after a public Client ID is returned, and the backend order token
+flow still works.
