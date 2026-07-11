@@ -25,12 +25,12 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Dark Elf Bracelet",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
-      amount: 45,
+      amount: 75,
       currency: CATALOG_CURRENCY,
     },
-    description: "A spinal elf-weave bracelet: flexible, textured, and easy to wear every day.",
+    description: "A spinal elf-weave bracelet: flexible, textured, and ideal for every-day wear.",
     material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
@@ -57,7 +57,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       currency: CATALOG_CURRENCY,
       label: "Price on enquiry",
     },
-    description: "A slim 7 mm half-Persian chain: understated, close-wearing, and easy to layer.",
+    description: "A slim 7 mm width half-Persian chain: understated, close-wearing, and perfect for daily wear and layering.",
     material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
@@ -76,8 +76,9 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 90,
+      amount: null,
       currency: CATALOG_CURRENCY,
+      label: "Price on enquiry",
     },
     description: "Thick Byzantine weave joining weighty dual links in a bone-like repeating pattern.",
     material: "Stainless steel",
@@ -87,7 +88,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
   },
   {
     id: "half-persian-wallet-chain-pendant",
-    name: "Half-Persian Wallet Chain with Pendant",
+    name: "Half-Persian Wallet Chain with Charm",
     type: "wallet-chains",
     components: [],
     collection: null,
@@ -95,7 +96,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       amount: 85,
       currency: CATALOG_CURRENCY,
     },
-    description: "A half-Persian wallet chain with a Byzantine charm chain and pendant.",
+    description: "A half-Persian wallet chain with a small charm on a Byzantine chain.",
     material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
@@ -103,7 +104,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     images: [
       {
         src: "assets/images/half-persian-wallet-chain-star.jpg",
-        alt: "Half-Persian wallet chain with Byzantine charm chain and pendant",
+        alt: "Half-Persian wallet chain with a small cross-like star charm on a small Byzantine chain ",
       },
     ],
   },
@@ -209,7 +210,30 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     orderable: false,
     visual: "wyrm",
   },
+    {
+    id: "test-product",
+    name: "Test Item",
+    type: "bracelets",
+    components: ["bone", "fossil"],
+    collection: "classics",
+    price: {
+      amount: 2,
+      currency: CATALOG_CURRENCY,
+    },
+    description: "Short product description here.",
+    material: "Stainless steel",
+    status: "Available",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/new-product-image.jpg",
+        alt: "Description of the product image",
+      },
+    ],
+  },
 ]);
+
 
 export function productById(id) {
   return GLOAMWEALD_PRODUCTS.find((product) => product.id === id) || null;
