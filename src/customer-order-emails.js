@@ -40,7 +40,7 @@ function joinMetadataValue(metadata, prefix, maxParts = 4) {
 }
 
 function deliveryAddressLines(customer = {}, requiresAddress = true) {
-  if (!requiresAddress) return ["Legacy pickup arrangement"];
+  if (!requiresAddress) return ["No postal address recorded"];
   const locality = [customer.city, customer.state, customer.postcode].filter(Boolean).join(" ");
   return [customer.address1, customer.address2, locality, "Australia"].filter(Boolean);
 }
