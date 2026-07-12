@@ -1,8 +1,8 @@
 import {
   json,
-  sendStripeOrderEmailOnce,
   verifyStripeWebhookSignature,
 } from "../../src/checkout-shared.js";
+import { sendStripeOrderEmailsOnce } from "../../src/customer-order-emails.js";
 
 /*
   Cloudflare Pages route:
@@ -23,11 +23,11 @@ export async function onRequestPost(context) {
       session?.payment_status === "paid"
     ) {
       try {
-        await sendStripeOrderEmailOnce(context.env, session);
+        await sendStripeOrderEmailsOnce(context.env, session);
       } catch (error) {
         return json(500, {
           received: false,
-          error: "Stripe payment was confirmed, but the order email could not be sent. Stripe should retry this webhook.",
+          error: "Stripe payment was confirmed, but one or more order emails could not be sent. Stripe should retry this webhook.",
         });
       }
     }
