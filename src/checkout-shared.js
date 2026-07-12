@@ -1,5 +1,3 @@
-import { checkoutProductById } from "./product-catalog.js";
-
 /*
   Cloudflare Pages Functions checkout helper.
 
@@ -28,25 +26,6 @@ import { checkoutProductById } from "./product-catalog.js";
 
 const CURRENCY = "AUD";
 const BRAND_NAME = "GLOAMWEALD";
-const DEFAULT_RESEND_FROM = "Gloamweald <onboarding@resend.dev>";
-
-const SHIPPING_RATES = Object.freeze({
-  pickup: {
-    label: "Brisbane pickup / hand-off",
-    amount: 0,
-    requiresAddress: false,
-  },
-  "au-standard": {
-    label: "Australia standard tracked shipping",
-    amount: 10,
-    requiresAddress: true,
-  },
-  "au-express": {
-    label: "Australia express tracked shipping",
-    amount: 16,
-    requiresAddress: true,
-  },
-});
 
 export function json(status, payload) {
   return new Response(JSON.stringify(payload), {
@@ -106,79 +85,6 @@ export function paypalBaseUrl(env) {
   return env.PAYPAL_ENV === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
-}
-
-export function normaliseOrder(input) {
-  const rawItems = Array.isArray(input.items) ? input.items : [];
-  const quantities = new Map();
-
-  rawItems.forEach((item) => {
-    const id = safeText(item.id, 80);
-    const quantity = Math.max(1, Math.min(10, Number(item.quantity) || 1));
-    if (!checkoutProductById(id)) throw new Error("Cart contains an unavailable item.");
-    quantities.set(id, (quantities.get(id) || 0) + quantity);
-  });
-
-  const items = [...quantities.entries()].map(([id, quantity]) => {
-    const product = checkoutProductById(id);
-    return {
-      id,
-      name: product.name,
-      quantity,
-      unitAmount: product.unitAmount,
-      lineTotal: product.unitAmount * quantity,
-    };
-  });
-
-  if (!items.length) throw new Error("Cart is empty.");
-
-  const shippingId = safeText(input.shippingId || "au-standard", 80);
-  const shipping = SHIPPING_RATES[shippingId];
-  if (!shipping) throw new Error("Choose a valid shipping method.");
-
-  const customer = {
-    name: safeText(input.customer?.name, 180),
-    email: safeText(input.customer?.email, 180),
-    phone: safeText(input.customer?.phone, 80),
-    address1: safeText(input.customer?.address1, 180),
-    address2: safeText(input.customer?.address2, 180),
-    city: safeText(input.customer?.city, 120),
-    state: safeText(input.customer?.state, 120),
-    postcode: safeText(input.customer?.postcode, 40),
-    country: safeText(input.customer?.country || "AU", 10),
-  };
-
-  if (!customer.name) throw new Error("Name is required.");
-  if (!customer.email || !customer.email.includes("@")) throw new Error("A valid email is required.");
-
-  if (shipping.requiresAddress) {
-    if (customer.country !== "AU") {
-      throw new Error("International shipping needs a custom quote before PayPal payment.");
-    }
-    ["address1", "city", "state", "postcode"].forEach((field) => {
-      if (!customer[field]) throw new Error("Postal address is required for shipping.");
-    });
-  }
-
-  const subtotal = items.reduce((total, item) => total + item.lineTotal, 0);
-  const total = subtotal + shipping.amount;
-  const random = new Uint8Array(3);
-  crypto.getRandomValues(random);
-  const suffix = [...random].map((byte) => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
-  const reference = `GLOAM-${Date.now().toString(36).toUpperCase()}-${suffix}`;
-
-  return {
-    reference,
-    customer,
-    items,
-    shippingId,
-    shipping,
-    notes: safeText(input.notes, 1200),
-    subtotal,
-    total,
-    currency: CURRENCY,
-    createdAt: new Date().toISOString(),
-  };
 }
 
 function base64UrlEncode(text) {
@@ -303,10 +209,7 @@ export function paypalOrderPayload(order) {
         value: moneyValue(item.unitAmount),
       },
     })),
-  };
-
-  if (order.shipping.requiresAddress) {
-    purchaseUnit.shipping = {
+    shipping: {
       name: {
         full_name: order.customer.name,
       },
@@ -318,8 +221,8 @@ export function paypalOrderPayload(order) {
         postal_code: order.customer.postcode,
         country_code: "AU",
       },
-    };
-  }
+    },
+  };
 
   return {
     intent: "CAPTURE",
@@ -330,7 +233,7 @@ export function paypalOrderPayload(order) {
           payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
           payment_method_selected: "PAYPAL",
           brand_name: BRAND_NAME,
-          shipping_preference: order.shipping.requiresAddress ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
+          shipping_preference: "SET_PROVIDED_ADDRESS",
           user_action: "PAY_NOW",
         },
       },
@@ -356,12 +259,6 @@ function splitMetadataValue(value, prefix, metadata, maxParts = 4) {
     const chunk = text.slice(index * 500, (index + 1) * 500);
     if (chunk) metadata[`${prefix}_${index + 1}`] = chunk;
   }
-}
-
-function joinMetadataValue(metadata, prefix, maxParts = 4) {
-  return Array.from({ length: maxParts }, (_, index) => metadata?.[`${prefix}_${index + 1}`] || "")
-    .join("")
-    .trim();
 }
 
 function stripeMetadataForOrder(order) {
@@ -507,159 +404,4 @@ export async function verifyStripeWebhookSignature(env, rawBody, signatureHeader
   }
 
   return JSON.parse(rawBody);
-}
-
-function orderEmailText(order, captureData = {}) {
-  const purchaseUnit = captureData.purchase_units?.[0] || {};
-  const capture = purchaseUnit.payments?.captures?.[0] || {};
-  const payerEmail = captureData.payment_source?.paypal?.email_address || "";
-  const locality = [order.customer.city, order.customer.state, order.customer.postcode]
-    .filter(Boolean)
-    .join(" ");
-
-  return [
-    "GLOAMWEALD PayPal order",
-    "",
-    `Reference: ${order.reference}`,
-    `PayPal order ID: ${captureData.id || order.paypalOrderId || ""}`,
-    `PayPal capture ID: ${capture.id || ""}`,
-    `PayPal status: ${capture.status || captureData.status || ""}`,
-    payerEmail ? `PayPal payer email: ${payerEmail}` : null,
-    "",
-    "Items",
-    ...order.items.map(
-      (item) => `${item.quantity} x ${item.name} - $${moneyValue(item.lineTotal)} ${CURRENCY}`,
-    ),
-    "",
-    `Subtotal: $${moneyValue(order.subtotal)} ${CURRENCY}`,
-    `Shipping: $${moneyValue(order.shipping.amount)} ${CURRENCY} (${order.shipping.label})`,
-    `Total: $${moneyValue(order.total)} ${CURRENCY}`,
-    "",
-    "Customer",
-    order.customer.name,
-    order.customer.email,
-    order.customer.phone || null,
-    "",
-    "Delivery / pickup details",
-    order.shipping.requiresAddress ? order.customer.address1 : "Pickup / hand-off",
-    order.shipping.requiresAddress ? order.customer.address2 : null,
-    order.shipping.requiresAddress ? locality : null,
-    order.shipping.requiresAddress ? "Australia" : null,
-    "",
-    "Customer notes",
-    order.notes || "None",
-  ]
-    .filter((line) => line !== null && String(line).trim() !== "")
-    .join("\n");
-}
-
-export async function sendOrderEmail(env, order, captureData) {
-  return sendResendEmail(env, {
-    replyTo: order.customer.email,
-    subject: `GLOAMWEALD PayPal order ${order.reference}`,
-    text: orderEmailText(order, captureData),
-  });
-}
-
-function stripeOrderEmailText(session) {
-  const metadata = session.metadata || {};
-  const customer = session.customer_details || {};
-  const items = joinMetadataValue(metadata, "items") || "See Stripe Checkout receipt.";
-  const notes = joinMetadataValue(metadata, "notes") || "None";
-  const paidAmount = session.amount_total ? moneyValue(session.amount_total / 100) : metadata.total;
-
-  return [
-    "GLOAMWEALD Stripe order",
-    "",
-    `Reference: ${metadata.reference || session.client_reference_id || ""}`,
-    `Stripe Checkout Session ID: ${session.id || ""}`,
-    `Stripe Payment Intent ID: ${session.payment_intent || ""}`,
-    `Stripe status: ${session.status || ""}`,
-    `Stripe payment status: ${session.payment_status || ""}`,
-    customer.email ? `Stripe payer email: ${customer.email}` : null,
-    "",
-    "Items",
-    items,
-    "",
-    `Subtotal: $${metadata.subtotal || ""} ${metadata.currency || CURRENCY}`,
-    `Shipping: $${metadata.shipping_amount || ""} ${metadata.currency || CURRENCY} (${metadata.shipping_label || ""})`,
-    `Total: $${paidAmount || metadata.total || ""} ${metadata.currency || CURRENCY}`,
-    "",
-    "Customer",
-    metadata.customer_name || customer.name || "",
-    metadata.customer_email || customer.email || "",
-    metadata.customer_phone || customer.phone || null,
-    "",
-    "Delivery / pickup details",
-    metadata.shipping_id === "pickup" ? "Pickup / hand-off" : metadata.address1,
-    metadata.shipping_id === "pickup" ? null : metadata.address2,
-    metadata.shipping_id === "pickup" ? null : [metadata.city, metadata.state, metadata.postcode].filter(Boolean).join(" "),
-    metadata.shipping_id === "pickup" ? null : metadata.country || "AU",
-    "",
-    "Customer notes",
-    notes,
-  ]
-    .filter((line) => line !== null && String(line).trim() !== "")
-    .join("\n");
-}
-
-export async function sendStripeOrderEmail(env, session) {
-  const metadata = session.metadata || {};
-  return sendResendEmail(env, {
-    replyTo: metadata.customer_email || session.customer_details?.email || "",
-    subject: `GLOAMWEALD Stripe order ${metadata.reference || session.id}`,
-    text: stripeOrderEmailText(session),
-    idempotencyKey: `gloamweald-stripe-order-email-${session.id}`,
-  });
-}
-
-export function stripeOrderEmailAlreadySent(session) {
-  return session?.metadata?.gloamweald_order_email_sent === "true";
-}
-
-export async function markStripeOrderEmailSent(env, session, resendResponse = {}) {
-  return updateStripeCheckoutSessionMetadata(env, session.id, {
-    gloamweald_order_email_sent: "true",
-    gloamweald_order_email_sent_at: new Date().toISOString(),
-    gloamweald_resend_email_id: safeText(resendResponse.id, 200),
-  });
-}
-
-export async function sendStripeOrderEmailOnce(env, session) {
-  if (!session?.id) throw new Error("Stripe Checkout Session ID is missing.");
-
-  const latestSession = await retrieveStripeCheckoutSession(env, session.id);
-  if (stripeOrderEmailAlreadySent(latestSession)) {
-    return { sent: false, skipped: true, reason: "already-sent" };
-  }
-
-  const resendResponse = await sendStripeOrderEmail(env, latestSession);
-  await markStripeOrderEmailSent(env, latestSession, resendResponse);
-  return { sent: true, skipped: false, resend: resendResponse };
-}
-
-async function sendResendEmail(env, { replyTo, subject, text, idempotencyKey }) {
-  const headers = {
-    Authorization: `Bearer ${requireEnv(env, "RESEND_API_KEY")}`,
-    "Content-Type": "application/json",
-  };
-  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      from: env.RESEND_FROM || DEFAULT_RESEND_FROM,
-      to: [requireEnv(env, "CONTACT_EMAIL")],
-      reply_to: replyTo,
-      subject,
-      text,
-    }),
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.message || "Order email could not be sent.");
-  }
-  return data;
 }
