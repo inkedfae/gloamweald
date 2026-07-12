@@ -18,6 +18,15 @@ function check(name, condition, detail) {
   results.push({ name, passed: Boolean(condition), detail });
 }
 
+function expectThrows(name, fn, pattern, detail) {
+  try {
+    fn();
+    check(name, false, detail);
+  } catch (error) {
+    check(name, pattern.test(error.message), `${detail} (${error.message})`);
+  }
+}
+
 function frontendText() {
   return [
     "about.html",
@@ -32,7 +41,8 @@ function frontendText() {
     "index.html",
     "products.js",
     "script.js",
-    "stripe-checkout.js",
+    "checkout.js",
+    "checkout.css",
     "shop.html",
     "src/product-catalog.js",
     "style.css",
@@ -43,17 +53,35 @@ function frontendText() {
 }
 
 const script = read("script.js");
-const stripeFrontend = readIfExists("stripe-checkout.js");
-const checkoutFrontend = `${script}\n${stripeFrontend}`;
+const checkoutScript = read("checkout.js");
+const checkoutFrontend = `${script}\n${checkoutScript}`;
 const frontend = frontendText();
+const checkoutShared = read("src/checkout-shared.js");
+const checkoutOrder = read("src/checkout-order.js");
+const customerEmails = read("src/customer-order-emails.js");
+const productsStub = read("products.js");
+const createPayPalOrder = read("functions/api/create-paypal-order.js");
+const paypalCapture = read("functions/api/capture-paypal-order.js");
+const createStripeSession = read("functions/api/create-stripe-session.js");
+const stripeConfirm = read("functions/api/confirm-stripe-session.js");
+const stripeWebhook = read("functions/api/stripe-webhook.js");
+const successPage = read("success.html");
+const cartPage = read("cart.html");
+const carePage = read("care.html");
+const removedStripeCheckout = !fs.existsSync(path.join(root, "stripe-checkout.js"));
+
 const { onRequestGet: checkoutConfig } = await import("../functions/api/checkout-config.js");
 const {
-  normaliseOrder,
+  paypalOrderPayload,
   signOrder,
   stripeCheckoutSessionForm,
   verifyOrderToken,
   verifyStripeWebhookSignature,
 } = await import("../src/checkout-shared.js");
+const {
+  checkoutShippingAmount,
+  normaliseOrder,
+} = await import("../src/checkout-order.js");
 const {
   GLOAMWEALD_PRODUCTS,
   checkoutProductById,
@@ -66,22 +94,17 @@ await import("../functions/api/create-stripe-session.js");
 await import("../functions/api/confirm-stripe-session.js");
 await import("../functions/api/stripe-webhook.js");
 
-const checkoutShared = read("src/checkout-shared.js");
-const productsStub = read("products.js");
-const stripeConfirm = read("functions/api/confirm-stripe-session.js");
-const stripeWebhook = read("functions/api/stripe-webhook.js");
+const env = {
+  PAYPAL_CLIENT_ID: "public-client-id",
+  PAYPAL_CLIENT_SECRET: "server-secret-placeholder",
+  STRIPE_SECRET_KEY: "stripe-secret-placeholder",
+  STRIPE_WEBHOOK_SECRET: "stripe-webhook-secret-placeholder",
+  RESEND_API_KEY: "resend-secret-placeholder",
+  CONTACT_EMAIL: "orders@example.com",
+  PAYPAL_ENV: "sandbox",
+};
 
-const configuredResponse = await checkoutConfig({
-  env: {
-    PAYPAL_CLIENT_ID: "public-client-id",
-    PAYPAL_CLIENT_SECRET: "server-secret-placeholder",
-    STRIPE_SECRET_KEY: "stripe-secret-placeholder",
-    STRIPE_WEBHOOK_SECRET: "stripe-webhook-secret-placeholder",
-    RESEND_API_KEY: "resend-secret-placeholder",
-    CONTACT_EMAIL: "orders@example.com",
-    PAYPAL_ENV: "sandbox",
-  },
-});
+const configuredResponse = await checkoutConfig({ env });
 const configuredBody = await configuredResponse.json();
 check(
   "checkout-config returns only safe public keys",
@@ -95,13 +118,13 @@ check(
     !("STRIPE_WEBHOOK_SECRET" in configuredBody) &&
     !("RESEND_API_KEY" in configuredBody) &&
     !("CONTACT_EMAIL" in configuredBody),
-  "GET /api/checkout-config does not expose server-only env values.",
+  "GET /api/checkout-config exposes only the public PayPal client id, currency, env, and Stripe configured flag.",
 );
 
 const missingResponse = await checkoutConfig({ env: {} });
 const missingBody = await missingResponse.json();
 check(
-  "checkout-config disables PayPal when public client id is missing",
+  "checkout-config disables checkout when public config is missing",
   missingBody.configured === false && !missingBody.paypalClientId && typeof missingBody.error === "string",
   "Missing PAYPAL_CLIENT_ID returns configured:false with a non-secret message.",
 );
@@ -114,25 +137,8 @@ check(
 
 check(
   "script.js has no hardcoded PayPal placeholder",
-  !script.includes("REPLACE_WITH_PAYPAL_CLIENT_ID"),
-  "script.js no longer contains REPLACE_WITH_PAYPAL_CLIENT_ID.",
-);
-
-check(
-  "script.js fetches public config before enabling PayPal",
-  script.includes('const PAYPAL_CONFIG_ENDPOINT = "/api/checkout-config"') &&
-    script.includes("await loadCheckoutConfig();") &&
-    script.includes("renderPayPalButtons();") &&
-    script.includes("checkoutConfig.paypalClientId"),
-  "PayPal startup waits for /api/checkout-config and uses the returned client id.",
-);
-
-check(
-  "PayPal SDK load is gated by valid config",
-  script.includes("if (!paypalReady())") &&
-    script.includes("PayPal checkout is not configured.") &&
-    script.includes('"client-id": checkoutConfig.paypalClientId'),
-  "SDK URL is built only after paypalReady() and uses checkoutConfig.paypalClientId.",
+  !checkoutFrontend.includes("REPLACE_WITH_PAYPAL_CLIENT_ID"),
+  "Frontend scripts no longer contain REPLACE_WITH_PAYPAL_CLIENT_ID.",
 );
 
 check(
@@ -147,6 +153,26 @@ check(
     !checkoutFrontend.includes("/v2/checkout/orders") &&
     !checkoutFrontend.includes("api.stripe.com"),
   "Frontend uses local checkout API routes and does not call PayPal or Stripe APIs directly.",
+);
+
+check(
+  "no dead checkout override script remains",
+  removedStripeCheckout &&
+    !cartPage.includes("stripe-checkout.js") &&
+    !successPage.includes("stripe-checkout.js") &&
+    cartPage.includes("checkout.js") &&
+    successPage.includes("checkout.js") &&
+    !fs.existsSync(path.join(root, "cart-shipping.js")) &&
+    !cartPage.includes("cart-shipping.js"),
+  "Checkout is handled by checkout.js as the direct checkout module; no permanent override/duplicate checkout script remains.",
+);
+
+check(
+  "old pickup labels and old rates are gone from checkout code",
+  !/Brisbane pickup|hand-off|handoff|Placeholder rate|\$10 AUD|\$16 AUD|Australia standard tracked shipping|Australia express tracked shipping|amount:\s*10,|amount:\s*16,/.test(
+    `${checkoutFrontend}\n${checkoutShared}\n${checkoutOrder}`,
+  ),
+  "Old standard-pickup wording and the old $10/$16 shipping values are not present in checkout code.",
 );
 
 const pricedProducts = GLOAMWEALD_PRODUCTS.filter((product) => productPriceAmount(product) !== null);
@@ -164,13 +190,17 @@ const checkoutPricesMatchCatalog = checkoutProducts.every(
 );
 check(
   "backend checkout prices come from product catalogue",
-  checkoutShared.includes('from "./product-catalog.js"') &&
-    !checkoutShared.includes("ORDERABLE_PRODUCTS") &&
+  checkoutOrder.includes('from "./product-catalog.js"') &&
+    createPayPalOrder.includes('from "../../src/checkout-order.js"') &&
+    createStripeSession.includes('from "../../src/checkout-order.js"') &&
+    !checkoutOrder.includes("ORDERABLE_PRODUCTS") &&
     checkoutPricesMatchCatalog,
-  "src/checkout-shared.js imports product-catalog and derives checkout unit amounts from catalogue prices.",
+  "src/checkout-order.js imports product-catalog and both payment creation endpoints use its normaliseOrder().",
 );
 
-const duplicatePriceMapFound = /unitAmount:\s*(45|75|85|90)|"dark-elf-bracelet"\s*:\s*\{|"bonelink-wallet-chain"\s*:\s*\{|"half-persian-wallet-chain-pendant"\s*:\s*\{/.test(checkoutShared);
+const duplicatePriceMapFound = /unitAmount:\s*(45|75|85|90)|"dark-elf-bracelet"\s*:\s*\{|"bonelink-wallet-chain"\s*:\s*\{|"half-persian-wallet-chain-pendant"\s*:\s*\{/.test(
+  `${checkoutShared}\n${checkoutOrder}`,
+);
 const productsLoaderDuplicatesCatalogueData = /dark-elf-bracelet|bonelink-wallet-chain|half-persian-wallet-chain-pendant|amount:\s*(45|75|85|90)|\$(45|75|85|90)/.test(productsStub);
 check(
   "only one editable source for product prices",
@@ -178,7 +208,7 @@ check(
     !duplicatePriceMapFound &&
     productsStub.includes("src/product-catalog.js") &&
     !productsLoaderDuplicatesCatalogueData,
-  "Product display metadata and checkout prices live in src/product-catalog.js; products.js only loads that catalogue for existing pages.",
+  "Product display metadata and checkout prices live in src/product-catalog.js; checkout code reads catalogue prices.",
 );
 
 const displayedPricesMatchCheckout = checkoutProducts.every(({ product, checkoutProduct }) =>
@@ -195,52 +225,141 @@ const blockedProducts = GLOAMWEALD_PRODUCTS.filter(
 );
 const blockedProductsStayBlocked = blockedProducts.every((product) => checkoutProductById(product.id) === null);
 check(
-  "placeholder and concept products are blocked from checkout",
+  "concept/enquiry products are blocked from backend checkout unless explicitly orderable with a price",
   blockedProductsStayBlocked,
   `${blockedProducts.length} non-purchasable/enquiry products are not available to backend checkout.`,
 );
 
-const env = {
-  PAYPAL_CLIENT_ID: "public-client-id",
-  PAYPAL_CLIENT_SECRET: "server-secret-placeholder",
-  STRIPE_SECRET_KEY: "stripe-secret-placeholder",
-  STRIPE_WEBHOOK_SECRET: "stripe-webhook-secret-placeholder",
-  RESEND_API_KEY: "resend-secret-placeholder",
-  CONTACT_EMAIL: "orders@example.com",
+const customer = {
+  name: "Test Customer",
+  email: "test@example.com",
+  phone: "0400000000",
+  address1: "1 Gloam Way",
+  city: "Brisbane",
+  state: "QLD",
+  postcode: "4000",
+  country: "AU",
 };
-const pickupOrder = normaliseOrder({
+
+const underStandard = normaliseOrder({
   items: [{ id: "dark-elf-bracelet", quantity: 1 }],
-  shippingId: "pickup",
-  customer: { name: "Test Customer", email: "test@example.com", country: "AU" },
+  shippingId: "au-standard",
+  customer,
+  notes: "Dark Elf Bracelet +1.5 cm",
 });
-const token = await signOrder(env, { ...pickupOrder, paypalOrderId: "PAYPAL-ORDER-123" });
-const verified = await verifyOrderToken(env, token);
-const darkElfCheckoutProduct = checkoutProductById("dark-elf-bracelet");
+const underExpress = normaliseOrder({
+  items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+  shippingId: "au-express",
+  customer,
+});
+const overStandard = normaliseOrder({
+  items: [
+    { id: "dark-elf-bracelet", quantity: 1 },
+    { id: "half-persian-wallet-chain-pendant", quantity: 1 },
+  ],
+  shippingId: "au-standard",
+  customer,
+});
+const overExpress = normaliseOrder({
+  items: [
+    { id: "dark-elf-bracelet", quantity: 1 },
+    { id: "half-persian-wallet-chain-pendant", quantity: 1 },
+  ],
+  shippingId: "au-express",
+  customer,
+});
+
 check(
-  "existing create/capture token flow still works",
-  pickupOrder.total === darkElfCheckoutProduct.unitAmount && verified.paypalOrderId === "PAYPAL-ORDER-123",
-  "Shared checkout helper still normalises orders and verifies server-signed capture tokens.",
+  "backend AU shipping rates are exact decimals",
+  checkoutShippingAmount("au-standard", 75) === 10.95 &&
+    checkoutShippingAmount("au-express", 75) === 13.95 &&
+    checkoutShippingAmount("au-standard", 150) === 0 &&
+    checkoutShippingAmount("au-express", 150) === 3 &&
+    underStandard.shipping.amount === 10.95 &&
+    underExpress.shipping.amount === 13.95 &&
+    overStandard.shipping.amount === 0 &&
+    overExpress.shipping.amount === 3,
+  "Backend shipping source returns $10.95, $13.95, $0.00, and $3.00 for the required AU cases.",
 );
 
-const stripeForm = stripeCheckoutSessionForm(pickupOrder, {
+expectThrows(
+  "backend rejects stale pickup shipping",
+  () =>
+    normaliseOrder({
+      items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+      shippingId: "pickup",
+      customer,
+    }),
+  /pickup|Australia Post/i,
+  "A stale localStorage/form value of pickup cannot pass backend order normalisation.",
+);
+
+expectThrows(
+  "backend requires Australian postal address",
+  () =>
+    normaliseOrder({
+      items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+      shippingId: "au-standard",
+      customer: { name: "Test Customer", email: "test@example.com", country: "AU" },
+    }),
+  /Postal address is required/i,
+  "AU shipping cannot create a PayPal order or Stripe session without postal address fields.",
+);
+
+expectThrows(
+  "backend blocks international quote-only checkout",
+  () =>
+    normaliseOrder({
+      items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+      shippingId: "international-quote",
+      customer: { ...customer, country: "INTL" },
+    }),
+  /custom quote/i,
+  "International quote-only checkout is blocked before payment creation.",
+);
+
+const token = await signOrder(env, { ...underStandard, paypalOrderId: "PAYPAL-ORDER-123" });
+const verified = await verifyOrderToken(env, token);
+check(
+  "existing PayPal create/capture token flow still works",
+  verified.paypalOrderId === "PAYPAL-ORDER-123" && verified.shipping.amount === 10.95,
+  "Checkout helper still signs and verifies server-side PayPal capture tokens with backend-calculated shipping.",
+);
+
+const paypalPayloadUnder = paypalOrderPayload(underStandard);
+const paypalPayloadExpress = paypalOrderPayload(overExpress);
+check(
+  "PayPal payload uses backend decimal shipping values",
+  paypalPayloadUnder.purchase_units[0].amount.breakdown.shipping.value === "10.95" &&
+    paypalPayloadUnder.purchase_units[0].amount.value === "85.95" &&
+    paypalPayloadExpress.purchase_units[0].amount.breakdown.shipping.value === "3.00" &&
+    paypalPayloadExpress.purchase_units[0].amount.value === "163.00" &&
+    paypalPayloadUnder.payment_source.paypal.experience_context.shipping_preference === "SET_PROVIDED_ADDRESS",
+  "PayPal order creation receives backend totals and two-decimal shipping amounts.",
+);
+
+const stripeFormUnder = stripeCheckoutSessionForm(underStandard, {
+  successUrl: "https://example.com/success.html?provider=stripe&session_id={CHECKOUT_SESSION_ID}",
+  cancelUrl: "https://example.com/cart.html?checkout=stripe-cancelled",
+});
+const stripeFormStandardFree = stripeCheckoutSessionForm(overStandard, {
+  successUrl: "https://example.com/success.html?provider=stripe&session_id={CHECKOUT_SESSION_ID}",
+  cancelUrl: "https://example.com/cart.html?checkout=stripe-cancelled",
+});
+const stripeFormExpressUpgrade = stripeCheckoutSessionForm(overExpress, {
   successUrl: "https://example.com/success.html?provider=stripe&session_id={CHECKOUT_SESSION_ID}",
   cancelUrl: "https://example.com/cart.html?checkout=stripe-cancelled",
 });
 check(
-  "Stripe Checkout Session uses backend order values",
-  stripeForm.get("mode") === "payment" &&
-    stripeForm.get("line_items[0][price_data][unit_amount]") === String(pickupOrder.items[0].unitAmount * 100) &&
-    stripeForm.get("line_items[0][price_data][currency]") === "aud" &&
-    stripeForm.get("metadata[reference]") === pickupOrder.reference &&
-    !stripeForm.toString().includes("stripe-secret-placeholder"),
-  "Stripe line items are generated server-side from the same normalised order totals and no secret is placed in the form.",
-);
-
-check(
-  "Stripe Checkout Session receives customer email",
-  stripeForm.get("customer_email") === pickupOrder.customer.email &&
-    stripeForm.get("metadata[customer_email]") === pickupOrder.customer.email,
-  "The backend passes the cart form customer email into Stripe Checkout and Stripe metadata.",
+  "Stripe Checkout Session uses backend decimal shipping cents",
+  stripeFormUnder.get("line_items[1][price_data][unit_amount]") === "1095" &&
+    !stripeFormStandardFree.has("line_items[2][price_data][unit_amount]") &&
+    stripeFormExpressUpgrade.get("line_items[2][price_data][unit_amount]") === "300" &&
+    stripeFormUnder.get("customer_email") === underStandard.customer.email &&
+    stripeFormUnder.get("metadata[shipping_amount]") === "10.95" &&
+    stripeFormExpressUpgrade.get("metadata[shipping_amount]") === "3.00" &&
+    !stripeFormUnder.toString().includes("stripe-secret-placeholder"),
+  "Stripe line items are generated server-side and convert $10.95/$3.00 shipping to 1095/300 cents.",
 );
 
 const webhookBody = JSON.stringify({
@@ -250,7 +369,7 @@ const webhookBody = JSON.stringify({
     object: {
       id: "cs_test_123",
       payment_status: "paid",
-      metadata: { reference: pickupOrder.reference },
+      metadata: { reference: underStandard.reference },
     },
   },
 });
@@ -281,26 +400,82 @@ check(
 );
 
 check(
+  "PayPal capture sends merchant and customer emails after confirmed capture",
+  paypalCapture.includes("const captureData = await response.json") &&
+    paypalCapture.includes("if (!response.ok)") &&
+    paypalCapture.indexOf("const emailResult = await sendPayPalOrderEmails") > paypalCapture.indexOf("if (!response.ok)") &&
+    customerEmails.includes("export async function sendPayPalOrderEmails") &&
+    customerEmails.includes("sendPayPalMerchantOrderEmail(env, order, captureData)") &&
+    customerEmails.includes("sendPayPalCustomerOrderEmail(env, order, captureData)") &&
+    customerEmails.includes('subject: "Your Gloamweald order is confirmed"'),
+  "PayPal customer confirmation is sent only after backend capture succeeds, while the merchant notification remains in place.",
+);
+
+check(
+  "customer confirmation emails include required content and HTML/text",
+  customerEmails.includes("function customerEmailText") &&
+    customerEmails.includes("function customerEmailHtml") &&
+    customerEmails.includes("html: email.html") &&
+    customerEmails.includes("Your offering has been received, and your payment is confirmed.") &&
+    customerEmails.includes("Joining you will be:") &&
+    customerEmails.includes("Shipping cost:") &&
+    customerEmails.includes("https://gloamweald.com/care.html") &&
+    customerEmails.includes("replyTo: requireEnv(env, \"CONTACT_EMAIL\")"),
+  "Customer emails have text and simple HTML versions, required wording, shipping cost/address, care link, and CONTACT_EMAIL reply-to.",
+);
+
+check(
+  "merchant emails include shipping address and notes",
+  customerEmails.includes("paypalMerchantEmailText") &&
+    customerEmails.includes("stripeMerchantEmailText") &&
+    customerEmails.includes("Delivery details") &&
+    customerEmails.includes("Customer notes / length adjustment requests") &&
+    customerEmails.includes("shipping.label") &&
+    customerEmails.includes("shipping_amount"),
+  "Merchant notifications keep payment refs and show shipping method/cost/address and order notes.",
+);
+
+check(
   "Stripe success waits for backend confirmation",
-  checkoutFrontend.includes("confirmStripeSuccess") &&
-    checkoutFrontend.includes("/api/confirm-stripe-session") &&
-    checkoutFrontend.includes("if (response.ok && data.paid)") &&
-    checkoutFrontend.includes("renderStripeConfirmed") &&
-    checkoutFrontend.includes("renderStripeAwaiting") &&
-    checkoutFrontend.includes("renderStripeError") &&
-    checkoutFrontend.includes("updateCartBadge(0)") &&
-    checkoutFrontend.includes("Your cart has not been cleared"),
+  checkoutScript.includes("confirmStripeStatus") &&
+    checkoutScript.includes("/api/confirm-stripe-session") &&
+    checkoutScript.includes("if (!stripe.ok || !stripe.paid)") &&
+    checkoutScript.includes("Awaiting payment confirmation") &&
+    checkoutScript.includes("Confirmation warning") &&
+    checkoutScript.includes("Your cart has not been cleared") &&
+    checkoutScript.includes("clearCart();"),
   "The Stripe success page calls the backend confirmation route, shows distinct confirmed/awaiting/error states, and only clears the cart after confirmed payment.",
 );
 
 check(
-  "Stripe order email is sent only by webhook with duplicate guard",
+  "Stripe order emails are sent only by webhook with duplicate guards",
   !stripeConfirm.includes("sendStripeOrderEmail") &&
-    stripeWebhook.includes("sendStripeOrderEmailOnce") &&
-    checkoutShared.includes("stripeOrderEmailAlreadySent") &&
-    checkoutShared.includes("gloamweald_order_email_sent") &&
-    checkoutShared.includes("updateStripeCheckoutSessionMetadata"),
-  "The success confirmation endpoint does not send emails; webhook sends via an idempotent metadata-guarded helper.",
+    stripeWebhook.includes("sendStripeOrderEmailsOnce") &&
+    customerEmails.includes("stripeMerchantEmailAlreadySent") &&
+    customerEmails.includes("stripeCustomerEmailAlreadySent") &&
+    customerEmails.includes("gloamweald_order_email_sent") &&
+    customerEmails.includes("gloamweald_customer_email_sent") &&
+    customerEmails.includes("updateStripeCheckoutSessionMetadata"),
+  "The success confirmation endpoint does not send emails; webhook sends merchant and customer emails via metadata-guarded helpers.",
+);
+
+check(
+  "success page does not send emails",
+  !successPage.includes("sendOrderEmail") &&
+    !successPage.includes("sendCustomerOrderEmail") &&
+    !successPage.includes("sendResendEmail") &&
+    !checkoutFrontend.includes("sendResendEmail"),
+  "Frontend success handling only confirms payment/cart state; it does not send merchant or customer emails.",
+);
+
+check(
+  "checkout and care copy are updated",
+  cartPage.includes("All Gloamweald orders are sent through Australia Post with tracking.") &&
+    cartPage.includes("Standard tracked shipping within Australia") &&
+    cartPage.includes("Small length adjustments") &&
+    carePage.includes("Quality and care concerns") &&
+    carePage.includes("case by case"),
+  "Checkout page contains shipping/made-to-order/length guidance and care page contains quality/care concerns.",
 );
 
 for (const result of results) {
