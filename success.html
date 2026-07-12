@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="products.js" defer></script>
   <script src="script.js" defer></script>
+  <script src="stripe-checkout.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -31,20 +32,20 @@
     <header class="page-hero page-hero--cart">
       <p class="eyebrow">The raven has carried it</p>
       <h1>Order status</h1>
-      <p>Payment confirmation appears here after the secure checkout backend confirms PayPal capture.</p>
+      <p>If you have just returned from checkout, this page verifies payment with the secure backend before changing your cart.</p>
     </header>
 
     <section class="section success-section" aria-labelledby="success-title">
       <div class="success-panel" data-payment-success>
-        <p class="eyebrow">Awaiting confirmation</p>
-        <h2 id="success-title">No confirmed payment is shown yet.</h2>
+        <p class="eyebrow" data-success-eyebrow>Checking payment</p>
+        <h2 id="success-title" data-success-title>Checking for a confirmed payment.</h2>
         <p data-success-message>
-          If you have just paid and this page does not update with PayPal order details, contact Gloamweald before trying again.
+          Keep this page open while Gloamweald checks the payment status. Your cart will only be cleared after payment is confirmed.
         </p>
         <p class="checkout-warning" data-success-warning hidden></p>
         <dl class="success-details" data-success-details hidden>
-          <div><dt>PayPal order</dt><dd data-success-order></dd></div>
-          <div><dt>Capture</dt><dd data-success-capture></dd></div>
+          <div><dt data-success-order-label>Order</dt><dd data-success-order></dd></div>
+          <div><dt data-success-capture-label>Payment reference</dt><dd data-success-capture></dd></div>
         </dl>
         <div class="checkout-result-actions">
           <a class="button button--solid" href="shop.html">Return to shop</a>
