@@ -1,0 +1,21 @@
+.checkout-info {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: rgba(229, 221, 202, 0.025);
+}
+
+.checkout-info h3 {
+  margin: 0;
+  color: var(--bone);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.checkout-info p {
+  margin: 0;
+  color: var(--bone-dim);
+  font-family: var(--sans);
+  font-size: 0.86rem;
+}
