@@ -40,6 +40,14 @@
     localStorage.removeItem(CART_STORAGE_KEY);
   }
 
+  function updateCartBadge(count = 0) {
+    document.querySelectorAll("[data-cart-count]").forEach((badge) => {
+      badge.textContent = String(count);
+      badge.hidden = count === 0;
+      badge.setAttribute("aria-label", `${count} item${count === 1 ? "" : "s"} in cart`);
+    });
+  }
+
   function formPayload(form) {
     const formData = new FormData(form);
 
@@ -147,6 +155,87 @@
     });
   }
 
+  function setSuccessDetails(panel, { sessionId, paymentIntent }) {
+    setSuccessText(["[data-success-order-label]"], "Stripe session");
+    setSuccessText(["[data-success-capture-label]"], "Payment intent");
+    setSuccessText(["[data-success-order]"], sessionId);
+    setSuccessText(["[data-success-capture]"], paymentIntent || "Confirmed by Stripe");
+
+    const details = panel.querySelector("[data-success-details]");
+    if (details) details.hidden = false;
+  }
+
+  function hideSuccessDetails(panel) {
+    const details = panel.querySelector("[data-success-details]");
+    if (details) details.hidden = true;
+  }
+
+  function renderStripeConfirmed(panel, data, sessionId) {
+    clearCart();
+    updateCartBadge(0);
+
+    setSuccessText([".page-hero--cart h1"], "Payment confirmed");
+    setSuccessText(
+      [".page-hero--cart p:last-child"],
+      "Your Stripe payment was confirmed by the secure checkout backend.",
+    );
+    setSuccessText(["[data-success-eyebrow]"], "Payment confirmed");
+    setSuccessText(["[data-success-title]"], "Stripe payment confirmed.");
+    setSuccessText(
+      ["[data-success-message]"],
+      "Your cart has been cleared. Keep your Stripe receipt for your records; Gloamweald receives order details from the Stripe webhook.",
+    );
+    setSuccessDetails(panel, {
+      sessionId: data.sessionID || sessionId,
+      paymentIntent: data.paymentIntent || "Confirmed by Stripe",
+    });
+
+    const warning = panel.querySelector("[data-success-warning]");
+    if (warning) warning.hidden = true;
+  }
+
+  function renderStripeAwaiting(panel, data, sessionId) {
+    setSuccessText([".page-hero--cart h1"], "Awaiting payment confirmation");
+    setSuccessText(
+      [".page-hero--cart p:last-child"],
+      "Stripe has returned you to Gloamweald, but the backend has not confirmed the payment as paid yet.",
+    );
+    setSuccessText(["[data-success-eyebrow]"], "Awaiting confirmation");
+    setSuccessText(["[data-success-title]"], "Awaiting payment confirmation.");
+    setSuccessText(
+      ["[data-success-message]"],
+      "Your cart has not been cleared. Keep your Stripe receipt and contact Gloamweald if this does not update or if you need help matching the payment to your order.",
+    );
+    hideSuccessDetails(panel);
+
+    const warning = panel.querySelector("[data-success-warning]");
+    if (warning) {
+      warning.hidden = false;
+      warning.textContent = `Stripe session ${data.sessionID || sessionId} is not confirmed as paid yet.`;
+    }
+  }
+
+  function renderStripeError(panel, message) {
+    setSuccessText([".page-hero--cart h1"], "Payment confirmation needs attention");
+    setSuccessText(
+      [".page-hero--cart p:last-child"],
+      "The secure checkout backend could not confirm the Stripe payment status.",
+    );
+    setSuccessText(["[data-success-eyebrow]"], "Confirmation warning");
+    setSuccessText(["[data-success-title]"], "Stripe payment could not be confirmed.");
+    setSuccessText(
+      ["[data-success-message]"],
+      "Your cart has not been cleared. Please keep your Stripe receipt and contact Gloamweald before trying payment again.",
+    );
+    hideSuccessDetails(panel);
+
+    const warning = panel.querySelector("[data-success-warning]");
+    if (warning) {
+      warning.hidden = false;
+      warning.textContent = message;
+    }
+  }
+
   async function confirmStripeSuccess() {
     const panel = document.querySelector("[data-payment-success]");
     if (!panel) return;
@@ -155,17 +244,19 @@
     if (params.get("provider") !== "stripe") return;
 
     const sessionId = params.get("session_id");
-    const warning = panel.querySelector("[data-success-warning]");
 
     if (!sessionId) {
-      if (warning) {
-        warning.hidden = false;
-        warning.textContent = "Stripe returned without a Checkout Session ID. Contact Gloamweald before trying again.";
-      }
+      renderStripeError(panel, "Stripe returned without a Checkout Session ID. Contact Gloamweald before trying again.");
       return;
     }
 
     setSuccessText([".page-hero--cart p:last-child"], "Confirming your Stripe payment with the secure checkout backend...");
+    setSuccessText(["[data-success-eyebrow]"], "Checking payment");
+    setSuccessText(["[data-success-title]"], "Checking Stripe payment confirmation.");
+    setSuccessText(
+      ["[data-success-message]"],
+      "Please wait while Gloamweald checks Stripe's payment status. Your cart has not been cleared yet.",
+    );
 
     try {
       const response = await fetch(`${CONFIRM_STRIPE_SESSION_ENDPOINT}?${new URLSearchParams({ session_id: sessionId })}`, {
@@ -173,34 +264,19 @@
         cache: "no-store",
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.paid) {
-        throw new Error(data.error || "Stripe payment has not been confirmed by the backend.");
+      if (response.ok && data.paid) {
+        renderStripeConfirmed(panel, data, sessionId);
+        return;
       }
 
-      clearCart();
-      setSuccessText([".page-hero--cart h1"], "Payment confirmed");
-      setSuccessText(
-        ["[data-success-message]"],
-        "Your cart has been cleared. Keep your Stripe receipt for your records; Gloamweald receives order details from the Stripe webhook.",
-      );
-      setSuccessText(["[data-success-order-label]"], "Stripe session");
-      setSuccessText(["[data-success-capture-label]"], "Payment intent");
-      setSuccessText(["[data-success-order]"], data.sessionID || sessionId);
-      setSuccessText(["[data-success-capture]"], data.paymentIntent || "Confirmed by Stripe");
+      if (data.paid === false && (data.status || data.paymentStatus)) {
+        renderStripeAwaiting(panel, data, sessionId);
+        return;
+      }
 
-      const details = panel.querySelector("[data-success-details]");
-      if (details) details.hidden = false;
-      if (warning) warning.hidden = true;
+      throw new Error(data.error || "Stripe payment has not been confirmed by the backend.");
     } catch (error) {
-      setSuccessText([".page-hero--cart h1"], "Payment not confirmed");
-      setSuccessText(
-        ["[data-success-message]"],
-        "Your cart has not been cleared. Please contact Gloamweald before trying payment again.",
-      );
-      if (warning) {
-        warning.hidden = false;
-        warning.textContent = error.message;
-      }
+      renderStripeError(panel, error.message);
     }
   }
 

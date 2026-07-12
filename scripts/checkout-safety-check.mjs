@@ -236,6 +236,13 @@ check(
   "Stripe line items are generated server-side from the same normalised order totals and no secret is placed in the form.",
 );
 
+check(
+  "Stripe Checkout Session receives customer email",
+  stripeForm.get("customer_email") === pickupOrder.customer.email &&
+    stripeForm.get("metadata[customer_email]") === pickupOrder.customer.email,
+  "The backend passes the cart form customer email into Stripe Checkout and Stripe metadata.",
+);
+
 const webhookBody = JSON.stringify({
   id: "evt_test",
   type: "checkout.session.completed",
@@ -277,9 +284,13 @@ check(
   "Stripe success waits for backend confirmation",
   checkoutFrontend.includes("confirmStripeSuccess") &&
     checkoutFrontend.includes("/api/confirm-stripe-session") &&
-    checkoutFrontend.includes("if (!response.ok || !data.paid)") &&
-    checkoutFrontend.includes("clearCart();"),
-  "The Stripe success page calls the backend confirmation route before clearing the cart.",
+    checkoutFrontend.includes("if (response.ok && data.paid)") &&
+    checkoutFrontend.includes("renderStripeConfirmed") &&
+    checkoutFrontend.includes("renderStripeAwaiting") &&
+    checkoutFrontend.includes("renderStripeError") &&
+    checkoutFrontend.includes("updateCartBadge(0)") &&
+    checkoutFrontend.includes("Your cart has not been cleared"),
+  "The Stripe success page calls the backend confirmation route, shows distinct confirmed/awaiting/error states, and only clears the cart after confirmed payment.",
 );
 
 check(
