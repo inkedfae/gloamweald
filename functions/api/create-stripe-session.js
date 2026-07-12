@@ -2,9 +2,9 @@ import {
   assertStripeCheckoutConfigured,
   createStripeCheckoutSession,
   json,
-  normaliseOrder,
   parseJsonBody,
 } from "../../src/checkout-shared.js";
+import { normaliseOrder } from "../../src/checkout-order.js";
 
 /*
   Cloudflare Pages route:

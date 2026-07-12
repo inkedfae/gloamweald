@@ -1,13 +1,13 @@
 import {
   assertCheckoutConfigured,
   json,
-  normaliseOrder,
   parseJsonBody,
   paypalAccessToken,
   paypalBaseUrl,
   paypalOrderPayload,
   signOrder,
 } from "../../src/checkout-shared.js";
+import { normaliseOrder } from "../../src/checkout-order.js";
 
 /*
   Cloudflare Pages route:
