@@ -4,9 +4,9 @@ import {
   parseJsonBody,
   paypalAccessToken,
   paypalBaseUrl,
-  sendOrderEmail,
   verifyOrderToken,
 } from "../../src/checkout-shared.js";
+import { sendPayPalOrderEmails } from "../../src/customer-order-emails.js";
 
 /*
   Cloudflare Pages route:
@@ -44,21 +44,26 @@ export async function onRequestPost(context) {
       });
     }
 
-    try {
-      await sendOrderEmail(context.env, order, captureData);
-    } catch (error) {
+    const captureID = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id || "";
+    const emailResult = await sendPayPalOrderEmails(context.env, order, captureData);
+
+    if (!emailResult.merchantEmailSent || !emailResult.customerEmailSent) {
       return json(200, {
-        warning: "Payment was captured, but the order email could not be sent. Contact Gloamweald with the PayPal order ID.",
+        warning: "Payment was captured, but one or more order emails could not be sent. Contact Gloamweald with the PayPal order ID.",
         orderID,
-        captureID: captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id || "",
-        emailSent: false,
+        captureID,
+        emailSent: emailResult.merchantEmailSent,
+        merchantEmailSent: emailResult.merchantEmailSent,
+        customerEmailSent: emailResult.customerEmailSent,
       });
     }
 
     return json(200, {
       orderID,
-      captureID: captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id || "",
+      captureID,
       emailSent: true,
+      merchantEmailSent: true,
+      customerEmailSent: true,
     });
   } catch (error) {
     return json(400, { error: error.message });
