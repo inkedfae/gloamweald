@@ -31,8 +31,9 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A spinal Elf weave creates a flexible bracelet with a raised central ridge and intricate texture. Dark and distinctive, it resembles something shaped around an ancient spine.",
+      "A spinal Elf weave creates a flexible bracelet with a raised central ridge and intricate texture. Dark and distinctive, it resembles something shaped around an ancient spine. It fastens with a substantial ring clasp that can be worn as a centrepiece or turned discreetly beneath the wrist.",
     material: "Stainless steel",
+    clasp: "Ring clip",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -61,6 +62,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "The classic Half Persian weave creates a dense, flexible bracelet that drapes comfortably around the wrist. Its flowing pattern catches the light with every movement, balancing simplicity with quiet strength.",
     material: "Stainless steel",
+    clasp: "Lobster clasp",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -85,6 +87,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A distinctive raised weave with a repeating spinal pattern that creates depth and texture. Bold without being bulky, it echoes the strength and resilience of bone.",
     material: "Stainless steel",
+    clasp: "Lobster clasp",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -109,6 +112,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "This intricate Celtic-inspired weave has an elegant balance of strength and detail. If you look closely, it may seem to be looking back at you, watching over you with quiet vigilance.",
     material: "Stainless steel",
+    clasp: "Toggle bar",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -133,6 +137,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A tightly woven sheet of European 4-in-1 maille with a dense, armour-inspired texture. Small rings create a refined pattern that recalls the close-linked mail once worn beneath cloaks and plate.",
     material: "Stainless steel",
+    clasp: "Slide lock",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -157,6 +162,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A balanced European 4-in-1 weave with a little more openness and flexibility. As light passes through the larger rings, the repeating geometry becomes part of the design itself.",
     material: "Stainless steel",
+    clasp: "Slide lock",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -181,6 +187,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A bold, open European 4-in-1 weave with a lighter feel and unmistakable chainmail character. Larger rings reveal the weave in its simplest form, where strength comes from the links working together.",
     material: "Stainless steel",
+    clasp: "Slide lock",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -205,6 +212,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A slim Half Persian chain with an understated, close-wearing profile. Its narrow flowing pattern sits comfortably against the body and layers easily with other necklaces.",
     material: "Stainless steel",
+    clasp: "Lobster clasp",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -229,6 +237,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body, equally at home worn alone or with a pendant.",
     material: "Stainless steel",
+    clasp: "Lobster clasp",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -244,15 +253,16 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     id: "waymarker-necklace",
     name: "Waymarker Necklace",
     type: "necklaces",
-    components: [],
+    components: ["gemstone"],
     collection: null,
     price: {
       amount: 180,
       currency: CATALOG_CURRENCY,
     },
     description:
-      "Byzantine weave is interrupted by oversized rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each larger link quietly draws the eye onward.",
-    material: "Stainless steel",
+      "Byzantine weave interrupted by thick rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each link leads to a tapered point - a map for forgotten places, with a larkivite gemstone to keep you on the path.",
+    material: "Stainless steel · gemstone",
+    clasp: "Lobster clasp",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -275,8 +285,9 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       currency: CATALOG_CURRENCY,
     },
     description:
-      "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its articulated structure brings the suggestion of a spine to a substantial everyday chain.",
+      "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its thick, mirrored structure brings the suggestion a chain of bones to a substantial everyday piece.",
     material: "Stainless steel",
+    clasp: "Carabiner",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -301,6 +312,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A flowing Half Persian wallet chain finished with a small charm suspended from Byzantine links. The fine hanging detail moves freely beneath the heavier main chain.",
     material: "Stainless steel",
+    clasp: "Carabiner",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
