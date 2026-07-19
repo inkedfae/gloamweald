@@ -39,9 +39,31 @@
     <section class="section checkout-section" aria-labelledby="checkout-title">
       <div class="section-heading section-heading--compact">
         <h2 id="checkout-title">Checkout</h2>
-        <p>This checkout calculates the cart and shipping, then payment creation and confirmation happen through backend endpoints. Order details are emailed server-side after successful payment confirmation.</p>
+        <p>Review your cart, choose delivery, and add any sizing notes before payment.</p>
         <p>Most Gloamweald pieces are made to order or finished to size after payment. If extra details are needed before making or posting your piece, Gloamweald will contact you using the email provided at checkout.</p>
       </div>
+
+      <section class="checkout-info checkout-info--compact" aria-labelledby="length-info-title">
+        <h3 id="length-info-title">Small length adjustments</h3>
+        <p>Most made-to-order Gloamweald pieces can have up to 2 cm added or removed at no extra cost.</p>
+        <p>If you would like a small adjustment, include the item name and requested change in the order notes, for example:</p>
+        <p>&ldquo;Dark Elf Bracelet +1.5 cm&rdquo;</p>
+        <p>or</p>
+        <p>&ldquo;Small Half-Persian Necklace -2 cm&rdquo;</p>
+        <p>Requests over 2 cm, major sizing changes, or design changes should be discussed by email or Instagram before ordering.</p>
+      </section>
+
+      <details class="checkout-info checkout-info--details">
+        <summary>More about delivery and shipping</summary>
+        <div class="checkout-info__body">
+          <p>All Gloamweald orders are sent through Australia Post with tracking.</p>
+          <p>Standard tracked shipping within Australia &mdash; $10.95</p>
+          <p>Express tracked shipping within Australia &mdash; $13.95</p>
+          <p>Standard tracked shipping is free on Australian orders of $150 or more. An express upgrade is available for an additional $3.</p>
+          <p>Most Gloamweald pieces are made to order or finished to size before dispatch. Tracking details will be emailed once your order has been posted.</p>
+          <p>Gloamweald is an online-only studio and does not currently offer local pickup as a standard checkout option. If you would like to discuss pickup, please contact Gloamweald by email or Instagram before placing your order.</p>
+        </div>
+      </details>
 
       <div class="checkout-layout">
         <section class="cart-panel" aria-labelledby="cart-title">
@@ -103,30 +125,10 @@
           </label>
           <p class="shipping-note" data-shipping-note></p>
 
-          <section class="checkout-info" aria-labelledby="shipping-info-title">
-            <h3 id="shipping-info-title">Shipping</h3>
-            <p>All Gloamweald orders are sent through Australia Post with tracking.</p>
-            <p>Standard tracked shipping within Australia &mdash; $10.95</p>
-            <p>Express tracked shipping within Australia &mdash; $13.95</p>
-            <p>Standard tracked shipping is free on Australian orders of $150 or more. An express upgrade is available for an additional $3.</p>
-            <p>Most Gloamweald pieces are made to order or finished to size before dispatch. Tracking details will be emailed once your order has been posted.</p>
-            <p>Gloamweald is an online-only studio and does not currently offer local pickup as a standard checkout option. If you would like to discuss pickup, please contact Gloamweald by email or Instagram before placing your order.</p>
-          </section>
-
           <label class="field-full">
             Notes <span>optional</span>
             <textarea name="notes" rows="4" placeholder="Sizing, preferred clasp, gift note, or anything I should know."></textarea>
           </label>
-
-          <section class="checkout-info" aria-labelledby="length-info-title">
-            <h3 id="length-info-title">Small length adjustments</h3>
-            <p>Most made-to-order Gloamweald pieces can have up to 2 cm added or removed at no extra cost.</p>
-            <p>If you would like a small adjustment, include the item name and requested change in the order notes, for example:</p>
-            <p>&ldquo;Dark Elf Bracelet +1.5 cm&rdquo;</p>
-            <p>or</p>
-            <p>&ldquo;Small Half-Persian Necklace -2 cm&rdquo;</p>
-            <p>Requests over 2 cm, major sizing changes, or design changes should be discussed by email or Instagram before ordering.</p>
-          </section>
 
           <section class="paypal-checkout" aria-labelledby="paypal-title" data-paypal-checkout>
             <h3 id="paypal-title">Pay with PayPal</h3>
@@ -153,7 +155,7 @@
             <div><dt>Shipping</dt><dd data-cart-shipping>$0.00</dd></div>
             <div class="summary-total"><dt>Total</dt><dd data-cart-total>$0.00</dd></div>
           </dl>
-          <p>PayPal and Stripe use Cloudflare backend endpoints. Public checkout config is loaded from Cloudflare, while server-only credentials stay in backend environment variables.</p>
+          <p>Your order confirmation will be emailed after payment is confirmed. Keep your payment receipt for your records.</p>
         </aside>
       </div>
     </section>
