@@ -25,14 +25,14 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Dark Elf Bracelet",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 75,
       currency: CATALOG_CURRENCY,
     },
     description:
       "A spinal Elf weave creates a flexible bracelet with a raised central ridge and intricate texture. Dark and distinctive, it resembles something shaped around an ancient spine.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -60,7 +60,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "The classic Half Persian weave creates a dense, flexible bracelet that drapes comfortably around the wrist. Its flowing pattern catches the light with every movement, balancing simplicity with quiet strength.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -84,7 +84,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "A distinctive raised weave with a repeating spinal pattern that creates depth and texture. Bold without being bulky, it echoes the strength and resilience of bone.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -101,14 +101,14 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Celtic Visions Bracelet",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 90,
       currency: CATALOG_CURRENCY,
     },
     description:
       "This intricate Celtic-inspired weave has an elegant balance of strength and detail. If you look closely, it may seem to be looking back at you, watching over you with quiet vigilance.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -132,7 +132,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "A tightly woven sheet of European 4-in-1 maille with a dense, armour-inspired texture. Small rings create a refined pattern that recalls the close-linked mail once worn beneath cloaks and plate.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -156,7 +156,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "A balanced European 4-in-1 weave with a little more openness and flexibility. As light passes through the larger rings, the repeating geometry becomes part of the design itself.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -180,7 +180,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "A bold, open European 4-in-1 weave with a lighter feel and unmistakable chainmail character. Larger rings reveal the weave in its simplest form, where strength comes from the links working together.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -204,7 +204,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "A slim Half Persian chain with an understated, close-wearing profile. Its narrow flowing pattern sits comfortably against the body and layers easily with other necklaces.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -228,7 +228,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     },
     description:
       "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body, equally at home worn alone or with a pendant.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -245,14 +245,14 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Waymarker Necklace",
     type: "necklaces",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 180,
       currency: CATALOG_CURRENCY,
     },
     description:
       "Byzantine weave is interrupted by oversized rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each larger link quietly draws the eye onward.",
-    material: "316 stainless steel · stainless steel clasp",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -269,14 +269,14 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Bonelink Wallet Chain",
     type: "wallet-chains",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 110,
       currency: CATALOG_CURRENCY,
     },
     description:
       "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its articulated structure brings the suggestion of a spine to a substantial everyday chain.",
-    material: "316 stainless steel · stainless steel hardware",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
@@ -293,14 +293,14 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Half Persian Wallet Chain with Charm",
     type: "wallet-chains",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 85,
       currency: CATALOG_CURRENCY,
     },
     description:
       "A flowing Half Persian wallet chain finished with a small charm suspended from Byzantine links. The fine hanging detail moves freely beneath the heavier main chain.",
-    material: "316 stainless steel · stainless steel hardware",
+    material: "Stainless steel",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
