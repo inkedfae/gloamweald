@@ -30,15 +30,17 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       amount: 75,
       currency: CATALOG_CURRENCY,
     },
-    description: "A spinal elf-weave bracelet: flexible, textured, and ideal for every-day wear.",
+    description:
+      "A spinal Elf weave creates a flexible bracelet with a raised central ridge and intricate texture. Dark and distinctive, it resembles something shaped around an ancient spine. It fastens with a substantial ring clasp that can be worn as a centrepiece or turned discreetly beneath the wrist.",
     material: "Stainless steel",
+    clasp: "Ring clip",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
     images: [
       {
         src: "assets/images/dark-elf-bracelet-primary.jpg",
-        alt: "Dark Elf spinal elf-weave bracelet worn around a tattooed wrist",
+        alt: "Dark Elf spinal Elf-weave bracelet worn around a tattooed wrist",
       },
       {
         src: "assets/images/dark-elf-bracelet-underneath.jpg",
@@ -46,29 +48,232 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       },
     ],
   },
+
+  {
+    id: "half-persian-bracelet",
+    name: "Half Persian Bracelet",
+    type: "bracelets",
+    components: [],
+    collection: "classics",
+    price: {
+      amount: 80,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "The classic Half Persian weave creates a dense, flexible bracelet that drapes comfortably around the wrist. Its flowing pattern catches the light with every movement, balancing simplicity with quiet strength.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-half-persian-bracelet.jpg",
+        alt: "Half Persian stainless steel bracelet",
+      },
+    ],
+  },
+
+  {
+    id: "vertebrae-bracelet",
+    name: "Vertebrae Bracelet",
+    type: "bracelets",
+    components: [],
+    collection: "classics",
+    price: {
+      amount: 90,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "A distinctive raised weave with a repeating spinal pattern that creates depth and texture. Bold without being bulky, it echoes the strength and resilience of bone.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-vertebrae-bracelet.jpg",
+        alt: "Vertebrae-weave stainless steel bracelet",
+      },
+    ],
+  },
+
+  {
+    id: "celtic-visions-bracelet",
+    name: "Celtic Visions Bracelet",
+    type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: 90,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "This intricate Celtic-inspired weave has an elegant balance of strength and detail. If you look closely, it may seem to be looking back at you, watching over you with quiet vigilance.",
+    material: "Stainless steel",
+    clasp: "Toggle bar",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-celtic-visions-bracelet.jpg",
+        alt: "Celtic Visions stainless steel bracelet",
+      },
+    ],
+  },
+
+  {
+    id: "european-4-in-1-cuff-6mm",
+    name: "European 4-in-1 Cuff — 6 mm",
+    type: "bracelets",
+    components: [],
+    collection: "classics",
+    price: {
+      amount: 110,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "A tightly woven sheet of European 4-in-1 maille with a dense, armour-inspired texture. Small rings create a refined pattern that recalls the close-linked mail once worn beneath cloaks and plate.",
+    material: "Stainless steel",
+    clasp: "Slide lock",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-european-cuff-6mm.jpg",
+        alt: "Dense European 4-in-1 stainless steel cuff made with 6 mm rings",
+      },
+    ],
+  },
+
+  {
+    id: "european-4-in-1-cuff-7mm",
+    name: "European 4-in-1 Cuff — 7 mm",
+    type: "bracelets",
+    components: [],
+    collection: "classics",
+    price: {
+      amount: 100,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "A balanced European 4-in-1 weave with a little more openness and flexibility. As light passes through the larger rings, the repeating geometry becomes part of the design itself.",
+    material: "Stainless steel",
+    clasp: "Slide lock",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-european-cuff-7mm.jpg",
+        alt: "European 4-in-1 stainless steel cuff made with 7 mm rings",
+      },
+    ],
+  },
+
+  {
+    id: "european-4-in-1-cuff-8mm",
+    name: "European 4-in-1 Cuff — 8 mm",
+    type: "bracelets",
+    components: [],
+    collection: "classics",
+    price: {
+      amount: 90,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "A bold, open European 4-in-1 weave with a lighter feel and unmistakable chainmail character. Larger rings reveal the weave in its simplest form, where strength comes from the links working together.",
+    material: "Stainless steel",
+    clasp: "Slide lock",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-european-cuff-8mm.jpg",
+        alt: "Open European 4-in-1 stainless steel cuff made with 8 mm rings",
+      },
+    ],
+  },
+
   {
     id: "small-half-persian-necklace",
-    name: "Small Half-Persian Necklace",
+    name: "Small Half Persian Necklace",
     type: "necklaces",
     components: [],
     collection: "classics",
     price: {
-      amount: null,
+      amount: 130,
       currency: CATALOG_CURRENCY,
-      label: "Price on enquiry",
     },
-    description: "A slim 7 mm width half-Persian chain: understated, close-wearing, and perfect for daily wear and layering.",
+    description:
+      "A slim Half Persian chain with an understated, close-wearing profile. Its narrow flowing pattern sits comfortably against the body and layers easily with other necklaces.",
     material: "Stainless steel",
+    clasp: "Lobster clasp",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
     images: [
       {
         src: "assets/images/half-persian-necklace.jpg",
-        alt: "Small half-Persian stainless steel necklace worn close around a tattooed neck",
+        alt: "Small Half Persian stainless steel necklace worn close around a tattooed neck",
       },
     ],
   },
+
+  {
+    id: "full-persian-necklace",
+    name: "Full Persian Necklace",
+    type: "necklaces",
+    components: [],
+    collection: "classics",
+    price: {
+      amount: 170,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body, equally at home worn alone or with a pendant.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-full-persian-necklace.jpg",
+        alt: "Full Persian stainless steel necklace",
+      },
+    ],
+  },
+
+  {
+    id: "waymarker-necklace",
+    name: "Waymarker Necklace",
+    type: "necklaces",
+    components: ["gemstone"],
+    collection: null,
+    price: {
+      amount: 180,
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "Byzantine weave interrupted by thick rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each link leads to a tapered point - a map for forgotten places, with a larkivite gemstone to keep you on the path.",
+    material: "Stainless steel · gemstone",
+    clasp: "Lobster clasp",
+    status: "Available by enquiry",
+    orderable: true,
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-waymarker-necklace.jpg",
+        alt: "Waymarker necklace combining Byzantine weave with oversized linking rings",
+      },
+    ],
+  },
+
   {
     id: "bonelink-wallet-chain",
     name: "Bonelink Wallet Chain",
@@ -76,19 +281,27 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: null,
+      amount: 110,
       currency: CATALOG_CURRENCY,
-      label: "Price on enquiry",
     },
-    description: "Thick Byzantine weave joining weighty dual links in a bone-like repeating pattern.",
+    description:
+      "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its thick, mirrored structure brings the suggestion a chain of bones to a substantial everyday piece.",
     material: "Stainless steel",
+    clasp: "Carabiner",
     status: "Available by enquiry",
     orderable: true,
-    visual: "bone",
+    visual: "classic",
+    images: [
+      {
+        src: "assets/images/REPLACE-ME-bonelink-wallet-chain.jpg",
+        alt: "Bonelink stainless steel wallet chain with repeating bone-like sections",
+      },
+    ],
   },
+
   {
     id: "half-persian-wallet-chain-pendant",
-    name: "Half-Persian Wallet Chain with Charm",
+    name: "Half Persian Wallet Chain with Charm",
     type: "wallet-chains",
     components: [],
     collection: null,
@@ -96,144 +309,21 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       amount: 85,
       currency: CATALOG_CURRENCY,
     },
-    description: "A half-Persian wallet chain with a small charm on a Byzantine chain.",
+    description:
+      "A flowing Half Persian wallet chain finished with a small charm suspended from Byzantine links. The fine hanging detail moves freely beneath the heavier main chain.",
     material: "Stainless steel",
+    clasp: "Carabiner",
     status: "Available by enquiry",
     orderable: true,
     visual: "classic",
     images: [
       {
         src: "assets/images/half-persian-wallet-chain-star.jpg",
-        alt: "Half-Persian wallet chain with a small cross-like star charm on a small Byzantine chain ",
-      },
-    ],
-  },
-  {
-    id: "omen-choker",
-    name: "Omen Choker",
-    type: "necklaces",
-    components: ["bone"],
-    collection: "morrigan",
-    price: {
-      amount: null,
-      currency: CATALOG_CURRENCY,
-      label: "Not yet released",
-    },
-    description: "A close-set chain with pale bone details arranged in a quiet threefold rhythm.",
-    material: "Stainless steel · bone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "morrigan",
-  },
-  {
-    id: "blackwing-earrings",
-    name: "Blackwing Earrings",
-    type: "earrings",
-    components: ["gemstone"],
-    collection: "morrigan",
-    price: {
-      amount: null,
-      currency: CATALOG_CURRENCY,
-      label: "Not yet released",
-    },
-    description: "Long chain drops with dark gemstone points, made to shift like folded wings.",
-    material: "Stainless steel · gemstone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "morrigan",
-  },
-  {
-    id: "veilchain-bracelet",
-    name: "Veilchain Bracelet",
-    type: "bracelets",
-    components: ["gemstone"],
-    collection: "tenebris",
-    price: {
-      amount: null,
-      currency: CATALOG_CURRENCY,
-      label: "Not yet released",
-    },
-    description: "Fine dark chain gathered around a low-lit gemstone, like a lamp behind a veil.",
-    material: "Stainless steel · gemstone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "tenebris",
-  },
-  {
-    id: "night-relic-pendant",
-    name: "Night Relic Pendant",
-    type: "necklaces",
-    components: ["fossil"],
-    collection: "tenebris",
-    price: {
-      amount: null,
-      currency: CATALOG_CURRENCY,
-      label: "Not yet released",
-    },
-    description: "A small fossil fragment held inside a shadowed frame of interlinked steel.",
-    material: "Stainless steel · fossil",
-    status: "Collection concept",
-    orderable: false,
-    visual: "tenebris",
-  },
-  {
-    id: "hoardkeeper-collar",
-    name: "Hoardkeeper Collar",
-    type: "necklaces",
-    components: ["gemstone", "bone"],
-    collection: "wyrms-hoard",
-    price: {
-      amount: null,
-      currency: CATALOG_CURRENCY,
-      label: "Not yet released",
-    },
-    description: "A substantial collar carrying mismatched treasures gathered into one guarded piece.",
-    material: "Stainless steel · gemstone · bone",
-    status: "Collection concept",
-    orderable: false,
-    visual: "wyrm",
-  },
-  {
-    id: "buried-scale-chain",
-    name: "Buried Scale Chain",
-    type: "other",
-    components: ["fossil"],
-    collection: "wyrms-hoard",
-    price: {
-      amount: null,
-      currency: CATALOG_CURRENCY,
-      label: "Not yet released",
-    },
-    description: "Layered steel and a fossil centrepiece suggesting something old beneath the earth.",
-    material: "Stainless steel · fossil",
-    status: "Collection concept",
-    orderable: false,
-    visual: "wyrm",
-  },
-    {
-    id: "test-product",
-    name: "Test Item",
-    type: "bracelets",
-    components: ["bone", "fossil"],
-    collection: "classics",
-    price: {
-      amount: 2,
-      currency: CATALOG_CURRENCY,
-    },
-    description: "Short product description here.",
-    material: "Stainless steel",
-    status: "Available",
-    orderable: true,
-    visual: "classic",
-    images: [
-      {
-        src: "assets/images/new-product-image.jpg",
-        alt: "Description of the product image",
+        alt: "Half Persian wallet chain with a small cross-like star charm suspended from Byzantine links",
       },
     ],
   },
 ]);
-
 
 export function productById(id) {
   return GLOAMWEALD_PRODUCTS.find((product) => product.id === id) || null;
@@ -246,14 +336,21 @@ export function productPriceAmount(product) {
 
 export function productDisplayPrice(product) {
   const amount = productPriceAmount(product);
-  if (amount !== null) return `$${amount} ${product.price?.currency || CATALOG_CURRENCY}`;
+
+  if (amount !== null) {
+    return `$${amount} ${product.price?.currency || CATALOG_CURRENCY}`;
+  }
+
   return product?.price?.label || "Price on enquiry";
 }
 
 export function checkoutProductById(id) {
   const product = productById(id);
   const amount = productPriceAmount(product);
-  if (!product?.orderable || amount === null) return null;
+
+  if (!product?.orderable || amount === null) {
+    return null;
+  }
 
   return {
     id: product.id,

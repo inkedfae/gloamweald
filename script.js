@@ -290,6 +290,7 @@
           <p>${escapeHtml(product.description)}</p>
           <dl class="product-specs">
             <div><dt>Material</dt><dd>${escapeHtml(product.material)}</dd></div>
+            <div><dt>Clasp</dt><dd>${escapeHtml(product.clasp)}</dd></div>
             <div><dt>Status</dt><dd>${escapeHtml(product.status)}</dd></div>
           </dl>
           ${productAction(product)}
