@@ -6,6 +6,17 @@
   background: rgba(229, 221, 202, 0.025);
 }
 
+.checkout-info--compact {
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+}
+
+.checkout-info--details {
+  gap: 0;
+  margin-bottom: 1.1rem;
+  padding: 0;
+}
+
 .checkout-info h3 {
   margin: 0;
   color: var(--bone);
@@ -18,4 +29,26 @@
   color: var(--bone-dim);
   font-family: var(--sans);
   font-size: 0.86rem;
+}
+
+.checkout-info summary {
+  cursor: pointer;
+  padding: 0.9rem 1rem;
+  color: var(--bone);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  list-style-position: inside;
+  text-transform: uppercase;
+}
+
+.checkout-info summary:hover {
+  color: var(--bone-bright);
+}
+
+.checkout-info__body {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0 1rem 1rem;
 }
