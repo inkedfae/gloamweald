@@ -239,11 +239,11 @@ nav a[aria-current="page"]::after {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
   align-items: center;
-  gap: clamp(3rem, 8vw, 8rem);
+  gap: clamp(2rem, 5vw, 5rem);
   width: min(var(--content), calc(100% - 2.5rem));
-  min-height: clamp(29rem, 70svh, 44rem);
+  min-height: clamp(24rem, 58svh, 36rem);
   margin: 0 auto;
-  padding: clamp(3.5rem, 7vw, 6rem) 0;
+  padding: clamp(2.75rem, 5vw, 4.75rem) 0;
 }
 
 .eyebrow,
@@ -261,7 +261,7 @@ nav a[aria-current="page"]::after {
 .hero h1 {
   max-width: min(100%, 9ch);
   margin: 0;
-  font-size: clamp(3.5rem, 8vw, 7.6rem);
+  font-size: clamp(3.1rem, 6.5vw, 6.4rem);
   font-weight: 500;
   letter-spacing: -0.055em;
   line-height: 0.9;
@@ -271,9 +271,9 @@ nav a[aria-current="page"]::after {
 
 .hero-intro {
   max-width: 40rem;
-  margin: 2rem 0 0;
+  margin: 1.35rem 0 0;
   color: var(--bone-dim);
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  font-size: clamp(1.02rem, 1.7vw, 1.22rem);
 }
 
 .hero-actions,
@@ -282,7 +282,7 @@ nav a[aria-current="page"]::after {
   flex-wrap: wrap;
   align-items: center;
   gap: 1.25rem;
-  margin-top: 2rem;
+  margin-top: 1.45rem;
 }
 
 .button {
@@ -451,9 +451,9 @@ nav a[aria-current="page"]::after {
 
 .page-hero {
   display: grid;
-  min-height: clamp(17rem, 36svh, 27rem);
+  min-height: clamp(11.5rem, 24svh, 18rem);
   align-content: end;
-  padding: clamp(4.5rem, 8vw, 6.8rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(2.8rem, 5vw, 4.25rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(1.5rem, 3vw, 2.35rem);
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   background:
@@ -464,7 +464,7 @@ nav a[aria-current="page"]::after {
 .page-hero h1 {
   max-width: min(100%, 11ch);
   margin: 0;
-  font-size: clamp(3.4rem, 8vw, 7rem);
+  font-size: clamp(2.65rem, 5.6vw, 5rem);
   font-weight: 500;
   letter-spacing: -0.052em;
   line-height: 0.9;
@@ -474,9 +474,9 @@ nav a[aria-current="page"]::after {
 
 .page-hero > p:last-child {
   max-width: 42rem;
-  margin: 2rem 0 0;
+  margin: 0.9rem 0 0;
   color: var(--bone-dim);
-  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  font-size: clamp(0.98rem, 1.55vw, 1.15rem);
 }
 
 .page-hero--shop {
@@ -499,7 +499,7 @@ nav a[aria-current="page"]::after {
 }
 
 .section {
-  padding: clamp(5rem, 10vw, 9rem) max(1.25rem, calc((100vw - var(--content)) / 2));
+  padding: clamp(3.25rem, 6vw, 5.75rem) max(1.25rem, calc((100vw - var(--content)) / 2));
   border-top: 1px solid var(--line);
 }
 
@@ -507,8 +507,8 @@ nav a[aria-current="page"]::after {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.7fr);
   align-items: end;
-  gap: 3rem;
-  margin-bottom: 3.5rem;
+  gap: 1.75rem;
+  margin-bottom: 2rem;
 }
 
 .section-heading--compact {
@@ -520,7 +520,7 @@ nav a[aria-current="page"]::after {
 .care-section h2,
 .contact-section h2 {
   margin: 0;
-  font-size: clamp(2.8rem, 6vw, 5.7rem);
+  font-size: clamp(2.15rem, 4.6vw, 4.2rem);
   font-weight: 500;
   letter-spacing: -0.045em;
   line-height: 0.92;
@@ -628,8 +628,8 @@ nav a[aria-current="page"]::after {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.35rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.9rem, 1.4vw, 1.2rem);
 }
 
 .product-card {
@@ -643,11 +643,12 @@ nav a[aria-current="page"]::after {
 .product-visual {
   position: relative;
   display: grid;
-  min-height: 23rem;
+  aspect-ratio: 4 / 5;
+  min-height: 0;
   overflow: hidden;
   place-items: center;
   border-bottom: 1px solid var(--line);
-  background-color: #0d100e;
+  background-color: #050605;
   isolation: isolate;
 }
 
@@ -708,23 +709,23 @@ nav a[aria-current="page"]::after {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: clamp(1.4rem, 4vw, 2.2rem);
+  padding: clamp(1rem, 2vw, 1.35rem);
 }
 
 .product-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 1rem;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
 }
 
 .product-tags span,
 .product-collection-link {
-  padding: 0.28rem 0.48rem;
+  padding: 0.24rem 0.4rem;
   border: 1px solid var(--line);
   color: var(--steel);
   font-family: var(--sans);
-  font-size: 0.6rem;
+  font-size: 0.52rem;
   font-weight: 800;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -742,12 +743,12 @@ nav a[aria-current="page"]::after {
 }
 
 .product-details h3 {
-  max-width: 16ch;
+  max-width: 18ch;
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
   font-weight: 500;
   letter-spacing: -0.025em;
-  line-height: 1;
+  line-height: 1.05;
 }
 
 .product-details > p:not(.price) {
@@ -755,10 +756,10 @@ nav a[aria-current="page"]::after {
 }
 
 .price {
-  margin: 1rem 0 0;
+  margin: 0.75rem 0 0;
   color: var(--bone);
   font-family: var(--sans);
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 800;
 }
 
@@ -770,15 +771,15 @@ nav a[aria-current="page"]::after {
 
 .product-specs {
   width: 100%;
-  margin: 0.75rem 0 1.6rem;
+  margin: 0.65rem 0 1.1rem;
   border-top: 1px solid var(--line);
 }
 
 .product-specs div {
   display: grid;
-  grid-template-columns: 6rem 1fr;
-  gap: 1rem;
-  padding: 0.6rem 0;
+  grid-template-columns: 4.8rem 1fr;
+  gap: 0.65rem;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--line);
 }
 
@@ -786,7 +787,7 @@ nav a[aria-current="page"]::after {
 .product-specs dd {
   margin: 0;
   font-family: var(--sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
 }
 
 .product-specs dt {
@@ -808,7 +809,7 @@ nav a[aria-current="page"]::after {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.95rem;
+  gap: 0.7rem;
   margin-top: auto;
 }
 
@@ -825,14 +826,14 @@ nav a[aria-current="page"]::after {
 
 .concept-label {
   display: inline-flex;
-  min-height: 3rem;
+  min-height: 2.75rem;
   align-items: center;
   margin-top: auto;
-  padding: 0.75rem 1rem;
+  padding: 0.68rem 0.85rem;
   border: 1px dashed var(--line-strong);
   color: var(--steel);
   font-family: var(--sans);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -861,7 +862,8 @@ nav a[aria-current="page"]::after {
 
 .product-visual--photo {
   display: block;
-  min-height: 32rem;
+  aspect-ratio: 4 / 5;
+  min-height: 0;
   background: #050605;
 }
 
@@ -873,7 +875,7 @@ nav a[aria-current="page"]::after {
 .product-gallery {
   display: flex;
   width: 100%;
-  height: 32rem;
+  height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-inline: contain;
@@ -922,6 +924,7 @@ nav a[aria-current="page"]::after {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
   transition: transform 220ms ease;
 }
 
@@ -1129,12 +1132,28 @@ nav a[aria-current="page"]::after {
 
 .checkout-section {
   background: rgba(16, 19, 16, 0.7);
+  padding-top: clamp(2rem, 4vw, 3.4rem);
+}
+
+.checkout-section .section-heading {
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.checkout-section .section-heading h2 {
+  font-size: clamp(2rem, 3.8vw, 3rem);
+}
+
+.checkout-section .section-heading > p {
+  max-width: 50rem;
+  margin: 0;
 }
 
 .checkout-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.55fr);
-  gap: 1.35rem;
+  gap: 1rem;
   align-items: start;
 }
 
@@ -1148,7 +1167,7 @@ nav a[aria-current="page"]::after {
 
 .cart-panel,
 .checkout-form {
-  padding: clamp(1.4rem, 4vw, 2.2rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
 }
 
 .cart-panel {
@@ -1158,8 +1177,8 @@ nav a[aria-current="page"]::after {
 .cart-panel h2,
 .checkout-form h2,
 .order-summary h2 {
-  margin: 0 0 1.35rem;
-  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  margin: 0 0 0.95rem;
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1;
@@ -1171,15 +1190,15 @@ nav a[aria-current="page"]::after {
 
 .cart-lines {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.65rem;
 }
 
 .cart-line {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
-  gap: 1rem;
+  gap: 0.8rem;
   align-items: center;
-  padding: 1rem;
+  padding: 0.85rem;
   border: 1px solid var(--line);
   background: rgba(9, 11, 10, 0.44);
 }
@@ -1232,13 +1251,13 @@ nav a[aria-current="page"]::after {
 
 .checkout-form {
   display: grid;
-  gap: 1.2rem;
+  gap: 0.9rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .checkout-form label,
@@ -1267,8 +1286,8 @@ nav a[aria-current="page"]::after {
 .checkout-form textarea {
   display: block;
   width: 100%;
-  margin-top: 0.45rem;
-  padding: 0.78rem 0.85rem;
+  margin-top: 0.35rem;
+  padding: 0.68rem 0.75rem;
   border: 1px solid var(--line-strong);
   border-radius: 0;
   background: rgba(5, 6, 5, 0.82);
@@ -1293,13 +1312,14 @@ nav a[aria-current="page"]::after {
 }
 
 .shipping-note {
-  margin: -0.65rem 0 0;
+  margin: -0.45rem 0 0;
   color: var(--steel);
   font-family: var(--sans);
   font-size: 0.82rem;
 }
 
-.paypal-checkout {
+.paypal-checkout,
+.stripe-checkout {
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
@@ -1307,20 +1327,23 @@ nav a[aria-current="page"]::after {
   background: rgba(229, 221, 202, 0.03);
 }
 
-.paypal-checkout h3 {
+.paypal-checkout h3,
+.stripe-checkout h3 {
   margin: 0;
   font-size: 1.35rem;
   font-weight: 500;
 }
 
-.paypal-checkout p {
+.paypal-checkout p,
+.stripe-checkout p {
   margin: 0;
   color: var(--bone-dim);
   font-family: var(--sans);
   font-size: 0.84rem;
 }
 
-.paypal-checkout code {
+.paypal-checkout code,
+.stripe-checkout code {
   color: var(--bone);
 }
 
@@ -1350,8 +1373,8 @@ nav a[aria-current="page"]::after {
 
 .order-summary {
   position: sticky;
-  top: 7rem;
-  padding: 1.35rem;
+  top: 5.7rem;
+  padding: 1rem;
 }
 
 .order-summary dl {
@@ -1432,7 +1455,7 @@ nav a[aria-current="page"]::after {
 .success-panel h2 {
   max-width: 12ch;
   margin: 0;
-  font-size: clamp(2.4rem, 7vw, 5.8rem);
+  font-size: clamp(2rem, 5vw, 4.2rem);
   font-weight: 500;
   letter-spacing: -0.055em;
   line-height: 0.92;
@@ -1614,9 +1637,9 @@ nav a[aria-current="page"]::after {
 .collection-hero {
   position: relative;
   display: grid;
-  min-height: clamp(17rem, 38svh, 29rem);
+  min-height: clamp(12rem, 26svh, 20rem);
   align-content: end;
-  padding: clamp(4.75rem, 8vw, 7rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(2.5rem, 5vw, 4.25rem);
+  padding: clamp(3rem, 5vw, 4.5rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(1.6rem, 3vw, 2.5rem);
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   isolation: isolate;
@@ -1666,7 +1689,7 @@ nav a[aria-current="page"]::after {
 .collection-hero h1 {
   max-width: min(100%, 12ch);
   margin: 0;
-  font-size: clamp(3.5rem, 8.5vw, 7.5rem);
+  font-size: clamp(2.7rem, 5.8vw, 5.2rem);
   font-weight: 500;
   letter-spacing: -0.055em;
   line-height: 0.9;
@@ -1676,14 +1699,14 @@ nav a[aria-current="page"]::after {
 
 .collection-deck {
   max-width: 37rem;
-  margin: 2rem 0 0;
+  margin: 0.9rem 0 0;
   color: var(--bone-dim);
-  font-size: clamp(1.1rem, 2.2vw, 1.45rem);
+  font-size: clamp(1rem, 1.7vw, 1.2rem);
 }
 
 .breadcrumb {
   position: absolute;
-  top: clamp(2rem, 5vw, 4rem);
+  top: clamp(1.35rem, 3vw, 2.5rem);
   color: var(--steel);
   font-family: var(--sans);
   font-size: 0.7rem;
@@ -2012,6 +2035,12 @@ footer p {
   text-decoration: none;
 }
 
+@media (max-width: 1120px) {
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .site-header {
     align-items: flex-start;
@@ -2077,6 +2106,10 @@ footer p {
 
   .collection-grid {
     grid-template-columns: 1fr;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .collection-card {
@@ -2155,11 +2188,11 @@ footer p {
   .hero {
     width: min(100% - 2rem, var(--content));
     min-height: auto;
-    padding: 3.4rem 0;
+    padding: 2.75rem 0;
   }
 
   .hero h1 {
-    font-size: clamp(3rem, 15vw, 4.6rem);
+    font-size: clamp(2.75rem, 13vw, 4.2rem);
   }
 
   .material-note {
@@ -2200,14 +2233,9 @@ footer p {
     gap: 0.2rem;
   }
 
-  .product-visual {
-    min-height: 19rem;
-  }
-
-  .product-visual--photo,
-  .product-gallery {
+  .product-visual,
+  .product-visual--photo {
     min-height: 0;
-    height: 27rem;
   }
 
   .gallery-arrow {
@@ -2255,15 +2283,15 @@ footer p {
 
   .page-hero,
   .collection-hero {
-    min-height: clamp(16rem, 34svh, 24rem);
-    padding-top: 4rem;
-    padding-bottom: 2.35rem;
+    min-height: clamp(10rem, 24svh, 15rem);
+    padding-top: 2.75rem;
+    padding-bottom: 1.5rem;
   }
 
   .page-hero h1,
   .collection-hero h1,
   .contact-page h1 {
-    font-size: clamp(3rem, 14vw, 4.7rem);
+    font-size: clamp(2.35rem, 11vw, 3.7rem);
     line-height: 0.94;
   }
 
