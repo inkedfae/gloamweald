@@ -179,7 +179,7 @@
     if (shippingNote) {
       shippingNote.textContent = needsQuote
         ? shipping.detail
-        : `${shipping.detail} Payment uses backend-calculated shipping, so old cart data cannot change the final charge.`;
+        : `${shipping.detail} Your shipping charge is confirmed again at secure checkout.`;
     }
 
     updatePayPalStatus();
@@ -430,7 +430,7 @@
           eyebrow: "Payment confirmed",
           title: "Stripe payment confirmed.",
           message:
-            "Your cart has been cleared. Keep your Stripe receipt for your records; Gloamweald receives order details from the Stripe webhook.",
+            "Your cart has been cleared. Keep your Stripe receipt for your records and check your email for your order confirmation.",
         });
         renderSuccessDetails({
           orderLabel: "Stripe session",
@@ -459,7 +459,7 @@
         eyebrow: "Order received",
         title: "Thank you - your chainmail is in the making queue.",
         message:
-          "Your cart has been cleared. Keep your PayPal receipt for your records; Gloamweald has also received the order details.",
+          "Your cart has been cleared. Keep your PayPal receipt for your records and check your email for your order confirmation.",
         warning:
           warning ||
           "Payment was captured, but the order email could not be sent. Please contact Gloamweald with your PayPal order ID.",
@@ -478,11 +478,11 @@
     if (details) details.hidden = true;
     setSuccessState({
       eyebrow: "No confirmed payment",
-      title: "No confirmed backend payment is shown yet.",
+      title: "No confirmed payment is shown yet.",
       message:
         "If you have just paid and this page looks wrong, contact Gloamweald before trying again.",
       warning:
-        "No confirmed backend payment was supplied. If you have a payment receipt, keep it for your records.",
+        "No confirmed payment was supplied. If you have a payment receipt, keep it for your records.",
       showWarning: true,
     });
   }
@@ -494,7 +494,7 @@
     result.hidden = false;
     result.innerHTML = `
       <h3>${errorMessage ? "Checkout needs attention" : "Enquiry email ready"}</h3>
-      <p>${errorMessage ? escapeHtml(errorMessage) : "This email is only for pre-payment enquiries or quoted shipping. Paid PayPal and Stripe orders are emailed automatically by the backend after confirmation."}</p>
+      <p>${errorMessage ? escapeHtml(errorMessage) : "This email is only for pre-payment enquiries or quoted shipping. Paid PayPal and Stripe orders receive order confirmation by email after payment."}</p>
       <div class="checkout-result-actions">
         <a class="button button--solid" href="${checkoutMailto(details)}">Email enquiry details</a>
       </div>
@@ -527,7 +527,7 @@
           paypalEnv: String(data.paypalEnv || "sandbox").trim() || "sandbox",
           stripeConfigured: Boolean(data.stripeConfigured),
           stripeError: String(data.stripeError || "").trim(),
-          error: data.error || "PayPal checkout configuration is missing.",
+          error: data.error || "PayPal checkout is temporarily unavailable. Please try again later or contact Gloamweald.",
         };
         return checkoutConfig;
       })
@@ -537,8 +537,8 @@
           loaded: true,
           paypalConfigured: false,
           stripeConfigured: false,
-          stripeError: "Stripe checkout configuration could not be loaded.",
-          error: "PayPal checkout configuration could not be loaded.",
+          stripeError: "Card checkout is temporarily unavailable. Please try again later or contact Gloamweald.",
+          error: "PayPal checkout is temporarily unavailable. Please try again later or contact Gloamweald.",
         };
         return checkoutConfig;
       });
@@ -567,19 +567,19 @@
     }
 
     if (!checkoutConfig.loaded) {
-      status.textContent = "Checking PayPal checkout configuration...";
+      status.textContent = "Checking PayPal checkout...";
       return;
     }
 
     if (!paypalReady()) {
       status.textContent =
         checkoutConfig.error ||
-        "PayPal checkout is not configured yet. Add the public PayPal client id in Cloudflare Pages environment variables.";
+        "PayPal checkout is temporarily unavailable. Please try again later or contact Gloamweald.";
       return;
     }
 
     status.textContent =
-      "Use the PayPal button below. The backend creates and captures the order, then emails the order details to Gloamweald and the customer.";
+      "Use the PayPal button below. Your order confirmation will be emailed after payment is complete.";
   }
 
   function updateStripeStatus() {
@@ -604,19 +604,19 @@
     }
 
     if (!checkoutConfig.loaded) {
-      status.textContent = "Checking Stripe checkout configuration...";
+      status.textContent = "Checking card checkout...";
       return;
     }
 
     if (!stripeReady()) {
       status.textContent =
         checkoutConfig.stripeError ||
-        "Stripe checkout is not configured yet. Add the Stripe backend variables in Cloudflare Pages.";
+        "Card checkout is temporarily unavailable. Please try again later or contact Gloamweald.";
       return;
     }
 
     status.textContent =
-      "Use Stripe for secure card payment. The backend creates the Stripe session and confirms payment before showing success.";
+      "Use Stripe for secure card payment. Your cart will clear after payment is confirmed.";
   }
 
   function loadPayPalSdk() {
@@ -710,7 +710,7 @@
     } catch (error) {
       console.error("PayPal SDK failed to load", error);
       status.textContent =
-        "PayPal checkout could not load. Check the PayPal client ID, then reload the page.";
+        "PayPal checkout could not load. Please try again later or contact Gloamweald.";
     }
   }
 
