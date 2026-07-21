@@ -89,6 +89,8 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       "A tightly woven Jens Pind Linkage (JPL) chain creates a firm, structured band with a dense, cord-like feel. At its centre, a sphere of misty grey labradorite reveals flashes of blue and green at it turns through the light.",
     lore:
       "Wandering lights are sometimes seen between the trees of the Gloamweald, dancing just beyond the path and vanishing whenever they are pursued. Old makers learned that one could be coaxed gently into certain stones, where it would remain hidden and safe. Only at the right angle does the captive light reveal itself. Worn close to the skin, it is said to ward away the deeper darkness that watches from beneath the trees.",
+    loreAccent: "#6f8fa5",
+    loreGlow: "rgba(111, 143, 165, 0.4)",
     material: "Stainless steel · labradorite",
     clasp: "Lobster clasp",
     dimensions: "Custom length x 5mm x 5mm",
@@ -250,6 +252,8 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       "Byzantine weave interrupted by thick rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each link leads to a tapered point - a map for forgotten places, featuring a larvikite gemstone to keep you to the path.",
     lore:
       "The oldest paths through the Gloamweald were never marked with signs. Travellers instead followed rings of iron hung from branches, each one pointing towards the next before the forest swallowed it from view. A dark stone was carried at the journey's end, not to prevent its bearer from becoming lost, but to ensure that some path would always lead them onward.",
+    loreAccent: "#8f9a8a",
+    loreGlow: "rgba(143, 154, 138, 0.36)",
     material: "Stainless steel · larvikite",
     clasp: "Lobster clasp",
     dimensions: "Custom length x mm x mm",
@@ -278,6 +282,8 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its thick, articulated structure brings the imagery of a chain of bones to a substantial everyday piece.",
     lore:
       "No one agrees on what first left the bones behind. Some say it was a beast too large to pass between the trees; others insist the chain was assembled from relics found one by one along an overgrown path. Whatever their origin, the links are carried as a reminder: even what is buried may endure, joined together long after its name has been forgotten.",
+    loreAccent: "#b9af9c",
+    loreGlow: "rgba(185, 175, 156, 0.34)",
     material: "Stainless steel",
     clasp: "Carabiner",
     dimensions: "638mm x 12mm x 12mm",
@@ -332,6 +338,8 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       "Compact knots of interlinked stainless steel are finished with polished, outward-facing spikes. The upper spikes form a horned silhouette, the rings linked to allow each earring to shift and catch the light.",
     lore:
       "Briar imps make their nests where the undergrowth grows too thick for larger creatures to follow. Their horns resemble thorns, their bodies curl into knots, and they are easily mistaken for burrs caught among the branches. They are troublesome little things, but not entirely cruel. Leave one a bright scrap of metal and it may guard your path. Refuse, and it may ensure that every briar finds your sleeve.",
+    loreAccent: "#a13945",
+    loreGlow: "rgba(161, 57, 69, 0.42)",
     material: "Stainless steel",
     clasp: "Earring",
     dimensions: "mm x mm x mm",
