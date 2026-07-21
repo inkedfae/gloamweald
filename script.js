@@ -61,7 +61,7 @@
         type="button"
         data-lore-open="${escapeHtml(product.id)}"
         aria-label="Read lore for ${escapeHtml(product.name)}"
-      >LORE</button>
+      ><span aria-hidden="true">~ LORE ~</span></button>
     `;
   }
 
@@ -72,6 +72,12 @@
       .filter(Boolean)
       .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
       .join("");
+  }
+
+  function loreCssValue(value) {
+    const color = String(value || "").trim();
+    if (!color || /[;{}<>]/.test(color)) return "";
+    return color;
   }
 
   function readCart() {
@@ -302,6 +308,8 @@
     const collectionTag = collection
       ? `<a class="product-collection-link" href="${escapeHtml(collection.url)}">${escapeHtml(collection.name)}</a>`
       : "";
+    const price = productPrice(product);
+    const madeToOrder = product.orderable && /made to order/i.test(product.status || "");
 
     return `
       <article
@@ -310,6 +318,8 @@
         data-product-id="${escapeHtml(product.id)}"
         data-type="${escapeHtml(product.type)}"
         data-components="${escapeHtml(product.components.join(" "))}"
+        data-price-value="${price === null ? "" : escapeHtml(String(price))}"
+        data-made-to-order="${madeToOrder ? "true" : "false"}"
       >
         ${productMedia(product)}
         <div class="product-details">
@@ -420,8 +430,8 @@
             <h2 id="product-lore-title" data-lore-title></h2>
             <div class="lore-dialog__tools" aria-label="Lore text size">
               <span>Text size</span>
-              <button type="button" data-lore-zoom="-1" aria-label="Decrease lore text size">A&minus;</button>
-              <button type="button" data-lore-zoom="1" aria-label="Increase lore text size">A+</button>
+              <button type="button" data-lore-zoom="-1" aria-label="Decrease lore text size">&minus;</button>
+              <button type="button" data-lore-zoom="1" aria-label="Increase lore text size">+</button>
             </div>
             <div class="lore-dialog__scroll" tabindex="0" data-lore-scroll>
               <div class="lore-dialog__copy" id="product-lore-copy" data-lore-copy></div>
@@ -483,6 +493,26 @@
     const x = second.clientX - first.clientX;
     const y = second.clientY - first.clientY;
     return Math.hypot(x, y);
+  }
+
+  function applyLoreTheme(product) {
+    const { dialog } = loreElements();
+    if (!dialog) return;
+
+    const accent = loreCssValue(product?.loreAccent);
+    const glow = loreCssValue(product?.loreGlow);
+
+    if (accent) {
+      dialog.style.setProperty("--lore-accent", accent);
+    } else {
+      dialog.style.removeProperty("--lore-accent");
+    }
+
+    if (glow) {
+      dialog.style.setProperty("--lore-glow", glow);
+    } else {
+      dialog.style.removeProperty("--lore-glow");
+    }
   }
 
   function lightboxIndex(track) {
@@ -557,6 +587,7 @@
 
     loreState.opener = opener || null;
     setLoreScale(1);
+    applyLoreTheme(product);
     title.innerHTML = escapeHtml(product.name);
     copy.innerHTML = loreTextHtml(product.lore);
     if (scroll) scroll.scrollTop = 0;
@@ -608,6 +639,8 @@
     if (title) title.textContent = "";
     if (copy) copy.innerHTML = "";
     dialog?.style.removeProperty("--lore-text-scale");
+    dialog?.style.removeProperty("--lore-accent");
+    dialog?.style.removeProperty("--lore-glow");
     loreState.scale = 1;
     loreState.pinchStartDistance = null;
     loreState.pinchStartScale = 1;
@@ -699,6 +732,8 @@
     const status = document.querySelector("#filter-status");
     const clearButton = document.querySelector("#clear-filters");
     const emptyState = document.querySelector("#empty-state");
+    const sortSelect = document.querySelector("#shop-sort");
+    const shopGrid = document.querySelector("[data-shop-grid]");
 
     if (!filterButtons.length || !shopProducts.length || !status || !clearButton || !emptyState) return;
 
@@ -706,6 +741,64 @@
       type: "all",
       component: "all",
     };
+    const defaultOrder = new Map(shopProducts.map((product, index) => [product, index]));
+
+    function productSortPrice(card) {
+      const rawPrice = card.dataset.priceValue;
+      if (!rawPrice) return null;
+      const price = Number(rawPrice);
+      return Number.isFinite(price) ? price : null;
+    }
+
+    function defaultSort(a, b) {
+      return defaultOrder.get(a) - defaultOrder.get(b);
+    }
+
+    function comparePrice(direction) {
+      return (a, b) => {
+        const priceA = productSortPrice(a);
+        const priceB = productSortPrice(b);
+
+        if (priceA === null && priceB === null) return defaultSort(a, b);
+        if (priceA === null) return 1;
+        if (priceB === null) return -1;
+
+        return direction === "ascending"
+          ? priceA - priceB || defaultSort(a, b)
+          : priceB - priceA || defaultSort(a, b);
+      };
+    }
+
+    function madeToOrderSort(a, b) {
+      const aMadeToOrder = a.dataset.madeToOrder === "true";
+      const bMadeToOrder = b.dataset.madeToOrder === "true";
+
+      if (aMadeToOrder !== bMadeToOrder) {
+        return aMadeToOrder ? -1 : 1;
+      }
+
+      return defaultSort(a, b);
+    }
+
+    function sortProducts() {
+      if (!sortSelect || !shopGrid) return;
+
+      const sortedProducts = [...shopProducts].sort((a, b) => {
+        switch (sortSelect.value) {
+          case "price-ascending":
+            return comparePrice("ascending")(a, b);
+          case "price-descending":
+            return comparePrice("descending")(a, b);
+          case "made-to-order":
+            return madeToOrderSort(a, b);
+          case "default":
+          default:
+            return defaultSort(a, b);
+        }
+      });
+
+      shopGrid.append(...sortedProducts);
+    }
 
     function setPressedState(group, value) {
       filterButtons
@@ -759,6 +852,12 @@
       updateProducts();
     });
 
+    sortSelect?.addEventListener("change", () => {
+      sortProducts();
+      updateProducts();
+    });
+
+    sortProducts();
     updateProducts();
   }
 
