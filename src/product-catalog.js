@@ -281,7 +281,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its thick, articulated structure brings the imagery of a chain of bones to a substantial everyday piece.",
     lore:
-      "Hundreds of years ago, a long-forgotten story lived out deep within the Gloamweald, telling of a young maiden who lived in a small village at the edge of the forest. She was a kind girl, very ordinary by all accounts, with a stubborn streak that often ruffled feathers and, some whispered, was why she had still not married, despite being well past the age many thought she should have.
+      `Hundreds of years ago, a long-forgotten story lived out deep within the Gloamweald, telling of a young maiden who lived in a small village at the edge of the forest. She was a kind girl, very ordinary by all accounts, with a stubborn streak that often ruffled feathers and, some whispered, was why she had still not married, despite being well past the age many thought she should have.
 
 One evening, as the last of the day's light slipped behind the trees and villagers began closing shutters, lighting candles and calling their children indoors, she quietly walked into the Gloamweald alone, despite the warnings shouted after her, despite everybody knowing better than to wander beneath those trees after dark, and despite nobody understanding what could possibly have been important enough to draw her there.
 
@@ -353,7 +353,7 @@ The three children treasured their chains throughout their lives, and before lon
 
 To this day, little chains of forged steel, shaped in memory of those forgotten bones, are given as gifts between loved ones, carried by travellers setting out on long journeys, and worn by those beginning a new chapter in their lives, in the hope that perhaps, just perhaps, a little of that old story still lingers within them.
 
-And it is still said, all these centuries later, that those with a stubborn, determined heart find the Gloamweald just a little kinder.",
+And it is still said, all these centuries later, that those with a stubborn, determined heart find the Gloamweald just a little kinder.`,
     loreAccent: "#b9af9c",
     loreGlow: "rgba(185, 175, 156, 0.34)",
     material: "Stainless steel",
