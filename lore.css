@@ -147,13 +147,16 @@
   --lore-accent: var(--blood-bright);
   --lore-accent-pale: color-mix(in srgb, var(--lore-accent) 42%, var(--bone) 58%);
   --lore-glow: rgba(161, 57, 69, 0.38);
-  position: relative;
+  position: fixed;
+  top: 50%;
+  left: 50%;
   width: min(700px, calc(100vw - 2rem));
   max-width: none;
   max-height: min(86dvh, 48rem);
-  margin: auto;
+  margin: 0;
   padding: 0;
   overflow: visible;
+  transform: translate(-50%, -50%);
   border: 0;
   background: transparent;
   color: var(--bone);
@@ -225,7 +228,7 @@
 
 .lore-dialog__close:hover {
   border-color: var(--bone);
-  background: var(--bone);
+  background: var(--bone;
   color: var(--ink);
 }
 
