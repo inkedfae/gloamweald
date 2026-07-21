@@ -319,6 +319,7 @@
         data-type="${escapeHtml(product.type)}"
         data-components="${escapeHtml(product.components.join(" "))}"
         data-price-value="${price === null ? "" : escapeHtml(String(price))}"
+        data-orderable="${product.orderable ? "true" : "false"}"
         data-made-to-order="${madeToOrder ? "true" : "false"}"
       >
         ${productMedia(product)}
@@ -329,10 +330,12 @@
             ${collectionTag}
           </div>
           <div class="product-title-row">
-            <h3>${escapeHtml(product.name)}</h3>
+            <div class="product-title-copy">
+              <h3>${escapeHtml(product.name)}</h3>
+              <p class="price">${escapeHtml(product.price)}</p>
+            </div>
             ${productLoreButton(product)}
           </div>
-          <p class="price">${escapeHtml(product.price)}</p>
           <p class="product-description">${escapeHtml(product.description)}</p>
           <dl class="product-specs">
             <div><dt>Material</dt><dd>${escapeHtml(product.material)}</dd></div>
@@ -451,6 +454,8 @@
     scale: 1,
     pinchStartDistance: null,
     pinchStartScale: 1,
+    scrollX: 0,
+    scrollY: 0,
   };
 
   function lightboxElements() {
@@ -472,6 +477,27 @@
       scroll: document.querySelector("[data-lore-scroll]"),
       close: document.querySelector("[data-lore-close]"),
     };
+  }
+
+  function currentWindowScroll() {
+    return {
+      x: window.scrollX || window.pageXOffset || 0,
+      y: window.scrollY || window.pageYOffset || 0,
+    };
+  }
+
+  function restoreWindowScroll(x = loreState.scrollX, y = loreState.scrollY) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    window.scrollTo(x, y);
+  }
+
+  function focusWithoutScroll(element) {
+    if (!element) return;
+    try {
+      element.focus({ preventScroll: true });
+    } catch {
+      element.focus();
+    }
   }
 
   function clamp(number, min, max) {
@@ -501,6 +527,7 @@
 
     const accent = loreCssValue(product?.loreAccent);
     const glow = loreCssValue(product?.loreGlow);
+    const accentPale = loreCssValue(product?.loreAccentPale);
 
     if (accent) {
       dialog.style.setProperty("--lore-accent", accent);
@@ -512,6 +539,12 @@
       dialog.style.setProperty("--lore-glow", glow);
     } else {
       dialog.style.removeProperty("--lore-glow");
+    }
+
+    if (accentPale) {
+      dialog.style.setProperty("--lore-accent-pale", accentPale);
+    } else {
+      dialog.style.removeProperty("--lore-accent-pale");
     }
   }
 
@@ -585,6 +618,9 @@
     const { dialog, title, copy, scroll, close } = loreElements();
     if (!dialog || !title || !copy) return;
 
+    const position = currentWindowScroll();
+    loreState.scrollX = position.x;
+    loreState.scrollY = position.y;
     loreState.opener = opener || null;
     setLoreScale(1);
     applyLoreTheme(product);
@@ -598,9 +634,11 @@
     } else {
       dialog.setAttribute("open", "");
     }
+    restoreWindowScroll();
 
     requestAnimationFrame(() => {
-      close?.focus();
+      focusWithoutScroll(close);
+      restoreWindowScroll();
     });
   }
 
@@ -635,19 +673,25 @@
 
   function cleanupLore() {
     const { title, copy, dialog } = loreElements();
+    const scrollX = loreState.scrollX;
+    const scrollY = loreState.scrollY;
     document.documentElement.classList.remove("lightbox-open");
     if (title) title.textContent = "";
     if (copy) copy.innerHTML = "";
     dialog?.style.removeProperty("--lore-text-scale");
     dialog?.style.removeProperty("--lore-accent");
     dialog?.style.removeProperty("--lore-glow");
+    dialog?.style.removeProperty("--lore-accent-pale");
     loreState.scale = 1;
     loreState.pinchStartDistance = null;
     loreState.pinchStartScale = 1;
 
     const opener = loreState.opener;
     loreState.opener = null;
-    if (opener?.isConnected) opener.focus();
+    if (opener?.isConnected) focusWithoutScroll(opener);
+    restoreWindowScroll(scrollX, scrollY);
+    loreState.scrollX = 0;
+    loreState.scrollY = 0;
   }
 
   function initialiseLightbox() {
@@ -769,9 +813,15 @@
       };
     }
 
-    function madeToOrderSort(a, b) {
+    function availableSort(a, b) {
+      const aOrderable = a.dataset.orderable === "true";
+      const bOrderable = b.dataset.orderable === "true";
       const aMadeToOrder = a.dataset.madeToOrder === "true";
       const bMadeToOrder = b.dataset.madeToOrder === "true";
+
+      if (aOrderable !== bOrderable) {
+        return aOrderable ? -1 : 1;
+      }
 
       if (aMadeToOrder !== bMadeToOrder) {
         return aMadeToOrder ? -1 : 1;
@@ -790,7 +840,7 @@
           case "price-descending":
             return comparePrice("descending")(a, b);
           case "made-to-order":
-            return madeToOrderSort(a, b);
+            return availableSort(a, b);
           case "default":
           default:
             return defaultSort(a, b);
@@ -810,6 +860,7 @@
 
     function updateProducts() {
       let visibleCount = 0;
+      const availabilityOnly = sortSelect?.value === "made-to-order";
 
       shopProducts.forEach((product) => {
         const components = product.dataset.components.split(/\s+/).filter(Boolean);
@@ -817,7 +868,8 @@
           selected.type === "all" || product.dataset.type === selected.type;
         const matchesComponent =
           selected.component === "all" || components.includes(selected.component);
-        const isVisible = matchesType && matchesComponent;
+        const matchesAvailability = !availabilityOnly || product.dataset.orderable === "true";
+        const isVisible = matchesType && matchesComponent && matchesAvailability;
 
         product.hidden = !isVisible;
         if (isVisible) visibleCount += 1;
@@ -825,10 +877,11 @@
 
       const filtersAreClear =
         selected.type === "all" && selected.component === "all";
+      const productSetIsClear = filtersAreClear && !availabilityOnly;
 
       clearButton.hidden = filtersAreClear;
       emptyState.hidden = visibleCount !== 0;
-      status.textContent = filtersAreClear
+      status.textContent = productSetIsClear
         ? `Showing all ${shopProducts.length} pieces.`
         : visibleCount === 0
           ? "No pieces match these filters yet."
