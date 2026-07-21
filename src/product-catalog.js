@@ -76,19 +76,19 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     ],
   },
   {
-    id: "leoma-band",
-    name: "Lēoma Band",
+    id: "leoma-amulet",
+    name: "Lēoma Amulet",
     type: "bracelets",
     components: ["gemstone"],
     collection: null,
     price: {
-      amount: 90,
+      amount: 110,
       currency: CATALOG_CURRENCY,
     },
     description:
       "A tightly woven Jens Pind Linkage (JPL) chain creates a firm, structured band with a dense, cord-like feel. At its centre, a sphere of misty grey labradorite reveals flashes of blue and green at it turns through the light.",
     lore:
-      "Wandering lights are sometimes seen between the trees of the Gloamweald, dancing just beyond the path and vanishing whenever they are pursued. Old makers learned that one could be coaxed gently into certain stones, where it would remain hidden and safe. Only at the right angle does the captive light reveal itself. Worn close to the skin, it is said to ward away the deeper darkness that watches from beneath the trees.",
+      "Lēoma is an old word meaning radiance, or ray of light. It's often used to refer to the wandering lights that are sometimes seen between the thick trees of the Gloamweald, dancing just beyond the path, vanishing whenever they are pursued. The old wise ones learned that occasionally a Lēoma could be coaxed gently into certain stones, where it would remain hidden, and safe. Only at the right angle does the captive light reveal itself, and when worn close to the skin, it is said to ward away the deeper darkness that watches from beneath the trees.",
     loreAccent: "#6f8fa5",
     loreGlow: "rgba(111, 143, 165, 0.4)",
     material: "Stainless steel · labradorite",
@@ -100,11 +100,11 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     images: [
       {
         src: "assets/images/leoma-band-primary.jpg",
-        alt: "Lēoma Band worn on the wrist with a vivid blue-flashing labradorite centrepiece",
+        alt: "Lēoma Amulet worn on the wrist with a vivid blue-flashing labradorite centrepiece",
       },
       {
         src: "assets/images/leoma-band-detail.jpg",
-        alt: "Lēoma Band with a tightly woven stainless steel JPL chain and central labradorite bead",
+        alt: "Lēoma Amulet with a tightly woven stainless steel JPL chain and central labradorite bead",
       },
     ],
   },
@@ -115,7 +115,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 48,
+      amount: 50,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -148,7 +148,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       "This intricate Celtic-inspired weave has an elegant balance of strength and detail. If you look closely, it may seem to be looking back at you, watching over you with quiet vigilance.",
     material: "Stainless steel",
     clasp: "Toggle bar",
-    dimensions: "Custom length x mm x mm",
+    dimensions: "Custom length x 17mm x 8mm",
     status: "Available - Made to order",
     orderable: true,
     visual: "classic",
@@ -162,7 +162,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
 
   {
     id: "european-4-in-1-cuff-6mm",
-    name: "European 4-in-1 Cuff — 6 mm",
+    name: "Chainmaille Cuff",
     type: "bracelets",
     components: [],
     collection: "classics",
@@ -196,7 +196,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A slim Half Persian chain with an understated, close-wearing profile. Its narrow flowing pattern sits comfortably against the body and layers easily with other necklaces.",
+      "A slim Half Persian chain with an understated, close-wearing profile. Its narrow, flowing pattern drapes elegantly over collarbones or rippled fabric, and is ideal for daily wear, easy to layer with other necklaces.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "470mm x 6mm x 3.5mm",
@@ -218,11 +218,11 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 155,
+      amount: 150,
       currency: CATALOG_CURRENCY,
     },
     description:
-      "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body, equally at home worn alone or with a pendant.",
+      "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "600mm x 8mm x 8mm",
@@ -281,7 +281,79 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "Thick Byzantine sections join weighty double links in a repeating, bone-like pattern. Its thick, articulated structure brings the imagery of a chain of bones to a substantial everyday piece.",
     lore:
-      "No one agrees on what first left the bones behind. Some say it was a beast too large to pass between the trees; others insist the chain was assembled from relics found one by one along an overgrown path. Whatever their origin, the links are carried as a reminder: even what is buried may endure, joined together long after its name has been forgotten.",
+      "Hundreds of years ago, a long-forgotten story lived out deep within the Gloamweald, telling of a young maiden who lived in a small village at the edge of the forest. She was a kind girl, very ordinary by all accounts, with a stubborn streak that often ruffled feathers and, some whispered, was why she had still not married, despite being well past the age many thought she should have.
+
+One evening, as the last of the day's light slipped behind the trees and villagers began closing shutters, lighting candles and calling their children indoors, she quietly walked into the Gloamweald alone, despite the warnings shouted after her, despite everybody knowing better than to wander beneath those trees after dark, and despite nobody understanding what could possibly have been important enough to draw her there.
+
+By morning she had not returned.
+
+The villagers gathered where the old road disappeared beneath the trees, waiting anxiously, certain that she would appear at any moment, but as the hours wore on and the sun climbed high above the forest before slowly beginning its descent once more, hope faded with the light. It was only as evening settled for a second time, the shadows growing long and twilight beginning to creep once more between the trunks, that somebody spotted movement deep amongst the trees.
+
+A figure.
+
+Then another cry rang out.
+
+It was her.
+
+Relief swept through the gathered villagers, and several of the braver souls hurried forward to meet her, laughing and calling her name, but their smiles quickly faded as she drew closer.
+
+Her feet were bare, bloodied and caked with mud, the hem of her pale dress hanging in shredded strips, stained with earth and torn on briars, her hair loose, wild and tangled as though she had spent days pushing through undergrowth, and her face, almost unrecognisable beneath the dirt, seemed strangely empty, her wide, glassy eyes fixed on nothing at all.
+  
+She never answered their questions, never acknowledged the frightened voices calling after her, never even seemed to notice the hands reaching out to help.
+
+Instead, she walked silently through the crowd, clutching something so strange and gruesome that the villagers scarcely knew where to look.
+
+It was a chain, fashioned from dozens of little bones, each one carefully strung together with coarse twine woven from her own hair. No one recognised the bones, no one knew what creature they belonged to, and no one was brave enough to ask where she had found them.
+
+Ignoring the frightened whispers around her, she made her way back to the little cottage where she lived alone, disappearing inside and quietly closing the door behind her.
+
+Over the days that followed, several well-intentioned villagers knocked upon her door, bringing warm meals, fresh bread, flowers from their gardens and every excuse they could think of to check on her, but no matter how long they waited, or how softly they called her name, she never answered.
+
+Then, just as suddenly as she had vanished from the village, she returned to it.
+
+On the next market day, with merchants calling from their stalls and children weaving between crowded streets, the maiden simply walked into the village square as though nothing at all had happened.
+
+At first, nobody recognised her.
+
+Her features had hardly changed, and yet she seemed almost impossibly beautiful. Her once tangled hair now fell in soft, dark waves, woven back with delicate wildflowers that never seemed to wilt. She wore a finely made dress beneath a handsome travelling cloak, both of which looked far beyond anything she could ever have afforded, yet somehow suited her so perfectly that nobody questioned it for long.
+
+There was something else, too.
+
+People found themselves smiling as she passed, lingering in conversation longer than they had intended, laughing more easily than they usually would. She always seemed to know exactly the right thing to say, whether comforting a grieving widow, calming an anxious child, or settling some petty disagreement before it could become an argument, and to stand beside her, even for only a few moments, was simply... joyful.
+
+The villagers were confused, of course, and questions still lingered in the backs of their minds, but before long they found themselves simply happy for her, and, little by little, the strange events surrounding her return became something people spoke of less and less.
+
+The months that followed were unusually fortunate.
+
+The little garden beside her cottage flourished beyond anything the village had ever seen, producing vegetables larger than any before them, flowers brighter than seemed possible, and fruit so plentiful that she often gave much of it away to neighbours who had fallen on hard times. She never seemed to want for anything, though nobody could explain how she had come by the beautiful clothes she now wore, nor where the quiet prosperity that surrounded her had come from.
+
+In time, many young men sought her hand, though it was a handsome young blacksmith, hardworking, gentle, and well respected throughout the village, who eventually won her heart. Before long they were married, and together they raised three healthy children, living what anyone looking in from the outside would have called a long, peaceful and happy life.
+
+Only now and then, when the wind caught her cloak as she worked amongst her flowers, or she bent to gather herbs from the garden, would those nearby hear the gentle rattle of the little chain still hanging at her waist, or catch the briefest glimpse of pale white before it disappeared once more beneath the folds of cloth.
+
+Nobody ever asked to see it.
+
+Nobody ever asked where it had come from.
+
+Perhaps they feared the answer.
+
+Or perhaps they loved her too much to care.
+
+When she eventually passed away peacefully in old age, her husband was already an old man himself, long retired from the forge where he had spent almost his entire life. In the months that followed he quietly returned to his workshop one final time and, with hands that now trembled from age, carefully studied every little bone of the strange chain his wife had worn for almost the whole of her life before painstakingly forging three chains from steel in their likeness, one for each of their children.
+
+What became of the original bones has never been agreed upon.
+
+Some stories claim the old blacksmith buried them beside his wife, believing they belonged with her and nowhere else.
+
+Others insist he sealed them forever within the steel itself, so that a small part of the original chain would live on in every generation that followed.
+
+The blacksmith never revealed the truth.
+
+The three children treasured their chains throughout their lives, and before long other smiths were asked to forge similar ones for those wishing to honour the old story. As the generations passed, the names of the maiden, the blacksmith and even the village itself were slowly forgotten, but the tradition quietly endured.
+
+To this day, little chains of forged steel, shaped in memory of those forgotten bones, are given as gifts between loved ones, carried by travellers setting out on long journeys, and worn by those beginning a new chapter in their lives, in the hope that perhaps, just perhaps, a little of that old story still lingers within them.
+
+And it is still said, all these centuries later, that those with a stubborn, determined heart find the Gloamweald just a little kinder.",
     loreAccent: "#b9af9c",
     loreGlow: "rgba(185, 175, 156, 0.34)",
     material: "Stainless steel",
@@ -305,7 +377,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 79,
+      amount: 85,
       currency: CATALOG_CURRENCY,
     },
     description:
