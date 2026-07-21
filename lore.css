@@ -17,32 +17,53 @@
 
 .lore-button {
   position: relative;
+  display: grid;
+  width: 4rem;
+  aspect-ratio: 1;
+  place-items: center;
   isolation: isolate;
-  min-width: 3.1rem;
-  min-height: 2.35rem;
-  padding: 0.52rem 0.62rem;
+  padding: 0.25rem;
   border: 1px solid rgba(229, 221, 202, 0.34);
-  border-radius: 999px 999px 1rem 1rem;
+  border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 35%, rgba(229, 221, 202, 0.08), transparent 60%),
-    rgba(9, 11, 10, 0.55);
+    radial-gradient(circle at 50% 38%, rgba(229, 221, 202, 0.08), transparent 58%),
+    rgba(9, 11, 10, 0.58);
   color: var(--steel);
   cursor: pointer;
   font-family: var(--sans);
-  font-size: 0.6rem;
+  font-size: 0.48rem;
   font-weight: 900;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   line-height: 1;
+  text-align: center;
   text-transform: uppercase;
 }
 
-.lore-button::before {
+.lore-button::before,
+.lore-button::after {
   position: absolute;
   z-index: -1;
-  inset: 0.34rem 0.45rem;
-  border: 1px solid rgba(229, 221, 202, 0.12);
-  border-radius: 50% 50% 42% 42%;
+  pointer-events: none;
   content: "";
+}
+
+.lore-button::before {
+  inset: 0.32rem;
+  border: 1px solid rgba(229, 221, 202, 0.13);
+  border-radius: 50%;
+}
+
+.lore-button::after {
+  inset: 0.62rem 0.5rem;
+  border-top: 1px solid rgba(229, 221, 202, 0.09);
+  border-bottom: 1px solid rgba(229, 221, 202, 0.09);
+  border-radius: 50%;
+}
+
+.lore-button span {
+  display: block;
+  max-width: 3.3rem;
+  white-space: nowrap;
 }
 
 .lore-button:hover,
@@ -50,6 +71,28 @@
   border-color: var(--blood-bright);
   color: var(--bone);
   transform: translateY(-1px);
+}
+
+.product-actions:not(.product-actions--center) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.product-actions:not(.product-actions--center) .button {
+  min-width: 0;
+  padding-right: clamp(0.7rem, 1.2vw, 1rem);
+  padding-left: clamp(0.7rem, 1.2vw, 1rem);
+  white-space: nowrap;
+}
+
+.product-actions:not(.product-actions--center) .quiet-button {
+  justify-self: end;
+  line-height: 1.25;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .product-actions--center {
@@ -66,35 +109,82 @@
   text-align: center;
 }
 
+.filter-group--sort {
+  align-items: center;
+}
+
+.filter-options--sort {
+  align-items: center;
+}
+
+.shop-sort {
+  width: min(100%, 18rem);
+  min-height: 2.45rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: rgba(5, 6, 5, 0.82);
+  color: var(--bone);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.shop-sort:hover,
+.shop-sort:focus-visible {
+  border-color: var(--line-strong);
+}
+
 .lore-dialog {
+  --lore-accent: var(--blood-bright);
+  --lore-glow: rgba(161, 57, 69, 0.38);
+  position: relative;
   width: min(700px, calc(100vw - 2rem));
   max-width: none;
   max-height: min(86dvh, 48rem);
   margin: auto;
   padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--line-strong);
+  overflow: visible;
+  border: 0;
   background: transparent;
   color: var(--bone);
+  isolation: isolate;
 }
 
 .lore-dialog[open] {
   display: grid;
 }
 
-.lore-dialog::backdrop {
+.lore-dialog::before {
+  position: absolute;
+  z-index: 0;
+  inset: -1.65rem;
+  border-radius: 1.8rem;
   background:
-    radial-gradient(circle at 50% 20%, rgba(125, 38, 48, 0.2), transparent 28rem),
-    rgba(0, 0, 0, 0.86);
+    radial-gradient(ellipse at center, transparent 42%, var(--lore-glow) 68%, transparent 82%),
+    radial-gradient(circle at 15% 15%, var(--lore-glow), transparent 32%),
+    radial-gradient(circle at 85% 88%, var(--lore-glow), transparent 34%);
+  content: "";
+  filter: blur(22px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.lore-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.86);
 }
 
 .lore-dialog__panel {
   position: relative;
+  z-index: 1;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
   max-height: min(86dvh, 48rem);
   padding: clamp(1.15rem, 4vw, 2rem);
   overflow: hidden;
+  border: 1px solid var(--line-strong);
   background:
     linear-gradient(rgba(20, 23, 20, 0.94), rgba(9, 11, 10, 0.98)),
     radial-gradient(circle at 20% 0, rgba(229, 221, 202, 0.08), transparent 20rem);
@@ -134,7 +224,7 @@
 
 .lore-dialog__eyebrow {
   margin: 0 3rem 0.65rem 0;
-  color: var(--blood-bright);
+  color: var(--lore-accent);
   font-family: var(--sans);
   font-size: 0.68rem;
   font-weight: 900;
@@ -165,19 +255,22 @@
 }
 
 .lore-dialog__tools button {
-  min-width: 2.3rem;
+  display: grid;
+  width: 2.2rem;
   min-height: 2rem;
+  place-items: center;
   border: 1px solid var(--line);
   background: rgba(229, 221, 202, 0.04);
   color: var(--bone);
   cursor: pointer;
   font-family: var(--sans);
-  font-size: 0.72rem;
+  font-size: 1.05rem;
   font-weight: 800;
+  line-height: 1;
 }
 
 .lore-dialog__tools button:hover {
-  border-color: var(--bone);
+  border-color: var(--lore-accent);
   background: rgba(229, 221, 202, 0.1);
 }
 
@@ -185,7 +278,7 @@
   min-height: 0;
   overflow-y: auto;
   padding-right: 0.5rem;
-  scrollbar-color: var(--blood-bright) rgba(229, 221, 202, 0.08);
+  scrollbar-color: var(--lore-accent) rgba(229, 221, 202, 0.08);
   scrollbar-width: thin;
   touch-action: pan-y pinch-zoom;
   -webkit-overflow-scrolling: touch;
@@ -212,15 +305,36 @@
   }
 
   .lore-button {
-    min-width: 2.8rem;
-    min-height: 2.15rem;
-    padding: 0.45rem 0.52rem;
-    font-size: 0.56rem;
+    width: 3.45rem;
+    font-size: 0.42rem;
+  }
+
+  .lore-button span {
+    max-width: 2.9rem;
+  }
+
+  .product-actions:not(.product-actions--center) {
+    gap: 0.48rem;
+  }
+
+  .product-actions:not(.product-actions--center) .button {
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+  }
+
+  .product-actions:not(.product-actions--center) .quiet-button {
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
   }
 
   .lore-dialog {
     width: min(100vw - 1rem, 700px);
     max-height: calc(100dvh - 1rem);
+  }
+
+  .lore-dialog::before {
+    inset: -0.9rem;
+    filter: blur(16px);
   }
 
   .lore-dialog__panel {
