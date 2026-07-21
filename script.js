@@ -5,6 +5,9 @@
   const collections = window.GLOAMWEALD_COLLECTIONS || {};
   const CART_STORAGE_KEY = "gloamweald-cart";
   const CONTACT_EMAIL = "gloamweald@gmail.com";
+  const LORE_MIN_SCALE = 0.85;
+  const LORE_MAX_SCALE = 1.45;
+  const LORE_SCALE_STEP = 0.08;
 
   const typeLabels = {
     bracelets: "Bracelet",
@@ -41,12 +44,40 @@
     return products.find((product) => product.id === id);
   }
 
-  function orderSubject(product) {
-    return encodeURIComponent(`${product.name} enquiry`);
+  function contactPageLink(label, className = "quiet-button") {
+    return `<a class="${className}" href="contact.html" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
   }
 
-  function mailtoForProduct(product) {
-    return `mailto:${CONTACT_EMAIL}?subject=${orderSubject(product)}`;
+  function productHasLore(product) {
+    return typeof product?.lore === "string" && product.lore.trim().length > 0;
+  }
+
+  function productLoreButton(product) {
+    if (!productHasLore(product)) return "";
+
+    return `
+      <button
+        class="lore-button"
+        type="button"
+        data-lore-open="${escapeHtml(product.id)}"
+        aria-label="Read lore for ${escapeHtml(product.name)}"
+      ><span aria-hidden="true">~ LORE ~</span></button>
+    `;
+  }
+
+  function loreTextHtml(lore) {
+    return String(lore)
+      .split(/\n{2,}/)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean)
+      .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+      .join("");
+  }
+
+  function loreCssValue(value) {
+    const color = String(value || "").trim();
+    if (!color || /[;{}<>]/.test(color)) return "";
+    return color;
   }
 
   function readCart() {
@@ -249,16 +280,24 @@
             type="button"
             data-add-to-cart="${escapeHtml(product.id)}"
           >Add to cart</button>
-          <a class="quiet-button" href="${mailtoForProduct(product)}">Ask a question</a>
+          ${contactPageLink("Ask a question")}
         </div>
       `;
     }
 
     if (product.orderable) {
-      return `<a class="button" href="${mailtoForProduct(product)}">Enquire to order</a>`;
+      return `
+        <div class="product-actions product-actions--center">
+          ${contactPageLink("Enquire to order", "quiet-button product-inquiry-link")}
+        </div>
+      `;
     }
 
-    return `<span class="concept-label">Concept placeholder</span>`;
+    return `
+      <div class="product-actions product-actions--center">
+        ${contactPageLink("Send an inquiry", "quiet-button product-inquiry-link")}
+      </div>
+    `;
   }
 
   function productCard(product) {
@@ -269,6 +308,8 @@
     const collectionTag = collection
       ? `<a class="product-collection-link" href="${escapeHtml(collection.url)}">${escapeHtml(collection.name)}</a>`
       : "";
+    const price = productPrice(product);
+    const madeToOrder = product.orderable && /made to order/i.test(product.status || "");
 
     return `
       <article
@@ -277,6 +318,9 @@
         data-product-id="${escapeHtml(product.id)}"
         data-type="${escapeHtml(product.type)}"
         data-components="${escapeHtml(product.components.join(" "))}"
+        data-price-value="${price === null ? "" : escapeHtml(String(price))}"
+        data-orderable="${product.orderable ? "true" : "false"}"
+        data-made-to-order="${madeToOrder ? "true" : "false"}"
       >
         ${productMedia(product)}
         <div class="product-details">
@@ -285,9 +329,14 @@
             ${componentTags}
             ${collectionTag}
           </div>
-          <h3>${escapeHtml(product.name)}</h3>
-          <p class="price">${escapeHtml(product.price)}</p>
-          <p>${escapeHtml(product.description)}</p>
+          <div class="product-title-row">
+            <div class="product-title-copy">
+              <h3>${escapeHtml(product.name)}</h3>
+              <p class="price">${escapeHtml(product.price)}</p>
+            </div>
+            ${productLoreButton(product)}
+          </div>
+          <p class="product-description">${escapeHtml(product.description)}</p>
           <dl class="product-specs">
             <div><dt>Material</dt><dd>${escapeHtml(product.material)}</dd></div>
             <div><dt>Clasp</dt><dd>${escapeHtml(product.clasp)}</dd></div>
@@ -369,8 +418,44 @@
     );
   }
 
+  function installLoreDialog() {
+    if (document.querySelector("#product-lore-dialog")) return;
+
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `
+        <dialog class="lore-dialog" id="product-lore-dialog" aria-labelledby="product-lore-title" aria-describedby="product-lore-copy">
+          <div class="lore-dialog__panel" data-lore-panel>
+            <button class="lore-dialog__close" type="button" data-lore-close aria-label="Close lore">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <p class="lore-dialog__eyebrow">From the Gloamweald</p>
+            <h2 id="product-lore-title" data-lore-title></h2>
+            <div class="lore-dialog__tools" aria-label="Lore text size">
+              <span>Text size</span>
+              <button type="button" data-lore-zoom="-1" aria-label="Decrease lore text size">&minus;</button>
+              <button type="button" data-lore-zoom="1" aria-label="Increase lore text size">+</button>
+            </div>
+            <div class="lore-dialog__scroll" tabindex="0" data-lore-scroll>
+              <div class="lore-dialog__copy" id="product-lore-copy" data-lore-copy></div>
+            </div>
+          </div>
+        </dialog>
+      `,
+    );
+  }
+
   const lightboxState = {
     images: [],
+  };
+
+  const loreState = {
+    opener: null,
+    scale: 1,
+    pinchStartDistance: null,
+    pinchStartScale: 1,
+    scrollX: 0,
+    scrollY: 0,
   };
 
   function lightboxElements() {
@@ -382,6 +467,85 @@
       previous: document.querySelector('[data-lightbox-nav="-1"]'),
       next: document.querySelector('[data-lightbox-nav="1"]'),
     };
+  }
+
+  function loreElements() {
+    return {
+      dialog: document.querySelector("#product-lore-dialog"),
+      title: document.querySelector("[data-lore-title]"),
+      copy: document.querySelector("[data-lore-copy]"),
+      scroll: document.querySelector("[data-lore-scroll]"),
+      close: document.querySelector("[data-lore-close]"),
+    };
+  }
+
+  function currentWindowScroll() {
+    return {
+      x: window.scrollX || window.pageXOffset || 0,
+      y: window.scrollY || window.pageYOffset || 0,
+    };
+  }
+
+  function restoreWindowScroll(x = loreState.scrollX, y = loreState.scrollY) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    window.scrollTo(x, y);
+  }
+
+  function focusWithoutScroll(element) {
+    if (!element) return;
+    try {
+      element.focus({ preventScroll: true });
+    } catch {
+      element.focus();
+    }
+  }
+
+  function clamp(number, min, max) {
+    return Math.min(max, Math.max(min, number));
+  }
+
+  function setLoreScale(scale) {
+    const { dialog } = loreElements();
+    loreState.scale = clamp(scale, LORE_MIN_SCALE, LORE_MAX_SCALE);
+    dialog?.style.setProperty("--lore-text-scale", loreState.scale.toFixed(2));
+  }
+
+  function adjustLoreScale(amount) {
+    setLoreScale(loreState.scale + amount);
+  }
+
+  function touchDistance(touches) {
+    const [first, second] = touches;
+    const x = second.clientX - first.clientX;
+    const y = second.clientY - first.clientY;
+    return Math.hypot(x, y);
+  }
+
+  function applyLoreTheme(product) {
+    const { dialog } = loreElements();
+    if (!dialog) return;
+
+    const accent = loreCssValue(product?.loreAccent);
+    const glow = loreCssValue(product?.loreGlow);
+    const accentPale = loreCssValue(product?.loreAccentPale);
+
+    if (accent) {
+      dialog.style.setProperty("--lore-accent", accent);
+    } else {
+      dialog.style.removeProperty("--lore-accent");
+    }
+
+    if (glow) {
+      dialog.style.setProperty("--lore-glow", glow);
+    } else {
+      dialog.style.removeProperty("--lore-glow");
+    }
+
+    if (accentPale) {
+      dialog.style.setProperty("--lore-accent-pale", accentPale);
+    } else {
+      dialog.style.removeProperty("--lore-accent-pale");
+    }
   }
 
   function lightboxIndex(track) {
@@ -447,6 +611,37 @@
     });
   }
 
+  function openLore(productId, opener) {
+    const product = productById(productId);
+    if (!productHasLore(product)) return;
+
+    const { dialog, title, copy, scroll, close } = loreElements();
+    if (!dialog || !title || !copy) return;
+
+    const position = currentWindowScroll();
+    loreState.scrollX = position.x;
+    loreState.scrollY = position.y;
+    loreState.opener = opener || null;
+    setLoreScale(1);
+    applyLoreTheme(product);
+    title.innerHTML = escapeHtml(product.name);
+    copy.innerHTML = loreTextHtml(product.lore);
+    if (scroll) scroll.scrollTop = 0;
+
+    document.documentElement.classList.add("lightbox-open");
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+    restoreWindowScroll();
+
+    requestAnimationFrame(() => {
+      focusWithoutScroll(close);
+      restoreWindowScroll();
+    });
+  }
+
   function closeLightbox() {
     const { dialog } = lightboxElements();
     if (!dialog) return;
@@ -458,11 +653,45 @@
     }
   }
 
+  function closeLore() {
+    const { dialog } = loreElements();
+    if (!dialog) return;
+    if (typeof dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+      cleanupLore();
+    }
+  }
+
   function cleanupLightbox() {
     const { track } = lightboxElements();
     document.documentElement.classList.remove("lightbox-open");
     lightboxState.images = [];
     if (track) track.innerHTML = "";
+  }
+
+  function cleanupLore() {
+    const { title, copy, dialog } = loreElements();
+    const scrollX = loreState.scrollX;
+    const scrollY = loreState.scrollY;
+    document.documentElement.classList.remove("lightbox-open");
+    if (title) title.textContent = "";
+    if (copy) copy.innerHTML = "";
+    dialog?.style.removeProperty("--lore-text-scale");
+    dialog?.style.removeProperty("--lore-accent");
+    dialog?.style.removeProperty("--lore-glow");
+    dialog?.style.removeProperty("--lore-accent-pale");
+    loreState.scale = 1;
+    loreState.pinchStartDistance = null;
+    loreState.pinchStartScale = 1;
+
+    const opener = loreState.opener;
+    loreState.opener = null;
+    if (opener?.isConnected) focusWithoutScroll(opener);
+    restoreWindowScroll(scrollX, scrollY);
+    loreState.scrollX = 0;
+    loreState.scrollY = 0;
   }
 
   function initialiseLightbox() {
@@ -491,12 +720,64 @@
     });
   }
 
+  function initialiseLoreDialog() {
+    installLoreDialog();
+    const { dialog, scroll } = loreElements();
+
+    dialog?.addEventListener("click", (event) => {
+      if (event.target === dialog) closeLore();
+    });
+
+    dialog?.addEventListener("close", cleanupLore);
+
+    scroll?.addEventListener(
+      "wheel",
+      (event) => {
+        if (!event.ctrlKey && !event.metaKey && !event.altKey) return;
+        event.preventDefault();
+        adjustLoreScale(event.deltaY < 0 ? LORE_SCALE_STEP : -LORE_SCALE_STEP);
+      },
+      { passive: false },
+    );
+
+    scroll?.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.touches.length !== 2) return;
+        loreState.pinchStartDistance = touchDistance(event.touches);
+        loreState.pinchStartScale = loreState.scale;
+      },
+      { passive: true },
+    );
+
+    scroll?.addEventListener(
+      "touchmove",
+      (event) => {
+        if (event.touches.length !== 2 || !loreState.pinchStartDistance) return;
+        event.preventDefault();
+        const ratio = touchDistance(event.touches) / loreState.pinchStartDistance;
+        setLoreScale(loreState.pinchStartScale * ratio);
+      },
+      { passive: false },
+    );
+
+    scroll?.addEventListener(
+      "touchend",
+      () => {
+        loreState.pinchStartDistance = null;
+      },
+      { passive: true },
+    );
+  }
+
   function initialiseShopFilters() {
     const filterButtons = [...document.querySelectorAll("[data-filter-group]")];
     const shopProducts = [...document.querySelectorAll("[data-shop-grid] [data-product]")];
     const status = document.querySelector("#filter-status");
     const clearButton = document.querySelector("#clear-filters");
     const emptyState = document.querySelector("#empty-state");
+    const sortSelect = document.querySelector("#shop-sort");
+    const shopGrid = document.querySelector("[data-shop-grid]");
 
     if (!filterButtons.length || !shopProducts.length || !status || !clearButton || !emptyState) return;
 
@@ -504,6 +785,70 @@
       type: "all",
       component: "all",
     };
+    const defaultOrder = new Map(shopProducts.map((product, index) => [product, index]));
+
+    function productSortPrice(card) {
+      const rawPrice = card.dataset.priceValue;
+      if (!rawPrice) return null;
+      const price = Number(rawPrice);
+      return Number.isFinite(price) ? price : null;
+    }
+
+    function defaultSort(a, b) {
+      return defaultOrder.get(a) - defaultOrder.get(b);
+    }
+
+    function comparePrice(direction) {
+      return (a, b) => {
+        const priceA = productSortPrice(a);
+        const priceB = productSortPrice(b);
+
+        if (priceA === null && priceB === null) return defaultSort(a, b);
+        if (priceA === null) return 1;
+        if (priceB === null) return -1;
+
+        return direction === "ascending"
+          ? priceA - priceB || defaultSort(a, b)
+          : priceB - priceA || defaultSort(a, b);
+      };
+    }
+
+    function availableSort(a, b) {
+      const aOrderable = a.dataset.orderable === "true";
+      const bOrderable = b.dataset.orderable === "true";
+      const aMadeToOrder = a.dataset.madeToOrder === "true";
+      const bMadeToOrder = b.dataset.madeToOrder === "true";
+
+      if (aOrderable !== bOrderable) {
+        return aOrderable ? -1 : 1;
+      }
+
+      if (aMadeToOrder !== bMadeToOrder) {
+        return aMadeToOrder ? -1 : 1;
+      }
+
+      return defaultSort(a, b);
+    }
+
+    function sortProducts() {
+      if (!sortSelect || !shopGrid) return;
+
+      const sortedProducts = [...shopProducts].sort((a, b) => {
+        switch (sortSelect.value) {
+          case "price-ascending":
+            return comparePrice("ascending")(a, b);
+          case "price-descending":
+            return comparePrice("descending")(a, b);
+          case "made-to-order":
+            return availableSort(a, b);
+          case "default":
+          default:
+            return defaultSort(a, b);
+        }
+      });
+
+      shopGrid.append(...sortedProducts);
+    }
 
     function setPressedState(group, value) {
       filterButtons
@@ -515,6 +860,7 @@
 
     function updateProducts() {
       let visibleCount = 0;
+      const availabilityOnly = sortSelect?.value === "made-to-order";
 
       shopProducts.forEach((product) => {
         const components = product.dataset.components.split(/\s+/).filter(Boolean);
@@ -522,7 +868,8 @@
           selected.type === "all" || product.dataset.type === selected.type;
         const matchesComponent =
           selected.component === "all" || components.includes(selected.component);
-        const isVisible = matchesType && matchesComponent;
+        const matchesAvailability = !availabilityOnly || product.dataset.orderable === "true";
+        const isVisible = matchesType && matchesComponent && matchesAvailability;
 
         product.hidden = !isVisible;
         if (isVisible) visibleCount += 1;
@@ -530,10 +877,11 @@
 
       const filtersAreClear =
         selected.type === "all" && selected.component === "all";
+      const productSetIsClear = filtersAreClear && !availabilityOnly;
 
       clearButton.hidden = filtersAreClear;
       emptyState.hidden = visibleCount !== 0;
-      status.textContent = filtersAreClear
+      status.textContent = productSetIsClear
         ? `Showing all ${shopProducts.length} pieces.`
         : visibleCount === 0
           ? "No pieces match these filters yet."
@@ -557,6 +905,12 @@
       updateProducts();
     });
 
+    sortSelect?.addEventListener("change", () => {
+      sortProducts();
+      updateProducts();
+    });
+
+    sortProducts();
     updateProducts();
   }
 
@@ -581,6 +935,7 @@
   renderProductGrids();
   initialiseProductGalleries();
   initialiseLightbox();
+  initialiseLoreDialog();
   initialiseShopFilters();
   updateCartCount();
 
@@ -592,6 +947,12 @@
       window.setTimeout(() => {
         addButton.textContent = "Add to cart";
       }, 1100);
+      return;
+    }
+
+    const loreButton = event.target.closest("[data-lore-open]");
+    if (loreButton) {
+      openLore(loreButton.dataset.loreOpen, loreButton);
       return;
     }
 
@@ -637,8 +998,19 @@
       return;
     }
 
+    const loreZoomButton = event.target.closest("[data-lore-zoom]");
+    if (loreZoomButton) {
+      adjustLoreScale(Number(loreZoomButton.dataset.loreZoom) * LORE_SCALE_STEP);
+      return;
+    }
+
     if (event.target.closest("[data-lightbox-close]")) {
       closeLightbox();
+      return;
+    }
+
+    if (event.target.closest("[data-lore-close]")) {
+      closeLore();
     }
   });
 })();

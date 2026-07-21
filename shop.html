@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#090b0a" />
   <link rel="icon" href="assets/images/many-eyed-raven-logo.jpg" type="image/jpeg" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="lore.css" />
   <script src="products.js" defer></script>
   <script src="script.js" defer></script>
 </head>
@@ -56,6 +58,18 @@
             <button type="button" data-filter-group="component" data-filter-value="gemstone" aria-pressed="false">Gemstone</button>
             <button type="button" data-filter-group="component" data-filter-value="bone" aria-pressed="false">Bone</button>
             <button type="button" data-filter-group="component" data-filter-value="fossil" aria-pressed="false">Fossil</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="filter-group filter-group--sort">
+          <legend>Sort by</legend>
+          <div class="filter-options filter-options--sort">
+            <select class="shop-sort" id="shop-sort" aria-label="Sort shop products">
+              <option value="default">Default</option>
+              <option value="price-ascending">Price: Low-to-high</option>
+              <option value="price-descending">Price: High-to-low</option>
+              <option value="made-to-order">Available (Made to order)</option>
+            </select>
           </div>
         </fieldset>
 

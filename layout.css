@@ -1,0 +1,48 @@
+html {
+  min-height: 100%;
+  scrollbar-gutter: stable;
+}
+
+body {
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+}
+
+body > main {
+  flex: 1 0 auto;
+}
+
+body > footer {
+  flex: 0 0 auto;
+}
+
+nav {
+  gap: 0.15rem clamp(0.9rem, 2vw, 1.75rem);
+  overflow: visible;
+}
+
+nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.65rem;
+  padding-bottom: 0.42rem;
+}
+
+nav a::after {
+  bottom: 0;
+}
+
+@media (max-width: 900px) {
+  nav {
+    overflow: visible;
+    padding: 0.15rem 0 0;
+    scrollbar-width: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  nav {
+    padding-bottom: 0;
+  }
+}
