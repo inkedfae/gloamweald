@@ -319,7 +319,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
   collection: null,
   price: {
     amount: null,
-    label: "Coming soon"
+    label: "Coming soon",
     currency: CATALOG_CURRENCY,
   },
   description:
