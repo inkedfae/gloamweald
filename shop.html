@@ -60,6 +60,18 @@
           </div>
         </fieldset>
 
+        <fieldset class="filter-group filter-group--sort">
+          <legend>Sort by</legend>
+          <div class="filter-options filter-options--sort">
+            <select class="shop-sort" id="shop-sort" aria-label="Sort shop products">
+              <option value="default">Default</option>
+              <option value="price-ascending">Price: Low-to-high</option>
+              <option value="price-descending">Price: High-to-low</option>
+              <option value="made-to-order">Available (Made to order)</option>
+            </select>
+          </div>
+        </fieldset>
+
         <div class="filter-summary">
           <p id="filter-status" aria-live="polite">Loading pieces…</p>
           <button id="clear-filters" class="quiet-button" type="button" hidden>Clear filters</button>
