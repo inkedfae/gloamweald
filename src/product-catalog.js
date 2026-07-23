@@ -115,20 +115,6 @@ export const PRODUCT_TYPE_CONFIG = Object.freeze({
     ],
     fallbackUrl: "/types/wallet-chains",
   },
-  cuffs: {
-    slug: "cuffs",
-    title: "Cuffs",
-    description:
-      "Cuffs fit differently from flexible chain bracelets. Follow the measuring instructions shown on the individual cuff page and choose a size based on the widest part the cuff must pass over as well as where it will sit.",
-    buyingGuideTitle: "Sizing & customisation guide",
-    buyingGuide: [
-      "Cuffs may need different sizing from flexible chain bracelets.",
-      "Measure where the cuff will sit and consider the widest part it must pass over.",
-      "Closure style and width can affect fit.",
-      "If a cuff is not yet size-configurable, contact Gloamweald before ordering custom sizing.",
-    ],
-    fallbackUrl: "/types/cuffs",
-  },
   earrings: {
     slug: "earrings",
     title: "Earrings",
@@ -531,7 +517,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     id: "european-4-in-1-cuff-6mm",
     slug: "european-4-in-1-cuff-6mm",
     name: "Chainmaille Cuff",
-    type: "cuffs",
+    type: "bracelets",
     components: [],
     collection: "classics",
     price: {

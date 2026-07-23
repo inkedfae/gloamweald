@@ -7,7 +7,7 @@ Product data lives in [src/product-catalog.js](src/product-catalog.js). That fil
 1. Copy an existing product object that is similar to the new piece.
 2. Give it a unique `id` and `slug`. Keep both lowercase, URL-safe and unaccented.
 3. Enter the visible `name`, `price`, `description`, `material`, `dimensions`, `status` and `images`.
-4. Set the product `type`, such as `bracelets`, `necklaces`, `wallet-chains`, `cuffs` or `earrings`.
+4. Set the product `type`, such as `bracelets`, `necklaces`, `wallet-chains`, `earrings` or `other`.
 5. Add `lore` only if the product needs a story section.
 6. Set `orderable: true` only when the product can be bought through checkout.
 7. Enable only the customisation options that can genuinely be made for that product.

@@ -16,7 +16,6 @@
     bracelets: "Bracelet",
     necklaces: "Necklace",
     "wallet-chains": "Wallet chain",
-    cuffs: "Cuff",
     earrings: "Earrings",
     other: "Other",
   };
@@ -1156,7 +1155,7 @@
   }
 
   function measuringGuideHtml(product) {
-    if (!["bracelets", "cuffs"].includes(product.type)) return "";
+    if (product.type !== "bracelets") return "";
 
     return `
       <details class="measuring-guide">
