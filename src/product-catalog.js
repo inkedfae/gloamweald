@@ -69,11 +69,11 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 45,
+      amount: 40,
       currency: CATALOG_CURRENCY,
     },
     description:
-      "The classic Half Persian weave creates a dense, flexible bracelet that drapes comfortably around the wrist. Its flowing pattern catches the light with every movement, balancing simplicity with quiet strength. ",
+      "The classic Half Persian weave creates a timeless, flexible bracelet that drapes comfortably around the wrist. Its flowing pattern catches the light with every movement, balancing simplicity with quiet strength. ",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "Custom length x 8mm x 4mm",
@@ -104,7 +104,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     description:
       "A tightly woven Jens Pind Linkage (JPL) chain creates a firm, structured band with a dense, cord-like feel. At its centre, a sphere of misty grey labradorite reveals flashes of blue and green at it turns through the light.",
     lore:
-      "Lēoma is an old word meaning radiance, or ray of light. It's often used to refer to the wandering lights that are sometimes seen between the thick trees of the Gloamweald, dancing just beyond the path, vanishing whenever they are pursued. The old wise ones learned that occasionally a Lēoma could be coaxed gently into certain stones, where it would remain hidden, and safe. Only at the right angle does the captive light reveal itself, and when worn close to the skin, it is said to ward away the deeper darkness that watches from beneath the trees.",
+      "Lēoma: an old word, once referring to radiance, or light. In a nearby village, folk gave this name to the wandering lights sometimes seen between the thick trees of the Gloamweald, dancing just beyond the path, vanishing whenever pursued. The healers and elders, those of the old ways, possessed a certain skill that enabled them to occasionally gently coax a lēoma into certain stones, where it would remain safe and hidden. Only at the right angle does the captive light reveal itself, and when worn close to the skin, it is said to ward away the unnerving shadows that seem to watch from between the trees.",
     loreAccent: "#6f8fa5",
     loreGlow: "rgba(111, 143, 165, 0.4)",
     material: "Stainless steel · labradorite",
@@ -139,11 +139,11 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 50,
+      amount: 45,
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A distinctive raised weave with a repeating spinal pattern that creates depth and texture. Bold without being bulky, it echoes the strength and resilience of bone.",
+      "A distinctive raised weave with a repeating pattern that creates depth and texture. Bold without being bulky, it echoes the strength and flexibility of a spine.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "Custom length x 12mm x 3.5mm",
@@ -173,7 +173,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 75,
+      amount: 70,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -203,11 +203,11 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 60,
+      amount: 55,
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A tightly woven sheet of European 4-in-1 maille with a dense, armour-inspired texture. Small rings create a refined pattern that recalls the close-linked mail once worn beneath cloaks and plate.",
+      "A tightly woven sheet of European 4-in-1 maille with a dense, armour-inspired texture. Small rings create a refined pattern that recalls the close-linked mail once worn beneath cloaks and armour.",
     material: "Stainless steel",
     clasp: "Slide lock",
     dimensions: "Custom length x 24mm x 3.5mm",
@@ -248,7 +248,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A slim Half Persian chain with an understated, close-wearing profile. Its narrow, flowing pattern drapes elegantly over collarbones or rippled fabric, and is ideal for daily wear, easy to layer with other necklaces.",
+      "A slim Half Persian chain with an understated, close-wearing profile. Its narrow, flowing pattern drapes elegantly over collarbones or rippled fabric. Perfect for daily wear, this necklace pairs with any outfit, and is ideal for layering with other necklaces.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "470mm x 6mm x 3.5mm",
@@ -274,38 +274,12 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       currency: CATALOG_CURRENCY,
     },
     description:
-      "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body",
+      "The classic Full Persian weave creates a dense, fluid chain with a substantial feel. Smooth and weighty, it settles naturally against the body.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "600mm x 8mm x 8mm",
     status: "Available - Made to order",
     orderable: true,
-    visual: "classic",
-    images: [],
-  },
-
-  {
-    id: "waymarker-necklace",
-    name: "Waymarker Necklace",
-    type: "necklaces",
-    components: ["gemstone"],
-    collection: null,
-    price: {
-      amount: null,
-      label: "Coming soon",
-      currency: CATALOG_CURRENCY,
-    },
-    description:
-      "Byzantine weave interrupted by thick rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each link leads to a tapered point - a map for forgotten places, featuring a larvikite gemstone to keep you to the path.",
-    lore:
-      "The oldest paths through the Gloamweald were never marked with signs. Travellers instead followed rings of iron hung from branches, each one pointing towards the next before the forest swallowed it from view. A dark stone was carried at the journey's end, not to prevent its bearer from becoming lost, but to ensure that some path would always lead them onward.",
-    loreAccent: "#8f9a8a",
-    loreGlow: "rgba(143, 154, 138, 0.36)",
-    material: "Stainless steel · larvikite",
-    clasp: "Lobster clasp",
-    dimensions: "Custom length x mm x mm",
-    status: "Coming soon",
-    orderable: false,
     visual: "classic",
     images: [],
   },
@@ -469,6 +443,32 @@ And it is still said, all these centuries later, that those with a stubborn, det
       },
     ],
   },
+    {
+    id: "waymarker-necklace",
+    name: "Waymarker Necklace",
+    type: "necklaces",
+    components: ["gemstone"],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Coming soon",
+      currency: CATALOG_CURRENCY,
+    },
+    description:
+      "Byzantine weave interrupted by thick rings, creating a steady rhythm along the chain. Like weathered markers along an old forest path, each link leads to a tapered point - a map for forgotten places, featuring a larvikite gemstone to keep you to the path.",
+    lore:
+      "The oldest paths through the Gloamweald were never marked with signs. Travellers instead followed rings of iron hung from branches or hammered into trunks, each one pointing towards the next before the forest swallowed it from view.",
+    loreAccent: "#8f9a8a",
+    loreGlow: "rgba(143, 154, 138, 0.36)",
+    material: "Stainless steel · larvikite",
+    clasp: "Lobster clasp",
+    dimensions: "Custom length x mm x mm",
+    status: "Coming soon",
+    orderable: false,
+    visual: "classic",
+    images: [],
+  },
+  
   {
     id: "briar-imp-earrings",
     name: "Briar Imp Earrings",
@@ -481,9 +481,9 @@ And it is still said, all these centuries later, that those with a stubborn, det
       currency: CATALOG_CURRENCY,
     },
     description:
-      "Compact knots of interlinked stainless steel are finished with polished, outward-facing spikes. The upper spikes form a horned silhouette, the rings linked to allow each earring to shift and catch the light.",
+      "Compact knots of interlinked stainless steel are finished with polished, outward-facing spikes. The upper spikes form a horned silhouette, with loosely-linked rings allowing each peice to shift with movement and life.",
     lore:
-      "Briar imps make their nests where the undergrowth grows too thick for larger creatures to follow. Their horns resemble thorns, their bodies curl into knots, and they are easily mistaken for burrs caught among the branches. They are troublesome little things, but not entirely cruel. Leave one a bright scrap of metal and it may guard your path. Refuse, and it may ensure that every briar finds your sleeve.",
+      "Briar imps make their nests where the undergrowth grows too thick for larger creatures to follow. Their horns resemble thorns, their bodies curl into tight, spined knots, and they are easily mistaken for burrs caught among the branches. They are troublesome little things, but not entirely cruel. Leave one a bright scrap of metal and it may guard your path from biting insects and painful flora. Refuse payment, and you may find that every briar finds your sock, and that biting insects are far kinder than a spiteful imp carrying sharp teeth and a grudge.",
     loreAccent: "#a13945",
     loreGlow: "rgba(161, 57, 69, 0.42)",
     material: "Stainless steel",
