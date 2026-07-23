@@ -28,9 +28,28 @@
     return new Function(
       `${browserSource}
       return {
+        CATALOG_CURRENCY,
+        CLASP_OPTIONS,
         collections: GLOAMWEALD_COLLECTIONS,
+        productTypes: PRODUCT_TYPE_CONFIG,
         products: GLOAMWEALD_PRODUCTS,
+        cartLineKey,
+        checkoutConfiguredLineItem,
+        claspOptionsForProduct,
+        configuredCartLine,
+        configuredUnitAmount,
+        customisationForProduct,
+        findClaspOption,
+        findLengthOption,
+        lengthOptionsForProduct,
+        normaliseProductConfiguration,
+        productById,
+        productBySlug,
         productDisplayPrice,
+        productPriceAmount,
+        productSlug,
+        selectionSummary,
+        validateProductCatalogue,
       };`,
     )();
   }
@@ -38,13 +57,22 @@
   try {
     const catalog = evaluateCatalog(loadCatalogSource());
     window.GLOAMWEALD_COLLECTIONS = catalog.collections;
+    window.GLOAMWEALD_PRODUCT_TYPES = catalog.productTypes;
+    window.GLOAMWEALD_CLASP_OPTIONS = catalog.CLASP_OPTIONS;
     window.GLOAMWEALD_PRODUCTS = catalog.products.map((product) => ({
       ...product,
-      price: catalog.productDisplayPrice(product),
+      displayPrice: catalog.productDisplayPrice(product),
     }));
+    window.GloamwealdCatalog = {
+      ...catalog,
+      products: window.GLOAMWEALD_PRODUCTS,
+    };
   } catch (error) {
     console.error("Gloamweald product catalogue could not be loaded.", error);
     window.GLOAMWEALD_COLLECTIONS = window.GLOAMWEALD_COLLECTIONS || {};
+    window.GLOAMWEALD_PRODUCT_TYPES = window.GLOAMWEALD_PRODUCT_TYPES || {};
+    window.GLOAMWEALD_CLASP_OPTIONS = window.GLOAMWEALD_CLASP_OPTIONS || {};
     window.GLOAMWEALD_PRODUCTS = window.GLOAMWEALD_PRODUCTS || [];
+    window.GloamwealdCatalog = window.GloamwealdCatalog || {};
   }
 })();

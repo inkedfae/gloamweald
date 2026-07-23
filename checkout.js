@@ -132,6 +132,82 @@
     if (refreshCart) renderCartPage();
   }
 
+  function priceDeltaLabel(amount) {
+    const value = Number(amount || 0);
+    if (!value) return "Included";
+    return `+${money.format(value)}`;
+  }
+
+  function addOnPriceLabel(amount) {
+    const value = Number(amount || 0);
+    if (!value) return "$0";
+    return `+${money.format(value)}`;
+  }
+
+  function cartProductUrl(item) {
+    const slug = item.product?.slug || item.product?.id || item.productId || "";
+    if (!slug) return "shop.html";
+
+    const params = new URLSearchParams();
+    params.set("product", slug);
+    params.set("editCart", item.key || item.id || "");
+    params.set("quantity", String(item.quantity || 1));
+
+    const selections = item.selections || {};
+    if (selections.length?.value) params.set("length", String(selections.length.value));
+    if (selections.clasp?.id) params.set("clasp", selections.clasp.id);
+    if (selections.extender) {
+      params.set("extender", selections.extender.selected ? "yes" : "no");
+    }
+
+    return `product.html?${params.toString()}`;
+  }
+
+  function cartModifierCostRows(item) {
+    const selections = item.selections || {};
+    const rows = [];
+
+    if (selections.length?.label) {
+      rows.push({
+        label: `Length: ${selections.length.label}`,
+        price: priceDeltaLabel(selections.length.priceDelta),
+      });
+    }
+
+    if (selections.clasp?.label) {
+      rows.push({
+        label: `Clasp: ${selections.clasp.label}`,
+        price: priceDeltaLabel(selections.clasp.priceDelta),
+      });
+    }
+
+    if (selections.extender?.selected) {
+      rows.push({
+        label: `Extender: ${selections.extender.label}`,
+        price: addOnPriceLabel(selections.extender.priceDelta),
+      });
+    }
+
+    if (!rows.length) return "";
+
+    const basePrice = Number.isFinite(item.basePrice) ? money.format(item.basePrice) : money.format(item.price);
+    const unitPrice = Number.isFinite(item.finalUnitPrice) ? money.format(item.finalUnitPrice) : money.format(item.price);
+
+    return `
+      <dl class="cart-line-costs" aria-label="Price details for ${escapeHtml(item.productName || item.product.name)}">
+        <div><dt>Base piece</dt><dd>${basePrice}</dd></div>
+        ${rows
+          .map(
+            (row) => `
+              <div><dt>${escapeHtml(row.label)}</dt><dd>${escapeHtml(row.price)}</dd></div>
+            `,
+          )
+          .join("")}
+        <div class="cart-line-costs__total"><dt>Item price</dt><dd>${unitPrice}</dd></div>
+      </dl>
+    `;
+  }
+
   function renderCartPage() {
     const cartItems = document.querySelector("[data-cart-items]");
     const cartEmpty = document.querySelector("[data-cart-empty]");
@@ -157,16 +233,21 @@
         (item) => `
           <article class="cart-line">
             <div>
-              <h3>${escapeHtml(item.product.name)}</h3>
+              <h3>${escapeHtml(item.productName || item.product.name)}</h3>
+              ${item.lineSummary ? `<p class="cart-line-options">${escapeHtml(item.lineSummary)}</p>` : ""}
+              ${cartModifierCostRows(item)}
               <p>${money.format(item.price)} each</p>
             </div>
-            <div class="quantity-control" aria-label="Quantity for ${escapeHtml(item.product.name)}">
-              <button type="button" data-cart-change="${escapeHtml(item.id)}" data-cart-delta="-1" aria-label="Remove one ${escapeHtml(item.product.name)}">-</button>
+            <div class="quantity-control" aria-label="Quantity for ${escapeHtml(item.productName || item.product.name)}">
+              <button type="button" data-cart-change="${escapeHtml(item.key || item.id)}" data-cart-delta="-1" aria-label="Remove one ${escapeHtml(item.productName || item.product.name)}">-</button>
               <span>${item.quantity}</span>
-              <button type="button" data-cart-change="${escapeHtml(item.id)}" data-cart-delta="1" aria-label="Add one ${escapeHtml(item.product.name)}">+</button>
+              <button type="button" data-cart-change="${escapeHtml(item.key || item.id)}" data-cart-delta="1" aria-label="Add one ${escapeHtml(item.productName || item.product.name)}">+</button>
             </div>
             <strong>${money.format(item.lineTotal)}</strong>
-            <button class="quiet-button" type="button" data-cart-remove="${escapeHtml(item.id)}">Remove</button>
+            <div class="cart-line-actions">
+              <a class="quiet-button" href="${escapeHtml(cartProductUrl(item))}" data-product-link>Adjust</a>
+              <button class="quiet-button" type="button" data-cart-remove="${escapeHtml(item.key || item.id)}">Remove</button>
+            </div>
           </article>
         `,
       )
@@ -192,7 +273,10 @@
 
   function checkoutLineSummary(items) {
     return items
-      .map((item) => `${item.quantity} x ${item.product.name} - ${money.format(item.lineTotal)}`)
+      .map((item) => {
+        const summary = item.lineSummary ? ` (${item.lineSummary})` : "";
+        return `${item.quantity} x ${item.productName || item.product.name}${summary} - ${money.format(item.lineTotal)}`;
+      })
       .join("\n");
   }
 
@@ -258,7 +342,12 @@
     };
 
     return {
-      items: displayItems.map((item) => ({ id: item.id, quantity: item.quantity })),
+      items: displayItems.map((item) => ({
+        id: item.productId || item.product?.id || item.id,
+        productId: item.productId || item.product?.id || item.id,
+        quantity: item.quantity,
+        selections: item.selections || {},
+      })),
       displayItems,
       customer,
       shippingId,
