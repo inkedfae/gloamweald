@@ -65,7 +65,7 @@
 
   function productUrl(product) {
     const slug = encodeURIComponent(productSlug(product));
-    return slug ? `/products/${slug}` : "shop.html";
+    return slug ? `product.html?product=${slug}` : "shop.html";
   }
 
   function productTypeUrl(type) {
@@ -308,26 +308,23 @@
   }
 
   function productMedia(product) {
-    const url = productUrl(product);
-
     if (product.images?.length) {
       const images = product.images
         .map(
           (image, index) => `
-            <a
+            <button
               class="product-photo"
-              href="${escapeHtml(url)}"
-              data-product-link
-              data-product-id="${escapeHtml(product.id)}"
+              type="button"
+              data-lightbox-open="${escapeHtml(product.id)}"
               data-image-index="${index}"
-              aria-label="View and customise ${escapeHtml(product.name)}"
+              aria-label="Open image ${index + 1} of ${product.images.length} for ${escapeHtml(product.name)} full-screen"
             >
               <img
                 src="${escapeHtml(image.src)}"
                 alt="${escapeHtml(image.alt)}"
                 ${index === 0 ? "" : 'loading="lazy"'}
               />
-            </a>
+            </button>
           `,
         )
         .join("");
