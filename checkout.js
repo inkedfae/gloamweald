@@ -157,16 +157,17 @@
         (item) => `
           <article class="cart-line">
             <div>
-              <h3>${escapeHtml(item.product.name)}</h3>
+              <h3>${escapeHtml(item.productName || item.product.name)}</h3>
+              ${item.lineSummary ? `<p class="cart-line-options">${escapeHtml(item.lineSummary)}</p>` : ""}
               <p>${money.format(item.price)} each</p>
             </div>
-            <div class="quantity-control" aria-label="Quantity for ${escapeHtml(item.product.name)}">
-              <button type="button" data-cart-change="${escapeHtml(item.id)}" data-cart-delta="-1" aria-label="Remove one ${escapeHtml(item.product.name)}">-</button>
+            <div class="quantity-control" aria-label="Quantity for ${escapeHtml(item.productName || item.product.name)}">
+              <button type="button" data-cart-change="${escapeHtml(item.key || item.id)}" data-cart-delta="-1" aria-label="Remove one ${escapeHtml(item.productName || item.product.name)}">-</button>
               <span>${item.quantity}</span>
-              <button type="button" data-cart-change="${escapeHtml(item.id)}" data-cart-delta="1" aria-label="Add one ${escapeHtml(item.product.name)}">+</button>
+              <button type="button" data-cart-change="${escapeHtml(item.key || item.id)}" data-cart-delta="1" aria-label="Add one ${escapeHtml(item.productName || item.product.name)}">+</button>
             </div>
             <strong>${money.format(item.lineTotal)}</strong>
-            <button class="quiet-button" type="button" data-cart-remove="${escapeHtml(item.id)}">Remove</button>
+            <button class="quiet-button" type="button" data-cart-remove="${escapeHtml(item.key || item.id)}">Remove</button>
           </article>
         `,
       )
@@ -192,7 +193,10 @@
 
   function checkoutLineSummary(items) {
     return items
-      .map((item) => `${item.quantity} x ${item.product.name} - ${money.format(item.lineTotal)}`)
+      .map((item) => {
+        const summary = item.lineSummary ? ` (${item.lineSummary})` : "";
+        return `${item.quantity} x ${item.productName || item.product.name}${summary} - ${money.format(item.lineTotal)}`;
+      })
       .join("\n");
   }
 
@@ -258,7 +262,12 @@
     };
 
     return {
-      items: displayItems.map((item) => ({ id: item.id, quantity: item.quantity })),
+      items: displayItems.map((item) => ({
+        id: item.productId || item.product?.id || item.id,
+        productId: item.productId || item.product?.id || item.id,
+        quantity: item.quantity,
+        selections: item.selections || {},
+      })),
       displayItems,
       customer,
       shippingId,

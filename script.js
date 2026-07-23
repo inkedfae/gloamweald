@@ -1,9 +1,12 @@
 (() => {
   "use strict";
 
+  const catalog = window.GloamwealdCatalog || {};
   const products = window.GLOAMWEALD_PRODUCTS || [];
   const collections = window.GLOAMWEALD_COLLECTIONS || {};
+  const productTypes = window.GLOAMWEALD_PRODUCT_TYPES || {};
   const CART_STORAGE_KEY = "gloamweald-cart";
+  const RETURN_STORAGE_KEY = "gloamweald-catalog-return";
   const CONTACT_EMAIL = "gloamweald@gmail.com";
   const LORE_MIN_SCALE = 0.85;
   const LORE_MAX_SCALE = 1.45;
@@ -13,6 +16,7 @@
     bracelets: "Bracelet",
     necklaces: "Necklace",
     "wallet-chains": "Wallet chain",
+    cuffs: "Cuff",
     earrings: "Earrings",
     other: "Other",
   };
@@ -36,12 +40,37 @@
   }
 
   function productPrice(product) {
-    const match = String(product?.price || "").match(/\$?\s*([0-9]+(?:\.[0-9]{1,2})?)/);
+    const catalogueAmount = catalog.productPriceAmount?.(product);
+    if (Number.isFinite(catalogueAmount)) return catalogueAmount;
+
+    const match = String(product?.displayPrice || product?.price || "").match(/\$?\s*([0-9]+(?:\.[0-9]{1,2})?)/);
     return match ? Number(match[1]) : null;
   }
 
+  function productDisplayPrice(product) {
+    return catalog.productDisplayPrice?.(product) || product?.displayPrice || product?.price || "Price on enquiry";
+  }
+
   function productById(id) {
-    return products.find((product) => product.id === id);
+    return catalog.productById?.(id) || products.find((product) => product.id === id);
+  }
+
+  function productBySlug(slug) {
+    return catalog.productBySlug?.(slug) || products.find((product) => (product.slug || product.id) === slug);
+  }
+
+  function productSlug(product) {
+    return catalog.productSlug?.(product) || product?.slug || product?.id || "";
+  }
+
+  function productUrl(product) {
+    const slug = encodeURIComponent(productSlug(product));
+    return slug ? `/products/${slug}` : "shop.html";
+  }
+
+  function productTypeUrl(type) {
+    const config = productTypes[type];
+    return config?.fallbackUrl || (type ? `/types/${encodeURIComponent(type)}` : "shop.html");
   }
 
   function contactPageLink(label, className = "quiet-button") {
@@ -84,15 +113,40 @@
     try {
       const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || "[]");
       if (!Array.isArray(parsed)) return [];
+
       return parsed
-        .map((item) => ({
-          id: String(item.id || ""),
-          quantity: Math.max(1, Number(item.quantity) || 1),
-        }))
-        .filter((item) => {
-          const product = productById(item.id);
-          return product?.orderable && productPrice(product) !== null;
-        });
+        .map((item) => {
+          try {
+            if (catalog.configuredCartLine) {
+              return catalog.configuredCartLine({
+                productId: item.productId || item.id,
+                quantity: item.quantity,
+                selections: item.selections || {},
+              });
+            }
+
+            const product = productById(item.productId || item.id);
+            const price = productPrice(product);
+            if (!product?.orderable || price === null) return null;
+            return {
+              id: product.id,
+              key: product.id,
+              productId: product.id,
+              productName: product.name,
+              quantity: Math.max(1, Number(item.quantity) || 1),
+              basePrice: price,
+              finalUnitPrice: price,
+              price,
+              selections: {},
+              lineSummary: "",
+              product,
+            };
+          } catch (error) {
+            console.warn("Removed invalid cart item.", error);
+            return null;
+          }
+        })
+        .filter(Boolean);
     } catch {
       return [];
     }
@@ -113,7 +167,18 @@
   }
 
   function writeCart(cart) {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    const stored = cart.map((item) => ({
+      key: item.key || item.id,
+      id: item.productId || item.id,
+      productId: item.productId || item.id,
+      productName: item.productName,
+      quantity: Math.max(1, Number(item.quantity) || 1),
+      basePrice: item.basePrice,
+      finalUnitPrice: item.finalUnitPrice || item.price,
+      selections: item.selections || {},
+      lineSummary: item.lineSummary || "",
+    }));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(stored));
     refreshCartUi();
   }
 
@@ -124,16 +189,12 @@
 
   function cartLineItems() {
     return readCart()
-      .map((item) => {
-        const product = productById(item.id);
-        const price = productPrice(product);
-        return {
-          ...item,
-          product,
-          price,
-          lineTotal: price * item.quantity,
-        };
-      })
+      .map((item) => ({
+        ...item,
+        product: item.product || productById(item.productId || item.id),
+        price: item.finalUnitPrice || item.price,
+        lineTotal: Math.round((item.finalUnitPrice || item.price) * item.quantity * 100) / 100,
+      }))
       .filter((item) => item.product && item.price !== null);
   }
 
@@ -141,26 +202,23 @@
     return cartLineItems().reduce((total, item) => total + item.lineTotal, 0);
   }
 
-  function addToCart(productId) {
-    const product = productById(productId);
-    if (!product || productPrice(product) === null) return;
-
+  function addConfiguredToCart(line) {
     const cart = readCart();
-    const existing = cart.find((item) => item.id === productId);
+    const existing = cart.find((item) => (item.key || item.id) === (line.key || line.id));
     if (existing) {
-      existing.quantity += 1;
+      existing.quantity = Math.min(10, existing.quantity + line.quantity);
     } else {
-      cart.push({ id: productId, quantity: 1 });
+      cart.push(line);
     }
 
     writeCart(cart);
-    announceCart(`${product.name} added to cart.`);
+    announceCart(`${line.productName} added to cart.`);
   }
 
-  function updateCartItem(productId, quantity) {
+  function updateCartItem(cartKey, quantity) {
     const cart = readCart()
       .map((item) =>
-        item.id === productId
+        (item.key || item.id) === cartKey
           ? { ...item, quantity: Math.max(0, quantity) }
           : item,
       )
@@ -168,8 +226,8 @@
     writeCart(cart);
   }
 
-  function removeCartItem(productId) {
-    writeCart(readCart().filter((item) => item.id !== productId));
+  function removeCartItem(cartKey) {
+    writeCart(readCart().filter((item) => (item.key || item.id) !== cartKey));
   }
 
   function installCartLink() {
@@ -202,24 +260,74 @@
     announcer.textContent = message;
   }
 
+  function catalogueReturnState() {
+    return {
+      url: `${location.pathname}${location.search}${location.hash}`,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      timestamp: Date.now(),
+    };
+  }
+
+  function saveCatalogueReturnState() {
+    try {
+      sessionStorage.setItem(RETURN_STORAGE_KEY, JSON.stringify(catalogueReturnState()));
+    } catch {
+      /* Continue without return-state persistence if storage is unavailable. */
+    }
+  }
+
+  function savedReturnState() {
+    try {
+      return JSON.parse(sessionStorage.getItem(RETURN_STORAGE_KEY) || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function continueShoppingUrl(product) {
+    const state = savedReturnState();
+    if (state?.url && Date.now() - Number(state.timestamp || 0) < 1000 * 60 * 60) {
+      return state.url;
+    }
+    return productTypeUrl(product?.type);
+  }
+
+  function restoreCatalogueScrollWhenReady() {
+    const state = savedReturnState();
+    const current = `${location.pathname}${location.search}${location.hash}`;
+    if (!state?.url || state.url !== current) return;
+
+    window.setTimeout(() => {
+      window.scrollTo({
+        left: Number(state.scrollX) || 0,
+        top: Number(state.scrollY) || 0,
+        behavior: "auto",
+      });
+    }, 80);
+  }
+
   function productMedia(product) {
+    const url = productUrl(product);
+
     if (product.images?.length) {
       const images = product.images
         .map(
           (image, index) => `
-            <button
+            <a
               class="product-photo"
-              type="button"
-              data-lightbox-open="${escapeHtml(product.id)}"
+              href="${escapeHtml(url)}"
+              data-product-link
+              data-product-id="${escapeHtml(product.id)}"
               data-image-index="${index}"
-              aria-label="Open image ${index + 1} of ${product.images.length} for ${escapeHtml(product.name)} full-screen"
+              aria-label="View and customise ${escapeHtml(product.name)}"
             >
               <img
                 src="${escapeHtml(image.src)}"
                 alt="${escapeHtml(image.alt)}"
                 ${index === 0 ? "" : 'loading="lazy"'}
               />
-            </button>
+            </a>
           `,
         )
         .join("");
@@ -270,32 +378,14 @@
   }
 
   function productAction(product) {
-    const price = productPrice(product);
-
-    if (product.orderable && price !== null) {
-      return `
-        <div class="product-actions">
-          <button
-            class="button button--solid"
-            type="button"
-            data-add-to-cart="${escapeHtml(product.id)}"
-          >Add to cart</button>
-          ${contactPageLink("Ask a question")}
-        </div>
-      `;
-    }
-
-    if (product.orderable) {
-      return `
-        <div class="product-actions product-actions--center">
-          ${contactPageLink("Enquire to order", "quiet-button product-inquiry-link")}
-        </div>
-      `;
-    }
-
     return `
-      <div class="product-actions product-actions--center">
-        ${contactPageLink("Send an inquiry", "quiet-button product-inquiry-link")}
+      <div class="product-actions">
+        <a
+          class="button button--solid"
+          href="${escapeHtml(productUrl(product))}"
+          data-product-link
+          data-product-id="${escapeHtml(product.id)}"
+        >View &amp; customise</a>
       </div>
     `;
   }
@@ -316,7 +406,9 @@
         class="product-card"
         data-product
         data-product-id="${escapeHtml(product.id)}"
+        data-product-slug="${escapeHtml(productSlug(product))}"
         data-type="${escapeHtml(product.type)}"
+        data-collection="${escapeHtml(product.collection || "")}"
         data-components="${escapeHtml(product.components.join(" "))}"
         data-price-value="${price === null ? "" : escapeHtml(String(price))}"
         data-orderable="${product.orderable ? "true" : "false"}"
@@ -331,8 +423,8 @@
           </div>
           <div class="product-title-row">
             <div class="product-title-copy">
-              <h3>${escapeHtml(product.name)}</h3>
-              <p class="price">${escapeHtml(product.price)}</p>
+              <h3><a href="${escapeHtml(productUrl(product))}" data-product-link data-product-id="${escapeHtml(product.id)}">${escapeHtml(product.name)}</a></h3>
+              <p class="price">${escapeHtml(productDisplayPrice(product))}</p>
             </div>
             ${productLoreButton(product)}
           </div>
@@ -352,9 +444,12 @@
   function renderProductGrids() {
     document.querySelectorAll("[data-product-grid]").forEach((grid) => {
       const collection = grid.dataset.collection;
-      const visibleProducts = collection
-        ? products.filter((product) => product.collection === collection)
-        : products;
+      const type = grid.dataset.type;
+      const visibleProducts = products.filter((product) => {
+        const matchesCollection = !collection || product.collection === collection;
+        const matchesType = !type || product.type === type;
+        return matchesCollection && matchesType;
+      });
 
       grid.innerHTML = visibleProducts.map(productCard).join("");
     });
@@ -781,9 +876,10 @@
 
     if (!filterButtons.length || !shopProducts.length || !status || !clearButton || !emptyState) return;
 
+    const params = new URLSearchParams(location.search);
     const selected = {
-      type: "all",
-      component: "all",
+      type: params.get("type") || "all",
+      component: params.get("component") || "all",
     };
     const defaultOrder = new Map(shopProducts.map((product, index) => [product, index]));
 
@@ -851,11 +947,25 @@
     }
 
     function setPressedState(group, value) {
+      const hasMatchingButton = filterButtons.some(
+        (button) => button.dataset.filterGroup === group && button.dataset.filterValue === value,
+      );
+      const safeValue = hasMatchingButton ? value : "all";
+      selected[group] = safeValue;
       filterButtons
         .filter((button) => button.dataset.filterGroup === group)
         .forEach((button) => {
-          button.setAttribute("aria-pressed", String(button.dataset.filterValue === value));
+          button.setAttribute("aria-pressed", String(button.dataset.filterValue === safeValue));
         });
+    }
+
+    function updateShopUrl() {
+      const next = new URLSearchParams(location.search);
+      selected.type === "all" ? next.delete("type") : next.set("type", selected.type);
+      selected.component === "all" ? next.delete("component") : next.set("component", selected.component);
+      sortSelect?.value && sortSelect.value !== "default" ? next.set("sort", sortSelect.value) : next.delete("sort");
+      const query = next.toString();
+      history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
     }
 
     function updateProducts() {
@@ -893,6 +1003,7 @@
         const { filterGroup, filterValue } = button.dataset;
         selected[filterGroup] = filterValue;
         setPressedState(filterGroup, filterValue);
+        updateShopUrl();
         updateProducts();
       });
     });
@@ -902,16 +1013,657 @@
       selected.component = "all";
       setPressedState("type", "all");
       setPressedState("component", "all");
+      updateShopUrl();
       updateProducts();
     });
 
     sortSelect?.addEventListener("change", () => {
       sortProducts();
+      updateShopUrl();
       updateProducts();
     });
 
+    setPressedState("type", selected.type);
+    setPressedState("component", selected.component);
+    if (sortSelect) {
+      const requestedSort = params.get("sort") || "default";
+      sortSelect.value = [...sortSelect.options].some((option) => option.value === requestedSort)
+        ? requestedSort
+        : "default";
+    }
     sortProducts();
     updateProducts();
+  }
+
+  function priceDeltaLabel(amount) {
+    const value = Number(amount || 0);
+    if (!value) return "Included";
+    return `+${money.format(value)}`;
+  }
+
+  function productSlugFromLocation() {
+    const params = new URLSearchParams(location.search);
+    const requested = params.get("slug") || params.get("product");
+    if (requested) return requested;
+
+    const parts = location.pathname.split("/").filter(Boolean);
+    const productIndex = parts.indexOf("products");
+    if (productIndex >= 0) return decodeURIComponent(parts[productIndex + 1] || "");
+    return "";
+  }
+
+  function updateProductMeta(product) {
+    document.title = `${product.name} | Gloamweald`;
+    const description = document.querySelector('meta[name="description"]');
+    if (description) {
+      description.setAttribute("content", product.description || `${product.name} by Gloamweald.`);
+    }
+    const image = product.images?.[0]?.src;
+    if (image) {
+      let ogImage = document.querySelector('meta[property="og:image"]');
+      if (!ogImage) {
+        ogImage = document.createElement("meta");
+        ogImage.setAttribute("property", "og:image");
+        document.head.append(ogImage);
+      }
+      ogImage.setAttribute("content", image);
+    }
+  }
+
+  function renderProductPageGallery(product) {
+    const images = product.images?.length
+      ? product.images
+      : [
+          {
+            src: "",
+            alt: `Photography coming soon for ${product.name}`,
+          },
+        ];
+
+    if (!product.images?.length) {
+      return `
+        <div class="product-page-gallery product-page-gallery--placeholder">
+          <div class="product-visual product-visual--${escapeHtml(product.visual || "classic")}">
+            <span>Photography coming soon</span>
+            <i aria-hidden="true"></i>
+          </div>
+        </div>
+      `;
+    }
+
+    const slides = images
+      .map(
+        (image, index) => `
+          <button
+            class="product-photo"
+            type="button"
+            data-lightbox-open="${escapeHtml(product.id)}"
+            data-image-index="${index}"
+            aria-label="Open image ${index + 1} of ${images.length} for ${escapeHtml(product.name)} full-screen"
+          >
+            <img
+              src="${escapeHtml(image.src)}"
+              alt="${escapeHtml(image.alt)}"
+              ${index === 0 ? "" : 'loading="lazy"'}
+            />
+          </button>
+        `,
+      )
+      .join("");
+    const controls =
+      images.length > 1
+        ? `
+          <button class="gallery-arrow gallery-arrow--previous" type="button" data-gallery-nav="-1" aria-label="Previous ${escapeHtml(product.name)} photograph" disabled><span aria-hidden="true">&lsaquo;</span></button>
+          <button class="gallery-arrow gallery-arrow--next" type="button" data-gallery-nav="1" aria-label="Next ${escapeHtml(product.name)} photograph"><span aria-hidden="true">&rsaquo;</span></button>
+        `
+        : "";
+
+    return `
+      <div class="product-page-gallery product-visual product-visual--photo">
+        <div class="product-gallery" tabindex="0" data-product-gallery aria-label="${escapeHtml(product.name)} product photographs">
+          ${slides}
+        </div>
+        ${controls}
+      </div>
+    `;
+  }
+
+  function renderProductSpecs(product) {
+    const specs = [
+      ["Material", product.material],
+      ["Clasp", product.clasp],
+      ["Dimensions", product.dimensions],
+      ["Status", product.status],
+    ].filter(([, value]) => String(value || "").trim());
+
+    if (!specs.length) return "";
+
+    return `
+      <dl class="product-specs product-specs--page">
+        ${specs
+          .map(([term, value]) => `<div><dt>${escapeHtml(term)}</dt><dd>${escapeHtml(value)}</dd></div>`)
+          .join("")}
+      </dl>
+    `;
+  }
+
+  function productLoreSection(product) {
+    if (!productHasLore(product)) return "";
+    return `
+      <section class="product-page-lore" aria-labelledby="product-page-lore-title">
+        <p class="eyebrow">From the Gloamweald</p>
+        <h2 id="product-page-lore-title">Lore</h2>
+        <div class="product-page-lore__copy">${loreTextHtml(product.lore)}</div>
+      </section>
+    `;
+  }
+
+  function measuringGuideHtml(product) {
+    if (!["bracelets", "cuffs"].includes(product.type)) return "";
+
+    return `
+      <details class="measuring-guide">
+        <summary aria-expanded="false">How do I choose my bracelet length?</summary>
+        <div>
+          <h4>How to choose your bracelet length</h4>
+          <p>If you do not already own a bracelet to measure:</p>
+          <ol>
+            <li>Wrap a flexible measuring tape around your wrist where you want the bracelet to sit.</li>
+            <li>Keep the tape against your skin without pulling it tight.</li>
+            <li>Record your wrist measurement, then add:</li>
+          </ol>
+          <ul>
+            <li><strong>1-1.5 cm</strong> for a close fit</li>
+            <li><strong>1.5-2 cm</strong> for a comfortable fit</li>
+            <li><strong>2-2.5 cm</strong> for a loose fit</li>
+          </ul>
+          <p>For example, if your wrist measures 17 cm, choose approximately 18.5-19 cm for a comfortable fit.</p>
+          <p>No measuring tape? Wrap a piece of string around your wrist, mark where the ends meet, then measure the string against a ruler.</p>
+          <p>Wider or heavier bracelets can feel tighter than finer chains, so choose the larger option if you are between sizes. You can also add the complimentary extender for greater adjustability.</p>
+        </div>
+      </details>
+    `;
+  }
+
+  function renderLengthSelector(product) {
+    const config = product.customisation?.length;
+    if (!config?.enabled) return "";
+
+    const options = catalog.lengthOptionsForProduct?.(product) || config.options || [];
+    if (!options.length) return "";
+
+    const descriptionId = `length-help-${escapeHtml(product.id)}`;
+    const label = config.label || (product.type === "necklaces" ? "Finished necklace length" : "Finished bracelet length");
+    const requiredMark = config.required ? " *" : "";
+    const helper =
+      config.helperText ||
+      (product.type === "wallet-chains"
+        ? "Choose the complete end-to-end length, including attachment hardware."
+        : "Choose the completed end-to-end length of the bracelet, including the clasp.");
+
+    const control =
+      options.length > 8
+        ? `
+          <label class="custom-select">
+            <span class="visually-hidden">${escapeHtml(label)}</span>
+            <select name="length" ${config.required ? "required" : ""} aria-describedby="${descriptionId}">
+              <option value="">Choose a length</option>
+              ${options
+                .map(
+                  (option) => `
+                    <option value="${escapeHtml(option.value)}">
+                      ${escapeHtml(option.label)}${option.priceDelta ? ` - +${money.format(option.priceDelta)}` : ""}
+                    </option>
+                  `,
+                )
+                .join("")}
+            </select>
+          </label>
+        `
+        : `
+          <div class="size-options">
+            ${options
+              .map(
+                (option) => `
+                  <label class="size-option">
+                    <input type="radio" name="length" value="${escapeHtml(option.value)}" ${config.required ? "required" : ""} />
+                    <span>${escapeHtml(option.label)}</span>
+                    <small>${escapeHtml(priceDeltaLabel(option.priceDelta))}</small>
+                  </label>
+                `,
+              )
+              .join("")}
+          </div>
+        `;
+
+    return `
+      <fieldset class="customisation-field customisation-field--length">
+        <legend>${escapeHtml(label)}${requiredMark}</legend>
+        <p id="${descriptionId}">${escapeHtml(helper)}</p>
+        ${control}
+        ${config.toleranceNote ? `<p class="field-note">${escapeHtml(config.toleranceNote)}</p>` : ""}
+        ${measuringGuideHtml(product)}
+      </fieldset>
+    `;
+  }
+
+  function renderClaspSelector(product) {
+    const config = product.customisation?.clasp;
+    if (!config?.enabled) return "";
+
+    const options = catalog.claspOptionsForProduct?.(product) || [];
+    if (!options.length) return "";
+
+    return `
+      <fieldset class="customisation-field customisation-field--clasp">
+        <legend>Choose your clasp</legend>
+        <p>The clasp shown in the product photographs is included. You can keep the pictured clasp or choose another compatible style.</p>
+        <div class="clasp-options">
+          ${options
+            .map((option, index) => {
+              const image = option.image
+                ? `<img src="${escapeHtml(option.image)}" alt="${escapeHtml(option.label || option.name)}" loading="lazy" />`
+                : `<span class="clasp-placeholder" aria-hidden="true">?</span>`;
+              return `
+                <label class="clasp-option">
+                  <input type="radio" name="clasp" value="${escapeHtml(option.id)}" ${index === 0 ? "checked" : ""} />
+                  <span class="clasp-option__image">${image}</span>
+                  <span class="clasp-option__name">${escapeHtml(option.label || option.name)}</span>
+                  <span class="clasp-option__meta">${escapeHtml(option.dimensions || "Measurement to be added")}</span>
+                  <span class="clasp-option__price">${escapeHtml(priceDeltaLabel(option.priceDelta))}</span>
+                </label>
+              `;
+            })
+            .join("")}
+        </div>
+      </fieldset>
+    `;
+  }
+
+  function renderExtenderSelector(product) {
+    const config = product.customisation?.extender;
+    if (!config?.enabled) return "";
+
+    const lengthCm = Number(config.lengthCm) || 3;
+    return `
+      <fieldset class="customisation-field customisation-field--extender" data-extender-field>
+        <legend>Add an extender</legend>
+        <p>The extender provides up to approximately ${lengthCm} cm of additional adjustable length. The bracelet itself will still be made to the finished length selected above.</p>
+        <div class="extender-options">
+          <label class="size-option">
+            <input type="radio" name="extender" value="no" checked />
+            <span>No extender</span>
+          </label>
+          <label class="size-option">
+            <input type="radio" name="extender" value="yes" />
+            <span>Add a ${lengthCm} cm extender</span>
+            <small>${escapeHtml(priceDeltaLabel(config.priceDelta))}</small>
+          </label>
+        </div>
+        <p class="field-note" data-extender-note></p>
+      </fieldset>
+    `;
+  }
+
+  function renderCustomisationForm(product) {
+    const orderable = product.orderable && productPrice(product) !== null;
+    const note = product.customisation?.hardwareNote
+      ? `<p class="field-note">${escapeHtml(product.customisation.hardwareNote)}</p>`
+      : "";
+
+    if (!orderable) {
+      return `
+        <div class="product-purchase-panel product-purchase-panel--inquiry">
+          <p>${escapeHtml(product.status || "This piece is not currently available to order.")}</p>
+          ${contactPageLink("Send an inquiry", "button button--solid")}
+        </div>
+      `;
+    }
+
+    return `
+      <form class="product-purchase-form" data-product-form data-product-id="${escapeHtml(product.id)}">
+        ${renderLengthSelector(product)}
+        ${renderClaspSelector(product)}
+        ${renderExtenderSelector(product)}
+        ${note}
+        <section class="price-summary" aria-live="polite" data-price-summary></section>
+        <p class="form-error" data-product-form-error role="alert"></p>
+        <div class="product-page-actions">
+          <button class="button button--solid" type="submit" data-product-add-button>Add to cart</button>
+          ${contactPageLink("Ask a question")}
+        </div>
+      </form>
+    `;
+  }
+
+  function productPageSelections(form) {
+    const data = new FormData(form);
+    return {
+      length: data.get("length") || "",
+      clasp: data.get("clasp") || "pictured",
+      extender: data.get("extender") === "yes",
+    };
+  }
+
+  function formHasRequiredSelections(product, selections) {
+    const length = product.customisation?.length;
+    return !length?.enabled || !length.required || selections.length;
+  }
+
+  function selectedClaspSupportsExtender(product, claspId) {
+    const option = catalog.findClaspOption?.(product, claspId);
+    return option?.supportsExtender !== false;
+  }
+
+  function updateProductPurchaseForm(form) {
+    const product = productById(form.dataset.productId);
+    if (!product) return;
+
+    const selections = productPageSelections(form);
+    const addButton = form.querySelector("[data-product-add-button]");
+    const error = form.querySelector("[data-product-form-error]");
+    const summary = form.querySelector("[data-price-summary]");
+    const extenderField = form.querySelector("[data-extender-field]");
+    const extenderYes = form.querySelector('input[name="extender"][value="yes"]');
+    const extenderNo = form.querySelector('input[name="extender"][value="no"]');
+    const extenderNote = form.querySelector("[data-extender-note]");
+
+    if (extenderField) {
+      const supports = selectedClaspSupportsExtender(product, selections.clasp);
+      extenderField.classList.toggle("is-disabled", !supports);
+      if (!supports && extenderYes?.checked) {
+        extenderNo.checked = true;
+        selections.extender = false;
+        if (extenderNote) {
+          extenderNote.textContent = "The extender was removed because the newly selected clasp does not support it.";
+        }
+      } else if (extenderNote) {
+        extenderNote.textContent = supports ? "" : "Extenders are not available with this clasp style.";
+      }
+      if (extenderYes) extenderYes.disabled = !supports;
+    }
+
+    const complete = formHasRequiredSelections(product, selections);
+    if (!complete) {
+      if (addButton) addButton.disabled = true;
+      if (summary) {
+        summary.innerHTML = `
+          <h3>Price</h3>
+          <p class="summary-total">Total: ${escapeHtml(productDisplayPrice(product))}</p>
+          <p class="field-note">Choose the required options to confirm the final price.</p>
+        `;
+      }
+      if (error) error.textContent = "";
+      return;
+    }
+
+    try {
+      const line = catalog.configuredCartLine({
+        productId: product.id,
+        quantity: 1,
+        selections,
+      });
+      if (addButton) addButton.disabled = false;
+      if (error) error.textContent = "";
+      if (summary) {
+        summary.innerHTML = `
+          <h3>Price</h3>
+          <dl>
+            <div><dt>${escapeHtml(product.name)}</dt><dd>${money.format(line.basePrice)}</dd></div>
+            ${
+              line.selections.length?.priceDelta
+                ? `<div><dt>${escapeHtml(line.selections.length.label)}</dt><dd>+${money.format(line.selections.length.priceDelta)}</dd></div>`
+                : ""
+            }
+            ${
+              line.selections.clasp?.priceDelta
+                ? `<div><dt>${escapeHtml(line.selections.clasp.label)}</dt><dd>+${money.format(line.selections.clasp.priceDelta)}</dd></div>`
+                : ""
+            }
+            ${
+              line.selections.extender?.selected
+                ? `<div><dt>${escapeHtml(line.selections.extender.label)}</dt><dd>${escapeHtml(priceDeltaLabel(line.selections.extender.priceDelta))}</dd></div>`
+                : ""
+            }
+            <div class="summary-total"><dt>Total</dt><dd>${money.format(line.finalUnitPrice)}</dd></div>
+          </dl>
+        `;
+      }
+    } catch (validationError) {
+      if (addButton) addButton.disabled = true;
+      if (error) error.textContent = validationError.message;
+    }
+  }
+
+  function renderProductPage() {
+    const root = document.querySelector("[data-product-page]");
+    if (!root) return;
+
+    const product = productBySlug(productSlugFromLocation());
+    if (!product) {
+      root.innerHTML = `
+        <section class="section product-not-found">
+          <p class="eyebrow">Lost in the trees</p>
+          <h1>Product not found</h1>
+          <p>This piece may have moved, changed name, or not yet made it out of the weald.</p>
+          <a class="button button--solid" href="shop.html">Return to shop</a>
+        </section>
+      `;
+      return;
+    }
+
+    updateProductMeta(product);
+    root.innerHTML = `
+      <section class="section product-page">
+        <a class="quiet-button product-back-link" href="${escapeHtml(continueShoppingUrl(product))}" data-continue-shopping>Continue shopping</a>
+        <div class="product-page-layout">
+          <div class="product-page__media">
+            ${renderProductPageGallery(product)}
+          </div>
+          <div class="product-page__info">
+            <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
+            <h1>${escapeHtml(product.name)}</h1>
+            <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
+            <p>${escapeHtml(product.description)}</p>
+            ${renderProductSpecs(product)}
+            ${renderCustomisationForm(product)}
+          </div>
+        </div>
+        ${productLoreSection(product)}
+      </section>
+    `;
+
+    root.querySelectorAll("[data-product-form]").forEach((form) => {
+      updateProductPurchaseForm(form);
+    });
+    initialiseProductGalleries();
+  }
+
+  function installAddToCartDialog() {
+    if (document.querySelector("#add-to-cart-dialog")) return;
+
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `
+        <dialog class="cart-confirmation-dialog" id="add-to-cart-dialog" aria-labelledby="cart-confirmation-title">
+          <div class="cart-confirmation-panel">
+            <button class="cart-confirmation-close" type="button" data-cart-confirm-close aria-label="Close added-to-cart message">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h2 id="cart-confirmation-title">Added to your cart</h2>
+            <div data-cart-confirm-body></div>
+            <div class="cart-confirmation-actions">
+              <button class="button" type="button" data-cart-confirm-continue>Continue shopping</button>
+              <a class="button button--solid" href="cart.html">View cart</a>
+            </div>
+          </div>
+        </dialog>
+      `,
+    );
+  }
+
+  const cartConfirmState = {
+    opener: null,
+    product: null,
+  };
+
+  function openAddToCartDialog(line, product, opener) {
+    const dialog = document.querySelector("#add-to-cart-dialog");
+    const body = dialog?.querySelector("[data-cart-confirm-body]");
+    if (!dialog || !body) return;
+
+    const image = product.images?.[0];
+    cartConfirmState.opener = opener || null;
+    cartConfirmState.product = product;
+
+    body.innerHTML = `
+      <div class="cart-confirmation-item">
+        ${
+          image
+            ? `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" />`
+            : `<div class="cart-confirmation-placeholder" aria-hidden="true"></div>`
+        }
+        <div>
+          <h3>${escapeHtml(line.productName)}</h3>
+          ${line.lineSummary ? `<p>${escapeHtml(line.lineSummary)}</p>` : ""}
+          <strong>${money.format(line.finalUnitPrice)}</strong>
+        </div>
+      </div>
+    `;
+
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+      document.documentElement.classList.add("lightbox-open");
+      dialog.querySelector("[data-cart-confirm-continue]")?.focus();
+    }
+  }
+
+  function closeAddToCartDialog() {
+    const dialog = document.querySelector("#add-to-cart-dialog");
+    if (!dialog?.open) return;
+    dialog.close();
+  }
+
+  function renderProductTypePage() {
+    const root = document.querySelector("[data-product-type-page]");
+    if (!root) return;
+
+    const params = new URLSearchParams(location.search);
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const typeIndex = pathParts.indexOf("types");
+    const type = params.get("type") || (typeIndex >= 0 ? decodeURIComponent(pathParts[typeIndex + 1] || "") : "");
+    const config = productTypes[type];
+    const typeProducts = products.filter((product) => product.type === type);
+
+    if (!config || !typeProducts.length) {
+      root.innerHTML = `
+        <section class="section product-not-found">
+          <p class="eyebrow">A path not yet marked</p>
+          <h1>Product type not found</h1>
+          <p>This category is not available yet.</p>
+          <a class="button button--solid" href="shop.html">Return to shop</a>
+        </section>
+      `;
+      return;
+    }
+
+    document.title = `${config.title} | Gloamweald`;
+    root.innerHTML = `
+      <header class="page-hero page-hero--shop">
+        <p class="eyebrow">By type</p>
+        <h1>${escapeHtml(config.title)}</h1>
+        <p>${escapeHtml(config.description)}</p>
+      </header>
+      <section class="section shop-section">
+        <details class="type-buying-guide">
+          <summary>${escapeHtml(config.buyingGuideTitle || "Sizing & customisation guide")}</summary>
+          <ul>
+            ${(config.buyingGuide || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </details>
+        <div class="filter-panel" aria-label="${escapeHtml(config.title)} filters">
+          <fieldset class="filter-group filter-group--sort">
+            <legend>Sort by</legend>
+            <div class="filter-options filter-options--sort">
+              <select class="shop-sort" data-type-sort aria-label="Sort ${escapeHtml(config.title)} products">
+                <option value="default">Default</option>
+                <option value="price-ascending">Price: Low-to-high</option>
+                <option value="price-descending">Price: High-to-low</option>
+                <option value="made-to-order">Available (Made to order)</option>
+              </select>
+            </div>
+          </fieldset>
+          <div class="filter-summary">
+            <p data-type-filter-status aria-live="polite">Showing ${typeProducts.length} pieces.</p>
+          </div>
+        </div>
+        <div class="product-grid" data-product-grid data-type="${escapeHtml(type)}" data-type-grid></div>
+        <div class="empty-state" data-type-empty hidden>
+          <p class="eyebrow">Nothing here yet</p>
+          <h3>This path is still growing.</h3>
+        </div>
+      </section>
+    `;
+
+    renderProductGrids();
+    initialiseProductGalleries();
+    initialiseTypePageFilters(root);
+  }
+
+  function initialiseTypePageFilters(root = document) {
+    const grid = root.querySelector("[data-type-grid]");
+    const sortSelect = root.querySelector("[data-type-sort]");
+    const status = root.querySelector("[data-type-filter-status]");
+    const empty = root.querySelector("[data-type-empty]");
+    if (!grid || !sortSelect) return;
+
+    const cards = [...grid.querySelectorAll("[data-product]")];
+    const defaultOrder = new Map(cards.map((card, index) => [card, index]));
+    const params = new URLSearchParams(location.search);
+    const requestedSort = params.get("sort") || "default";
+    sortSelect.value = [...sortSelect.options].some((option) => option.value === requestedSort)
+      ? requestedSort
+      : "default";
+
+    function cardPrice(card) {
+      const price = Number(card.dataset.priceValue);
+      return Number.isFinite(price) ? price : null;
+    }
+
+    function sortCards() {
+      const sorted = [...cards].sort((a, b) => {
+        const priceA = cardPrice(a);
+        const priceB = cardPrice(b);
+        if (sortSelect.value === "price-ascending") {
+          if (priceA === null) return 1;
+          if (priceB === null) return -1;
+          return priceA - priceB || defaultOrder.get(a) - defaultOrder.get(b);
+        }
+        if (sortSelect.value === "price-descending") {
+          if (priceA === null) return 1;
+          if (priceB === null) return -1;
+          return priceB - priceA || defaultOrder.get(a) - defaultOrder.get(b);
+        }
+        return defaultOrder.get(a) - defaultOrder.get(b);
+      });
+
+      let visible = 0;
+      sorted.forEach((card) => {
+        const show = sortSelect.value !== "made-to-order" || card.dataset.orderable === "true";
+        card.hidden = !show;
+        if (show) visible += 1;
+      });
+      grid.append(...sorted);
+      if (status) status.textContent = `Showing ${visible} of ${cards.length} pieces.`;
+      if (empty) empty.hidden = visible !== 0;
+
+      const next = new URLSearchParams(location.search);
+      sortSelect.value === "default" ? next.delete("sort") : next.set("sort", sortSelect.value);
+      history.replaceState(null, "", `${location.pathname}${next.toString() ? `?${next}` : ""}${location.hash}`);
+    }
+
+    sortSelect.addEventListener("change", sortCards);
+    sortCards();
   }
 
   window.GloamwealdCart = {
@@ -928,25 +1680,26 @@
     updateCartCount,
     updateCartItem,
     writeCart,
+    addConfiguredToCart,
     CONTACT_EMAIL,
   };
 
   installCartLink();
+  installAddToCartDialog();
   renderProductGrids();
+  renderProductPage();
+  renderProductTypePage();
   initialiseProductGalleries();
   initialiseLightbox();
   initialiseLoreDialog();
   initialiseShopFilters();
   updateCartCount();
+  restoreCatalogueScrollWhenReady();
 
   document.addEventListener("click", (event) => {
-    const addButton = event.target.closest("[data-add-to-cart]");
-    if (addButton) {
-      addToCart(addButton.dataset.addToCart);
-      addButton.textContent = "Added";
-      window.setTimeout(() => {
-        addButton.textContent = "Add to cart";
-      }, 1100);
+    const productLink = event.target.closest("[data-product-link]");
+    if (productLink) {
+      saveCatalogueReturnState();
       return;
     }
 
@@ -958,10 +1711,10 @@
 
     const changeButton = event.target.closest("[data-cart-change]");
     if (changeButton) {
-      const productId = changeButton.dataset.cartChange;
+      const cartKey = changeButton.dataset.cartChange;
       const delta = Number(changeButton.dataset.cartDelta);
-      const item = readCart().find((cartItem) => cartItem.id === productId);
-      if (item) updateCartItem(productId, item.quantity + delta);
+      const item = readCart().find((cartItem) => (cartItem.key || cartItem.id) === cartKey);
+      if (item) updateCartItem(cartKey, item.quantity + delta);
       return;
     }
 
@@ -1011,6 +1764,69 @@
 
     if (event.target.closest("[data-lore-close]")) {
       closeLore();
+      return;
     }
+
+    if (event.target.closest("[data-cart-confirm-close]")) {
+      closeAddToCartDialog();
+      return;
+    }
+
+    if (event.target.closest("[data-cart-confirm-continue]")) {
+      const product = cartConfirmState.product;
+      const url = continueShoppingUrl(product);
+      closeAddToCartDialog();
+      window.location.assign(url);
+    }
+  });
+
+  document.addEventListener("change", (event) => {
+    const form = event.target.closest("[data-product-form]");
+    if (form) updateProductPurchaseForm(form);
+  });
+
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      if (event.target.matches(".measuring-guide, .type-buying-guide")) {
+        event.target.querySelector("summary")?.setAttribute("aria-expanded", String(event.target.open));
+      }
+    },
+    true,
+  );
+
+  document.addEventListener("submit", (event) => {
+    const form = event.target.closest("[data-product-form]");
+    if (!form) return;
+
+    event.preventDefault();
+    const product = productById(form.dataset.productId);
+    const error = form.querySelector("[data-product-form-error]");
+    const addButton = form.querySelector("[data-product-add-button]");
+    if (!product) return;
+
+    try {
+      const line = catalog.configuredCartLine({
+        productId: product.id,
+        quantity: 1,
+        selections: productPageSelections(form),
+      });
+      addConfiguredToCart(line);
+      updateProductPurchaseForm(form);
+      openAddToCartDialog(line, product, addButton);
+    } catch (validationError) {
+      if (error) error.textContent = validationError.message;
+      updateProductPurchaseForm(form);
+    }
+  });
+
+  document.querySelector("#add-to-cart-dialog")?.addEventListener("click", (event) => {
+    if (event.target.id === "add-to-cart-dialog") closeAddToCartDialog();
+  });
+
+  document.querySelector("#add-to-cart-dialog")?.addEventListener("close", () => {
+    document.documentElement.classList.remove("lightbox-open");
+    cartConfirmState.opener?.focus?.();
+    cartConfirmState.opener = null;
   });
 })();

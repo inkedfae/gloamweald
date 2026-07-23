@@ -241,30 +241,39 @@ const customer = {
   country: "AU",
 };
 
+const darkElfCartItem = {
+  id: "dark-elf-bracelet",
+  quantity: 1,
+  selections: {
+    length: { value: 18 },
+    clasp: { id: "pictured" },
+    extender: { selected: false },
+  },
+};
+const bonelinkCartItem = {
+  id: "bonelink-wallet-chain",
+  quantity: 1,
+  selections: {},
+};
+
 const underStandard = normaliseOrder({
-  items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+  items: [darkElfCartItem],
   shippingId: "au-standard",
   customer,
   notes: "Dark Elf Bracelet +1.5 cm",
 });
 const underExpress = normaliseOrder({
-  items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+  items: [darkElfCartItem],
   shippingId: "au-express",
   customer,
 });
 const overStandard = normaliseOrder({
-  items: [
-    { id: "dark-elf-bracelet", quantity: 1 },
-    { id: "half-persian-wallet-chain-pendant", quantity: 1 },
-  ],
+  items: [darkElfCartItem, bonelinkCartItem],
   shippingId: "au-standard",
   customer,
 });
 const overExpress = normaliseOrder({
-  items: [
-    { id: "dark-elf-bracelet", quantity: 1 },
-    { id: "half-persian-wallet-chain-pendant", quantity: 1 },
-  ],
+  items: [darkElfCartItem, bonelinkCartItem],
   shippingId: "au-express",
   customer,
 });
@@ -286,7 +295,7 @@ expectThrows(
   "backend rejects stale pickup shipping",
   () =>
     normaliseOrder({
-      items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+      items: [darkElfCartItem],
       shippingId: "pickup",
       customer,
     }),
@@ -298,7 +307,7 @@ expectThrows(
   "backend requires Australian postal address",
   () =>
     normaliseOrder({
-      items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+      items: [darkElfCartItem],
       shippingId: "au-standard",
       customer: { name: "Test Customer", email: "test@example.com", country: "AU" },
     }),
@@ -310,7 +319,7 @@ expectThrows(
   "backend blocks international quote-only checkout",
   () =>
     normaliseOrder({
-      items: [{ id: "dark-elf-bracelet", quantity: 1 }],
+      items: [darkElfCartItem],
       shippingId: "international-quote",
       customer: { ...customer, country: "INTL" },
     }),
@@ -331,9 +340,9 @@ const paypalPayloadExpress = paypalOrderPayload(overExpress);
 check(
   "PayPal payload uses backend decimal shipping values",
   paypalPayloadUnder.purchase_units[0].amount.breakdown.shipping.value === "10.95" &&
-    paypalPayloadUnder.purchase_units[0].amount.value === "85.95" &&
+    paypalPayloadUnder.purchase_units[0].amount.value === "100.95" &&
     paypalPayloadExpress.purchase_units[0].amount.breakdown.shipping.value === "3.00" &&
-    paypalPayloadExpress.purchase_units[0].amount.value === "163.00" &&
+    paypalPayloadExpress.purchase_units[0].amount.value === "188.00" &&
     paypalPayloadUnder.payment_source.paypal.experience_context.shipping_preference === "SET_PROVIDED_ADDRESS",
   "PayPal order creation receives backend totals and two-decimal shipping amounts.",
 );

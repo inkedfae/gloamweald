@@ -1,4 +1,4 @@
-import { checkoutProductById } from "./product-catalog.js";
+import { checkoutConfiguredLineItem } from "./product-catalog.js";
 
 const CURRENCY = "AUD";
 const FREE_STANDARD_THRESHOLD = 150;
@@ -89,25 +89,27 @@ export function checkoutShippingOptions(country, subtotal) {
 
 function normaliseItems(input) {
   const rawItems = Array.isArray(input.items) ? input.items : [];
-  const quantities = new Map();
+  const lines = new Map();
 
   rawItems.forEach((item) => {
-    const id = safeText(item.id, 80);
-    const quantity = Math.max(1, Math.min(10, Number(item.quantity) || 1));
-    if (!checkoutProductById(id)) throw new Error("Cart contains an unavailable item.");
-    quantities.set(id, (quantities.get(id) || 0) + quantity);
+    const line = checkoutConfiguredLineItem({
+      productId: safeText(item.productId || item.id, 80),
+      quantity: Math.max(1, Math.min(10, Number(item.quantity) || 1)),
+      selections: item.selections || {},
+    });
+    const existing = lines.get(line.cartKey);
+    if (existing) {
+      existing.quantity = Math.min(10, existing.quantity + line.quantity);
+      existing.lineTotal = existing.unitAmount * existing.quantity;
+    } else {
+      lines.set(line.cartKey, line);
+    }
   });
 
-  const items = [...quantities.entries()].map(([id, quantity]) => {
-    const product = checkoutProductById(id);
-    return {
-      id,
-      name: product.name,
-      quantity,
-      unitAmount: product.unitAmount,
-      lineTotal: product.unitAmount * quantity,
-    };
-  });
+  const items = [...lines.values()].map((line) => ({
+    ...line,
+    lineTotal: Math.round(line.unitAmount * line.quantity * 100) / 100,
+  }));
 
   if (!items.length) throw new Error("Cart is empty.");
   return items;
