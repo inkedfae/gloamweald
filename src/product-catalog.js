@@ -40,12 +40,24 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/dark-elf-bracelet-primary.jpg",
-        alt: "Dark Elf spinal Elf-weave bracelet worn around a tattooed wrist",
+        src: "assets/images/dark-elf-1.webp",
+        alt: "Dark Elf Bracelet in stainless steel on a dark surface",
       },
       {
-        src: "assets/images/dark-elf-bracelet-underneath.jpg",
-        alt: "Underside of the Dark Elf bracelet beside a blue prop stone",
+        src: "assets/images/dark-elf-2.webp",
+        alt: "Dark Elf Bracelet worn around a tattooed wrist",
+      },
+      {
+        src: "assets/images/dark-elf-3.webp",
+        alt: "Dark Elf Bracelet worn against a weathered metal background",
+      },
+      {
+        src: "assets/images/dark-elf-4.webp",
+        alt: "Close detail of the Dark Elf Bracelet ring clasp and weave",
+      },
+      {
+        src: "assets/images/dark-elf-5.webp",
+        alt: "Close detail of the Dark Elf Bracelet weave held in hand",
       },
     ],
   },
@@ -70,8 +82,12 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/REPLACE-ME-half-persian-bracelet.jpg",
-        alt: "Half Persian stainless steel bracelet",
+        src: "assets/images/half-persian-b-1.webp",
+        alt: "Half Persian Bracelet in stainless steel on a dark surface",
+      },
+      {
+        src: "assets/images/half-persian-b-2.webp",
+        alt: "Half Persian Bracelet worn around a tattooed wrist",
       },
     ],
   },
@@ -99,12 +115,20 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/leoma-band-primary.jpg",
-        alt: "Lēoma Amulet worn on the wrist with a vivid blue-flashing labradorite centrepiece",
+        src: "assets/images/leoma-1.webp",
+        alt: "Lēoma Amulet in stainless steel with a labradorite centrepiece on a dark surface",
       },
       {
-        src: "assets/images/leoma-band-detail.jpg",
-        alt: "Lēoma Amulet with a tightly woven stainless steel JPL chain and central labradorite bead",
+        src: "assets/images/leoma-2.webp",
+        alt: "Lēoma Amulet worn around a tattooed wrist",
+      },
+      {
+        src: "assets/images/leoma-3.webp",
+        alt: "Lēoma Amulet worn around a wrist beside dark fabric",
+      },
+      {
+        src: "assets/images/leoma-4.webp",
+        alt: "Close detail of the Lēoma Amulet labradorite centrepiece on a leaf",
       },
     ],
   },
@@ -128,8 +152,16 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/REPLACE-ME-vertebrae-bracelet.jpg",
-        alt: "Vertebrae-weave stainless steel bracelet",
+        src: "assets/images/vertebrae-1.webp",
+        alt: "Vertebrae Bracelet in stainless steel on a dark surface",
+      },
+      {
+        src: "assets/images/vertebrae-2.webp",
+        alt: "Vertebrae Bracelet worn across a tattooed hand",
+      },
+      {
+        src: "assets/images/vertebrae-3.webp",
+        alt: "Vertebrae Bracelet beside bone props on a dark surface",
       },
     ],
   },
@@ -154,8 +186,12 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/REPLACE-ME-celtic-visions-bracelet.jpg",
-        alt: "Celtic Visions stainless steel bracelet",
+        src: "assets/images/celtic-visions-1.webp",
+        alt: "Celtic Visions Bracelet in stainless steel on a dark surface",
+      },
+      {
+        src: "assets/images/celtic-visions-2.webp",
+        alt: "Celtic Visions Bracelet worn around a tattooed wrist",
       },
     ],
   },
@@ -180,8 +216,24 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/REPLACE-ME-european-cuff-6mm.jpg",
-        alt: "Dense European 4-in-1 stainless steel cuff made with 6mm rings",
+        src: "assets/images/4in1-small-1.webp",
+        alt: "Chainmaille Cuff in stainless steel on a dark surface",
+      },
+      {
+        src: "assets/images/4in1-small-2.webp",
+        alt: "Chainmaille Cuff worn around a tattooed wrist",
+      },
+      {
+        src: "assets/images/4in1-small-3.webp",
+        alt: "Chainmaille Cuff showing its slide lock clasp",
+      },
+      {
+        src: "assets/images/4in1-small-4.webp",
+        alt: "Close detail of the Chainmaille Cuff weave and clasp",
+      },
+      {
+        src: "assets/images/4in1-small-5.webp",
+        alt: "Chainmaille Cuff worn around the underside of a wrist",
       },
     ],
   },
@@ -205,8 +257,8 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     visual: "classic",
     images: [
       {
-        src: "assets/images/half-persian-necklace.jpg",
-        alt: "Small Half Persian stainless steel necklace worn close around a tattooed neck",
+        src: "assets/images/half-persian-n-1.webp",
+        alt: "Small Half Persian Necklace worn close around a tattooed neck",
       },
     ],
   },
@@ -229,12 +281,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     status: "Available - Made to order",
     orderable: true,
     visual: "classic",
-    images: [
-      {
-        src: "assets/images/REPLACE-ME-full-persian-necklace.jpg",
-        alt: "Full Persian stainless steel necklace",
-      },
-    ],
+    images: [],
   },
 
   {
@@ -260,12 +307,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     status: "Coming soon",
     orderable: false,
     visual: "classic",
-    images: [
-      {
-        src: "assets/images/REPLACE-ME-waymarker-necklace.jpg",
-        alt: "Waymarker necklace combining Byzantine weave with oversized linking rings",
-      },
-    ],
+    images: [],
   },
 
   {
@@ -364,8 +406,24 @@ And it is still said, all these centuries later, that those with a stubborn, det
     visual: "classic",
     images: [
       {
-        src: "assets/images/REPLACE-ME-bonelink-wallet-chain.jpg",
-        alt: "Bonelink stainless steel wallet chain with repeating bone-like sections",
+        src: "assets/images/bonelink-1.webp",
+        alt: "Bonelink Wallet Chain in stainless steel on a dark surface",
+      },
+      {
+        src: "assets/images/bonelink-2.webp",
+        alt: "Bonelink Wallet Chain hanging from weathered wood and metal",
+      },
+      {
+        src: "assets/images/bonelink-3.webp",
+        alt: "Close detail of the Bonelink Wallet Chain clasp and links",
+      },
+      {
+        src: "assets/images/bonelink-4.webp",
+        alt: "Close detail of the Bonelink Wallet Chain link pattern",
+      },
+      {
+        src: "assets/images/bonelink-5.webp",
+        alt: "Bonelink Wallet Chain arranged beside bone props on dark wood",
       },
     ],
   },
@@ -390,8 +448,24 @@ And it is still said, all these centuries later, that those with a stubborn, det
     visual: "classic",
     images: [
       {
-        src: "assets/images/half-persian-wallet-chain-star.jpg",
-        alt: "Half Persian wallet chain with a small cross-like star charm suspended from Byzantine links",
+        src: "assets/images/half-persian-w-1.webp",
+        alt: "Half Persian Wallet Chain with Charm in stainless steel on a dark surface",
+      },
+      {
+        src: "assets/images/half-persian-w-2.webp",
+        alt: "Half Persian Wallet Chain with Charm clipped to a belt loop",
+      },
+      {
+        src: "assets/images/half-persian-w-3.webp",
+        alt: "Close detail of the Half Persian Wallet Chain charm and Byzantine link detail",
+      },
+      {
+        src: "assets/images/half-persian-w-4.webp",
+        alt: "Half Persian Wallet Chain with Charm hanging from a branch",
+      },
+      {
+        src: "assets/images/half-persian-w-5.webp",
+        alt: "Half Persian Wallet Chain with Charm worn from a belt loop",
       },
     ],
   },
@@ -420,16 +494,8 @@ And it is still said, all these centuries later, that those with a stubborn, det
     visual: "classic",
     images: [
       {
-        src: "assets/images/briar-imp-earrings-primary.jpg",
+        src: "assets/images/briar-imp-1.webp",
         alt: "Pair of Briar Imp stainless steel earrings with horn-like polished spikes",
-      },
-      {
-        src: "assets/images/briar-imp-earrings-side.jpg",
-        alt: "Side view of a Briar Imp earring showing its interlinked construction and outward-facing spikes",
-      },
-      {
-        src: "assets/images/briar-imp-earrings-worn.jpg",
-        alt: "Briar Imp stainless steel earring worn on an ear",
       },
     ],
   },
