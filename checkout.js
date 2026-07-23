@@ -138,6 +138,12 @@
     return `+${money.format(value)}`;
   }
 
+  function addOnPriceLabel(amount) {
+    const value = Number(amount || 0);
+    if (!value) return "$0";
+    return `+${money.format(value)}`;
+  }
+
   function cartProductUrl(item) {
     const slug = item.product?.slug || item.product?.id || item.productId || "";
     if (!slug) return "shop.html";
@@ -178,7 +184,7 @@
     if (selections.extender?.selected) {
       rows.push({
         label: `Extender: ${selections.extender.label}`,
-        price: priceDeltaLabel(selections.extender.priceDelta),
+        price: addOnPriceLabel(selections.extender.priceDelta),
       });
     }
 

@@ -1256,9 +1256,9 @@ nav a[aria-current="page"]::after {
 
 .cart-line-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: flex-end;
   justify-content: flex-end;
   font-family: var(--sans);
 }
@@ -2728,6 +2728,7 @@ footer p {
   }
 
   .cart-line-actions {
+    align-items: flex-start;
     justify-content: flex-start;
   }
 
