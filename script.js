@@ -1342,6 +1342,51 @@
     };
   }
 
+  function setFormControlValue(form, name, value) {
+    if (value === undefined || value === null || value === "") return;
+
+    const controls = Array.from(form.querySelectorAll(`[name="${name}"]`));
+    if (!controls.length) return;
+
+    if (controls.length === 1 && controls[0].tagName !== "INPUT") {
+      controls[0].value = String(value);
+      return;
+    }
+
+    const matching = controls.find((control) => control.value === String(value));
+    if (matching && "checked" in matching) {
+      matching.checked = true;
+    } else if (controls.length === 1) {
+      controls[0].value = String(value);
+    }
+  }
+
+  function applyCartEditParams(form, product) {
+    const params = new URLSearchParams(location.search);
+    const editCartKey = params.get("editCart") || "";
+    const editItem = editCartKey
+      ? readCart().find(
+          (item) => (item.key || item.id) === editCartKey && item.productId === product.id,
+        )
+      : null;
+    const savedSelections = editItem?.selections || {};
+
+    setFormControlValue(form, "length", params.get("length") || savedSelections.length?.value);
+    setFormControlValue(form, "clasp", params.get("clasp") || savedSelections.clasp?.id);
+
+    const extender =
+      params.get("extender") ||
+      (savedSelections.extender ? (savedSelections.extender.selected ? "yes" : "no") : "");
+    setFormControlValue(form, "extender", extender);
+
+    if (editItem) {
+      form.dataset.editCartKey = editCartKey;
+      form.dataset.editQuantity = String(editItem.quantity || Number(params.get("quantity")) || 1);
+      const button = form.querySelector("[data-product-add-button]");
+      if (button) button.textContent = "Update cart";
+    }
+  }
+
   function formHasRequiredSelections(product, selections) {
     const length = product.customisation?.length;
     return !length?.enabled || !length.required || selections.length;
@@ -1471,6 +1516,7 @@
     `;
 
     root.querySelectorAll("[data-product-form]").forEach((form) => {
+      applyCartEditParams(form, product);
       updateProductPurchaseForm(form);
     });
     initialiseProductGalleries();
@@ -1504,14 +1550,16 @@
     product: null,
   };
 
-  function openAddToCartDialog(line, product, opener) {
+  function openAddToCartDialog(line, product, opener, action = "added") {
     const dialog = document.querySelector("#add-to-cart-dialog");
     const body = dialog?.querySelector("[data-cart-confirm-body]");
+    const title = dialog?.querySelector("#cart-confirmation-title");
     if (!dialog || !body) return;
 
     const image = product.images?.[0];
     cartConfirmState.opener = opener || null;
     cartConfirmState.product = product;
+    if (title) title.textContent = action === "updated" ? "Updated your cart" : "Added to your cart";
 
     body.innerHTML = `
       <div class="cart-confirmation-item">
@@ -1803,14 +1851,17 @@
     if (!product) return;
 
     try {
+      const editCartKey = form.dataset.editCartKey || "";
+      const quantity = Number(form.dataset.editQuantity || 1) || 1;
       const line = catalog.configuredCartLine({
         productId: product.id,
-        quantity: 1,
+        quantity,
         selections: productPageSelections(form),
       });
+      if (editCartKey) removeCartItem(editCartKey);
       addConfiguredToCart(line);
       updateProductPurchaseForm(form);
-      openAddToCartDialog(line, product, addButton);
+      openAddToCartDialog(line, product, addButton, editCartKey ? "updated" : "added");
     } catch (validationError) {
       if (error) error.textContent = validationError.message;
       updateProductPurchaseForm(form);

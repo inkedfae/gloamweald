@@ -478,13 +478,13 @@ check(
 );
 
 check(
-  "checkout and care copy are updated",
+  "checkout shipping and care copy are updated",
   cartPage.includes("All Gloamweald orders are sent through Australia Post with tracking.") &&
     cartPage.includes("Standard tracked shipping within Australia") &&
-    cartPage.includes("Small length adjustments") &&
+    !cartPage.includes("Small length adjustments") &&
     carePage.includes("Quality and care concerns") &&
     carePage.includes("case by case"),
-  "Checkout page contains shipping/made-to-order/length guidance and care page contains quality/care concerns.",
+  "Checkout page contains customer shipping guidance without the old length-adjustment box, and care page contains quality/care concerns.",
 );
 
 for (const result of results) {

@@ -1217,8 +1217,54 @@ nav a[aria-current="page"]::after {
   font-size: 0.76rem;
 }
 
+.cart-line-costs {
+  display: grid;
+  gap: 0.25rem;
+  max-width: 32rem;
+  margin: 0.55rem 0 0.2rem;
+  color: var(--steel-dark);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+}
+
+.cart-line-costs div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cart-line-costs dt,
+.cart-line-costs dd {
+  margin: 0;
+}
+
+.cart-line-costs dd {
+  color: var(--bone-dim);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cart-line-costs__total {
+  margin-top: 0.15rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--line);
+}
+
 .cart-line strong {
   font-family: var(--sans);
+}
+
+.cart-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: var(--sans);
+}
+
+.cart-line-actions .quiet-button {
+  font-size: 0.72rem;
 }
 
 .quantity-control {
@@ -2679,6 +2725,10 @@ footer p {
   .cart-line {
     grid-template-columns: 1fr;
     align-items: start;
+  }
+
+  .cart-line-actions {
+    justify-content: flex-start;
   }
 
   .form-grid {
