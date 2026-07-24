@@ -15,7 +15,7 @@ Product data lives in [src/product-catalog.js](src/product-catalog.js). That fil
 
 ## Change bracelet sizes
 
-For an adjustable bracelet, use the shared helper:
+All orderable bracelets currently use the same shared length options:
 
 ```js
 options: STANDARD_BRACELET_LENGTHS,
@@ -27,19 +27,18 @@ That currently gives:
 - 21.5-23 cm +$5
 - 23.5-25 cm +$10
 
-For a fixed-unit bracelet, list the exact constructible lengths:
+Keep the bracelet tolerance note on bracelet products so customers know the finished length may be slightly over the requested size, but never smaller.
+
+## Change necklace lengths
+
+Orderable necklaces generally use the advertised length as the base length, then allow a small dropdown adjustment from 5 cm shorter to 2 cm longer:
 
 ```js
-options: fixedLengthOptions([
-  [16.5, 0],
-  [18, 0],
-  [19.5, 0],
-  [21, 0],
-  [22.5, 5],
-]),
+advertisedLengthCm: 47,
+options: necklaceAdjustmentOptions(47),
 ```
 
-The first value is the finished length in centimetres. The second value is the surcharge.
+For larger necklace changes, direct the customer to contact Gloamweald for a custom price.
 
 ## Change clasp availability
 
@@ -48,10 +47,26 @@ Global clasp information is stored once in `CLASP_OPTIONS`.
 Each product then lists which clasp IDs are compatible:
 
 ```js
+includedOptionId: "lobster",
 allowedOptionIds: ["lobster", "toggle", "medium-carabiner"],
 ```
 
+The `includedOptionId` is the clasp supplied at no extra cost for that specific product. The included clasp must also appear in `allowedOptionIds`.
+
 Do not add a clasp ID to a product unless that clasp is structurally suitable for that design.
+
+## Change extender options
+
+Bracelets and necklaces use the shared extender options:
+
+```js
+options: STANDARD_EXTENDER_OPTIONS,
+```
+
+That currently gives:
+
+- 2-5 cm: $0
+- 6-10 cm: +$1
 
 ## Change prices
 
@@ -60,7 +75,7 @@ There are several price layers:
 - Base product price: `price.amount`
 - Length surcharge: each length option's `priceDelta`
 - Clasp surcharge: the global clasp option's `priceDelta`
-- Extender surcharge: `customisation.extender.priceDelta`
+- Extender surcharge: each extender option's `priceDelta`
 
 The cart and checkout backend calculate the final item price from this catalogue data.
 

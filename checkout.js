@@ -157,7 +157,10 @@
     if (selections.length?.value) params.set("length", String(selections.length.value));
     if (selections.clasp?.id) params.set("clasp", selections.clasp.id);
     if (selections.extender) {
-      params.set("extender", selections.extender.selected ? "yes" : "no");
+      const extenderValue = selections.extender.selected
+        ? selections.extender.value || selections.extender.lengthCm || "yes"
+        : "no";
+      params.set("extender", String(extenderValue));
     }
 
     return `product.html?${params.toString()}`;

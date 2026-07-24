@@ -1656,8 +1656,12 @@ button.product-photo {
   font: inherit;
 }
 
-.size-options,
-.extender-options {
+.customisation-field .custom-select {
+  display: block;
+  margin-top: 0.85rem;
+}
+
+.size-options {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
