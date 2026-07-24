@@ -219,6 +219,19 @@ check(
   "Product display metadata and checkout prices live in src/product-catalog.js; checkout code reads catalogue prices.",
 );
 
+check(
+  "browser catalogue loader exposes customisation helpers",
+  [
+    "configuredCartLine",
+    "lengthOptionsForProduct",
+    "claspOptionsForProduct",
+    "extenderOptionsForProduct",
+    "findExtenderOption",
+  ].every((helper) => productsStub.includes(helper)) &&
+    script.includes("catalog.extenderOptionsForProduct"),
+  "products.js exposes the catalogue helpers needed by non-module product pages, including extender options.",
+);
+
 const displayedPricesMatchCheckout = checkoutProducts.every(({ product, checkoutProduct }) =>
   productDisplayPrice(product).includes(String(checkoutProduct.unitAmount)),
 );
