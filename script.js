@@ -1037,6 +1037,12 @@
     return `+${money.format(value)}`;
   }
 
+  function addOnPriceLabel(amount) {
+    const value = Number(amount || 0);
+    if (!value) return "$0";
+    return `+${money.format(value)}`;
+  }
+
   function productSlugFromLocation() {
     const params = new URLSearchParams(location.search);
     const requested = params.get("slug") || params.get("product");
@@ -1197,8 +1203,9 @@
         ? "Choose the complete end-to-end length, including attachment hardware."
         : "Choose the completed end-to-end length of the bracelet, including the clasp.");
 
+    const useSelect = config.inputType === "select" || options.length > 8;
     const control =
-      options.length > 8
+      useSelect
         ? `
           <label class="custom-select">
             <span class="visually-hidden">${escapeHtml(label)}</span>
@@ -1253,7 +1260,7 @@
     return `
       <fieldset class="customisation-field customisation-field--clasp">
         <legend>Choose your clasp</legend>
-        <p>The clasp shown in the product photographs is included. You can keep the pictured clasp or choose another compatible style.</p>
+        <p>The included clasp is marked Included. You can keep it or choose another compatible style.</p>
         <div class="clasp-options">
           ${options
             .map((option, index) => {
@@ -1280,22 +1287,28 @@
     const config = product.customisation?.extender;
     if (!config?.enabled) return "";
 
-    const lengthCm = Number(config.lengthCm) || 3;
+    const options = catalog.extenderOptionsForProduct?.(product) || [];
+    if (!options.length) return "";
+
     return `
       <fieldset class="customisation-field customisation-field--extender" data-extender-field>
         <legend>Add an extender</legend>
-        <p>The extender provides up to approximately ${lengthCm} cm of additional adjustable length. The bracelet itself will still be made to the finished length selected above.</p>
-        <div class="extender-options">
-          <label class="size-option">
-            <input type="radio" name="extender" value="no" checked />
-            <span>No extender</span>
-          </label>
-          <label class="size-option">
-            <input type="radio" name="extender" value="yes" />
-            <span>Add a ${lengthCm} cm extender</span>
-            <small>${escapeHtml(priceDeltaLabel(config.priceDelta))}</small>
-          </label>
-        </div>
+        <p>Choose an optional extender for a little extra adjustability.</p>
+        <label class="custom-select">
+          <span class="visually-hidden">Extender length</span>
+          <select name="extender" data-extender-control>
+            <option value="no">No extender</option>
+            ${options
+              .map(
+                (option) => `
+                  <option value="${escapeHtml(option.value)}">
+                    ${escapeHtml(option.label)} extender - ${escapeHtml(addOnPriceLabel(option.priceDelta))}
+                  </option>
+                `,
+              )
+              .join("")}
+          </select>
+        </label>
         <p class="field-note" data-extender-note></p>
       </fieldset>
     `;
@@ -1336,8 +1349,8 @@
     const data = new FormData(form);
     return {
       length: data.get("length") || "",
-      clasp: data.get("clasp") || "pictured",
-      extender: data.get("extender") === "yes",
+      clasp: data.get("clasp") || "",
+      extender: data.get("extender") || "no",
     };
   }
 
@@ -1360,6 +1373,16 @@
     }
   }
 
+  function extenderControlValue(product, value) {
+    if (value === undefined || value === null || value === "") return "";
+    const raw = String(value);
+    if (raw === "yes" || raw === "true" || raw === "1") {
+      const options = catalog.extenderOptionsForProduct?.(product) || [];
+      return String(options.find((option) => Number(option.value) === 3)?.value || options[0]?.value || "");
+    }
+    return raw;
+  }
+
   function applyCartEditParams(form, product) {
     const params = new URLSearchParams(location.search);
     const editCartKey = params.get("editCart") || "";
@@ -1373,10 +1396,15 @@
     setFormControlValue(form, "length", params.get("length") || savedSelections.length?.value);
     setFormControlValue(form, "clasp", params.get("clasp") || savedSelections.clasp?.id);
 
+    const savedExtender = savedSelections.extender;
     const extender =
       params.get("extender") ||
-      (savedSelections.extender ? (savedSelections.extender.selected ? "yes" : "no") : "");
-    setFormControlValue(form, "extender", extender);
+      (savedExtender
+        ? savedExtender.selected
+          ? savedExtender.value || savedExtender.lengthCm || "yes"
+          : "no"
+        : "");
+    setFormControlValue(form, "extender", extenderControlValue(product, extender));
 
     if (editItem) {
       form.dataset.editCartKey = editCartKey;
@@ -1405,23 +1433,27 @@
     const error = form.querySelector("[data-product-form-error]");
     const summary = form.querySelector("[data-price-summary]");
     const extenderField = form.querySelector("[data-extender-field]");
-    const extenderYes = form.querySelector('input[name="extender"][value="yes"]');
-    const extenderNo = form.querySelector('input[name="extender"][value="no"]');
+    const extenderControl = form.querySelector("[data-extender-control]");
     const extenderNote = form.querySelector("[data-extender-note]");
 
     if (extenderField) {
       const supports = selectedClaspSupportsExtender(product, selections.clasp);
       extenderField.classList.toggle("is-disabled", !supports);
-      if (!supports && extenderYes?.checked) {
-        extenderNo.checked = true;
-        selections.extender = false;
+      const extenderSelected = selections.extender && selections.extender !== "no";
+      if (!supports && extenderSelected && extenderControl) {
+        extenderControl.value = "no";
+        selections.extender = "no";
         if (extenderNote) {
           extenderNote.textContent = "The extender was removed because the newly selected clasp does not support it.";
         }
       } else if (extenderNote) {
         extenderNote.textContent = supports ? "" : "Extenders are not available with this clasp style.";
       }
-      if (extenderYes) extenderYes.disabled = !supports;
+      if (extenderControl) {
+        Array.from(extenderControl.options).forEach((option) => {
+          option.disabled = !supports && option.value !== "no";
+        });
+      }
     }
 
     const complete = formHasRequiredSelections(product, selections);
@@ -1463,7 +1495,7 @@
             }
             ${
               line.selections.extender?.selected
-                ? `<div><dt>${escapeHtml(line.selections.extender.label)}</dt><dd>${escapeHtml(priceDeltaLabel(line.selections.extender.priceDelta))}</dd></div>`
+                ? `<div><dt>${escapeHtml(line.selections.extender.label)}</dt><dd>${escapeHtml(addOnPriceLabel(line.selections.extender.priceDelta))}</dd></div>`
                 : ""
             }
             <div class="summary-total"><dt>Total</dt><dd>${money.format(line.finalUnitPrice)}</dd></div>

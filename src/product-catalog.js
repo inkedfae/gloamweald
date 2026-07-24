@@ -8,7 +8,8 @@
   - Add lore only when a product needs story text.
   - Enable customisation only for options that can genuinely be made.
   - Change clasp prices globally in CLASP_OPTIONS, then allow compatible IDs per product.
-  - Change bracelet length surcharges in helper ranges or in a product's explicit options.
+  - Change bracelet length surcharges in helper ranges.
+  - Change extender length choices in STANDARD_EXTENDER_OPTIONS.
 */
 
 export const CATALOG_CURRENCY = "AUD";
@@ -18,25 +19,34 @@ export const CLASP_OPTIONS = Object.freeze({
     id: "lobster",
     name: "Lobster clasp",
     priceDelta: 1,
-    image: "assets/images/clasps/lobster.jpg",
+    image: "",
     dimensions: "Measurement to be added",
     supportsExtender: true,
     description: "A compact, conventional jewellery clasp.",
+  },
+  "ring-clasp": {
+    id: "ring-clasp",
+    name: "Ring clasp",
+    priceDelta: 0,
+    image: "",
+    dimensions: "Measurement to be added",
+    supportsExtender: true,
+    description: "A ring-style closure used as the included clasp on selected bracelets.",
   },
   toggle: {
     id: "toggle",
     name: "Toggle clasp",
     priceDelta: 3,
-    image: "assets/images/clasps/toggle.jpg",
+    image: "",
     dimensions: "Measurement to be added",
-    supportsExtender: false,
+    supportsExtender: true,
     description: "A decorative ring-and-bar closure.",
   },
   "small-carabiner": {
     id: "small-carabiner",
     name: "Small carabiner",
     priceDelta: 3,
-    image: "assets/images/clasps/small-carabiner.jpg",
+    image: "",
     dimensions: "Measurement to be added",
     supportsExtender: true,
     description: "A sturdy clip with a compact profile.",
@@ -45,7 +55,7 @@ export const CLASP_OPTIONS = Object.freeze({
     id: "medium-carabiner",
     name: "Medium carabiner",
     priceDelta: 3,
-    image: "assets/images/clasps/medium-carabiner.jpg",
+    image: "",
     dimensions: "Measurement to be added",
     supportsExtender: true,
     description: "A stronger visible clip suited to heavier pieces.",
@@ -54,7 +64,7 @@ export const CLASP_OPTIONS = Object.freeze({
     id: "large-carabiner",
     name: "Large carabiner",
     priceDelta: 3,
-    image: "assets/images/clasps/large-carabiner.jpg",
+    image: "",
     dimensions: "Measurement to be added",
     supportsExtender: true,
     description: "A bolder clip for substantial pieces.",
@@ -63,9 +73,9 @@ export const CLASP_OPTIONS = Object.freeze({
     id: "slide-lock",
     name: "Slide-lock clasp",
     priceDelta: 3,
-    image: "assets/images/clasps/slide-lock.jpg",
+    image: "",
     dimensions: "Measurement to be added",
-    supportsExtender: false,
+    supportsExtender: true,
     description: "A broad clasp for cuff-style chainmaille.",
   },
 });
@@ -81,8 +91,8 @@ export const PRODUCT_TYPE_CONFIG = Object.freeze({
       "Measure an existing bracelet end to end, including the clasp.",
       "If you do not have a bracelet to measure, measure your wrist and add ease for comfort.",
       "Wide or heavy bracelets may feel tighter than finer chains.",
-      "Some designs are built in fixed repeating units and therefore have specific available lengths.",
-      "A complimentary 3 cm extender is available with compatible clasp styles.",
+      "Some weaves are built in repeating units, so the finished length may be up to 5 mm longer than requested rather than smaller.",
+      "Optional extenders are available with compatible clasp styles.",
       "Clasp options vary by design.",
     ],
     fallbackUrl: "/types/bracelets",
@@ -91,12 +101,13 @@ export const PRODUCT_TYPE_CONFIG = Object.freeze({
     slug: "necklaces",
     title: "Necklaces",
     description:
-      "Necklace lengths refer to the completed end-to-end length, including the clasp. Available lengths and clasp options vary by design and are shown on each product page.",
+      "Necklaces are generally made to the advertised length, with small length adjustments available on the individual product page where suitable.",
     buyingGuideTitle: "Sizing & customisation guide",
     buyingGuide: [
       "Measure a necklace that falls where you want the new piece to sit, or use string to test the desired drop.",
       "Measure the string against a ruler before choosing a length.",
-      "Wider or heavier chains can appear slightly shorter when worn.",
+      "Small listed-length adjustments allow up to 5 cm shorter or 2 cm longer than the advertised length.",
+      "For larger changes, contact Gloamweald before ordering so a custom length can be priced properly.",
       "Pendants may alter the visual drop even when the chain length is unchanged.",
     ],
     fallbackUrl: "/types/necklaces",
@@ -111,7 +122,7 @@ export const PRODUCT_TYPE_CONFIG = Object.freeze({
       "A longer chain creates a deeper drape.",
       "Attachment hardware contributes to the total finished length.",
       "The selected length refers to the complete end-to-end item, including hardware.",
-      "Bracelet extenders are not offered on wallet chains unless a specific product enables an equivalent option.",
+      "Extenders are not offered on wallet chains unless a specific product enables an equivalent option.",
     ],
     fallbackUrl: "/types/wallet-chains",
   },
@@ -156,12 +167,40 @@ export const STANDARD_BRACELET_LENGTHS = Object.freeze(
   ]),
 );
 
-export const STANDARD_NECKLACE_LENGTHS = Object.freeze(
+export const BRACELET_LENGTH_TOLERANCE_NOTE =
+  "I will do my best to come as close to the specified length as possible. This may involve extra rings or modified patterns near the clasp, and may not be exact. If I cannot make it exactly the desired length, I will never make it smaller; it may instead finish up to 5 mm over the desired length. Some weaves also flex and shift with tension, so measurements are taken with the bracelet extended to its full length.";
+
+export const NECKLACE_LENGTH_ADJUSTMENT_NOTE =
+  "Necklaces are generally made to the advertised length. You may request up to 5 cm less or up to 2 cm over the listed length. For other alterations or lengths, contact Gloamweald before ordering so I can provide a more appropriate price.";
+
+export const STANDARD_EXTENDER_OPTIONS = Object.freeze(
   createLengthOptions([
-    { from: 38, to: 60, step: 2, priceDelta: 0 },
-    { from: 62, to: 70, step: 2, priceDelta: 10 },
+    { from: 2, to: 5, step: 1, priceDelta: 0 },
+    { from: 6, to: 10, step: 1, priceDelta: 1 },
   ]),
 );
+
+function necklaceAdjustmentOptions(advertisedLengthCm) {
+  const base = Number(advertisedLengthCm);
+  if (!Number.isFinite(base) || base <= 0) return [];
+
+  return createLengthOptions([{ from: base - 5, to: base + 2, step: 1, priceDelta: 0 }]).map(
+    (option) => {
+      const difference = Math.round((option.value - base) * 10) / 10;
+      const suffix =
+        difference === 0
+          ? "advertised length"
+          : `${difference > 0 ? "+" : ""}${difference.toLocaleString("en-AU", {
+              maximumFractionDigits: 1,
+            })} cm`;
+
+      return {
+        ...option,
+        label: `${option.label} (${suffix})`,
+      };
+    },
+  );
+}
 
 export const STANDARD_WALLET_CHAIN_LENGTHS = Object.freeze(
   createLengthOptions([
@@ -169,14 +208,6 @@ export const STANDARD_WALLET_CHAIN_LENGTHS = Object.freeze(
     { from: 70, to: 80, step: 5, priceDelta: 10 },
   ]),
 );
-
-function fixedLengthOptions(values) {
-  return values.map(([value, priceDelta = 0]) => ({
-    value,
-    label: `${value.toLocaleString("en-AU", { maximumFractionDigits: 1 })} cm`,
-    priceDelta,
-  }));
-}
 
 export const GLOAMWEALD_COLLECTIONS = Object.freeze({
   classics: {
@@ -222,29 +253,19 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         enabled: true,
         required: true,
         label: "Finished bracelet length",
-        mode: "fixed",
-        options: fixedLengthOptions([
-          [16.5, 0],
-          [18, 0],
-          [19.5, 0],
-          [21, 0],
-          [22.5, 5],
-        ]),
-        toleranceNote:
-          "This design is built in fixed repeating units and is only available in the listed lengths.",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured ring clasp",
-        picturedImage: "assets/images/dark-elf-4.webp",
-        picturedSupportsExtender: true,
-        allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner", "large-carabiner"],
+        includedOptionId: "ring-clasp",
+        allowedOptionIds: ["ring-clasp", "lobster", "small-carabiner", "medium-carabiner", "large-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -297,19 +318,17 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         label: "Finished bracelet length",
         mode: "standard",
         options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured lobster clasp",
-        picturedImage: "assets/images/half-persian-b-1.webp",
-        picturedSupportsExtender: true,
+        includedOptionId: "lobster",
         allowedOptionIds: ["lobster", "toggle", "small-carabiner", "medium-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -353,19 +372,17 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         label: "Finished bracelet length",
         mode: "standard",
         options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured lobster clasp",
-        picturedImage: "assets/images/leoma-1.webp",
-        picturedSupportsExtender: true,
+        includedOptionId: "lobster",
         allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -411,29 +428,19 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         enabled: true,
         required: true,
         label: "Finished bracelet length",
-        mode: "fixed",
-        options: fixedLengthOptions([
-          [16.4, 0],
-          [17.8, 0],
-          [19.2, 0],
-          [20.6, 0],
-          [22, 5],
-        ]),
-        toleranceNote:
-          "This design is built in fixed repeating units and is only available in the listed lengths.",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured lobster clasp",
-        picturedImage: "assets/images/vertebrae-1.webp",
-        picturedSupportsExtender: true,
+        includedOptionId: "lobster",
         allowedOptionIds: ["lobster", "toggle", "small-carabiner", "medium-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -476,29 +483,19 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         enabled: true,
         required: true,
         label: "Finished bracelet length",
-        mode: "fixed",
-        options: fixedLengthOptions([
-          [16, 0],
-          [17.5, 0],
-          [19, 0],
-          [20.5, 0],
-          [22, 5],
-        ]),
-        toleranceNote:
-          "This design is built in fixed repeating units and is only available in the listed lengths.",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured toggle clasp",
-        picturedImage: "assets/images/celtic-visions-1.webp",
-        picturedSupportsExtender: false,
+        includedOptionId: "toggle",
         allowedOptionIds: ["lobster", "toggle", "medium-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -536,22 +533,22 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
       length: {
         enabled: true,
         required: true,
-        label: "Finished cuff length",
+        label: "Finished bracelet length",
         mode: "standard",
         options: STANDARD_BRACELET_LENGTHS,
         helperText:
           "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured slide-lock clasp",
-        picturedImage: "assets/images/4in1-small-3.webp",
-        picturedSupportsExtender: false,
+        includedOptionId: "slide-lock",
         allowedOptionIds: ["slide-lock"],
       },
       extender: {
-        enabled: false,
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -601,23 +598,23 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         enabled: true,
         required: true,
         label: "Finished necklace length",
-        mode: "standard",
-        options: STANDARD_NECKLACE_LENGTHS,
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 47,
+        options: necklaceAdjustmentOptions(47),
         helperText:
           "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured lobster clasp",
-        picturedImage: "assets/images/half-persian-n-1.webp",
-        picturedSupportsExtender: true,
+        includedOptionId: "lobster",
         allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [
@@ -652,23 +649,23 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         enabled: true,
         required: true,
         label: "Finished necklace length",
-        mode: "standard",
-        options: STANDARD_NECKLACE_LENGTHS,
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 60,
+        options: necklaceAdjustmentOptions(60),
         helperText:
           "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
       },
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured lobster clasp",
-        picturedImage: "",
-        picturedSupportsExtender: true,
+        includedOptionId: "lobster",
         allowedOptionIds: ["lobster", "toggle", "medium-carabiner"],
       },
       extender: {
         enabled: true,
-        lengthCm: 3,
-        priceDelta: 0,
+        options: STANDARD_EXTENDER_OPTIONS,
       },
     },
     images: [],
@@ -832,9 +829,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
       clasp: {
         enabled: true,
         required: false,
-        picturedLabel: "Pictured carabiner hardware",
-        picturedImage: "assets/images/half-persian-w-3.webp",
-        picturedSupportsExtender: false,
+        includedOptionId: "medium-carabiner",
         allowedOptionIds: ["medium-carabiner", "large-carabiner"],
       },
       extender: {
@@ -975,11 +970,14 @@ function selectedId(value) {
   return value;
 }
 
-function selectedBoolean(value) {
-  if (value && typeof value === "object" && "selected" in value) {
-    return Boolean(value.selected);
+function selectedExtenderValue(value) {
+  if (value && typeof value === "object") {
+    if ("selected" in value && !value.selected) return "no";
+    if ("value" in value) return value.value;
+    if ("lengthCm" in value) return value.lengthCm;
+    if ("selected" in value && value.selected) return "yes";
   }
-  return value === true || value === "true" || value === "yes" || value === "1";
+  return value;
 }
 
 function valuesMatch(a, b) {
@@ -1004,30 +1002,40 @@ export function claspOptionsForProduct(product) {
   const config = customisationForProduct(product).clasp;
   if (!config?.enabled) return [];
 
-  const picturedLabel = config.picturedLabel || "Pictured clasp";
-  const pictured = {
-    id: "pictured",
-    name: picturedLabel,
-    label: picturedLabel,
-    priceDelta: 0,
-    image: config.picturedImage || product?.images?.[0]?.src || "",
-    dimensions: "Included",
-    supportsExtender: config.picturedSupportsExtender !== false,
-    description: "The clasp shown in the product photographs is included.",
-    isPictured: true,
-  };
-
   const allowed = Array.isArray(config.allowedOptionIds) ? config.allowedOptionIds : [];
-  const options = allowed
+  const includedId = String(config.includedOptionId || allowed[0] || "").trim();
+  const ids = [
+    includedId,
+    ...allowed.filter((id) => id && id !== includedId),
+  ].filter(Boolean);
+
+  return ids
     .map((id) => CLASP_OPTIONS[id])
     .filter(Boolean)
     .map((option) => ({
       ...option,
       label: option.name,
-      priceDelta: normalisePriceDelta(option.priceDelta),
+      priceDelta: option.id === includedId ? 0 : normalisePriceDelta(option.priceDelta),
+      isIncluded: option.id === includedId,
     }));
+}
 
-  return [pictured, ...options];
+export function extenderOptionsForProduct(product) {
+  const config = customisationForProduct(product).extender;
+  if (!config?.enabled) return [];
+
+  if (Array.isArray(config.options) && config.options.length) {
+    return config.options;
+  }
+
+  const lengthCm = Number(config.lengthCm) || 3;
+  return [
+    {
+      value: lengthCm,
+      label: `${lengthCm.toLocaleString("en-AU", { maximumFractionDigits: 1 })} cm`,
+      priceDelta: normalisePriceDelta(config.priceDelta),
+    },
+  ];
 }
 
 export function findLengthOption(product, value) {
@@ -1036,8 +1044,23 @@ export function findLengthOption(product, value) {
 }
 
 export function findClaspOption(product, id) {
-  const wanted = String(selectedId(id) || "pictured").trim() || "pictured";
-  return claspOptionsForProduct(product).find((option) => option.id === wanted) || null;
+  const options = claspOptionsForProduct(product);
+  const wanted = String(selectedId(id) || options[0]?.id || "").trim() || options[0]?.id || "";
+  return options.find((option) => option.id === wanted) || null;
+}
+
+export function findExtenderOption(product, value) {
+  const options = extenderOptionsForProduct(product);
+  const wanted = selectedExtenderValue(value);
+  if (wanted === undefined || wanted === null || wanted === "" || wanted === false || wanted === "no") {
+    return null;
+  }
+
+  if (wanted === true || wanted === "true" || wanted === "yes" || wanted === "1") {
+    return options.find((option) => valuesMatch(option.value, 3)) || options[0] || null;
+  }
+
+  return options.find((option) => valuesMatch(option.value, wanted)) || null;
 }
 
 export function normaliseProductConfiguration(product, selections = {}) {
@@ -1078,20 +1101,25 @@ export function normaliseProductConfiguration(product, selections = {}) {
   }
 
   if (config.extender?.enabled) {
-    const wantsExtender = selectedBoolean(selections.extender);
+    const requestedExtender = selectedExtenderValue(selections.extender);
+    const extenderOption = findExtenderOption(product, selections.extender);
+    const wantsExtender = Boolean(extenderOption);
     const selectedClasp = normalised.clasp;
 
     if (wantsExtender && selectedClasp && selectedClasp.supportsExtender === false) {
       throw new Error("Extenders are not available with this clasp style.");
     }
 
+    if (requestedExtender && requestedExtender !== "no" && !extenderOption) {
+      throw new Error("Choose a valid extender length for this product.");
+    }
+
     normalised.extender = {
       selected: wantsExtender,
-      lengthCm: Number(config.extender.lengthCm) || 3,
-      label: wantsExtender
-        ? `${Number(config.extender.lengthCm) || 3} cm extender`
-        : "No extender",
-      priceDelta: wantsExtender ? normalisePriceDelta(config.extender.priceDelta) : 0,
+      value: wantsExtender ? extenderOption.value : "",
+      lengthCm: wantsExtender ? Number(extenderOption.value) : 0,
+      label: wantsExtender ? `${extenderOption.label} extender` : "No extender",
+      priceDelta: wantsExtender ? normalisePriceDelta(extenderOption.priceDelta) : 0,
     };
   }
 
@@ -1124,7 +1152,9 @@ export function selectionSummary(configuration = {}) {
 export function cartLineKey(productId, configuration = {}) {
   const length = configuration.length?.value ?? "";
   const clasp = configuration.clasp?.id ?? "";
-  const extender = configuration.extender?.selected ? "extender" : "no-extender";
+  const extender = configuration.extender?.selected
+    ? `extender:${configuration.extender.lengthCm || configuration.extender.value}`
+    : "no-extender";
   return [productId, `length:${length}`, `clasp:${clasp}`, extender].join("|");
 }
 
@@ -1243,6 +1273,14 @@ export function validateProductCatalogue() {
 
     if (config.clasp?.enabled) {
       const allowed = Array.isArray(config.clasp.allowedOptionIds) ? config.clasp.allowedOptionIds : [];
+      if (!config.clasp.includedOptionId) {
+        issues.push(`${label} needs an included clasp option.`);
+      } else if (!CLASP_OPTIONS[config.clasp.includedOptionId]) {
+        issues.push(`${label} includes unknown clasp option ${config.clasp.includedOptionId}.`);
+      } else if (!allowed.includes(config.clasp.includedOptionId)) {
+        issues.push(`${label} included clasp must also be in allowedOptionIds.`);
+      }
+
       allowed.forEach((id) => {
         if (!CLASP_OPTIONS[id]) issues.push(`${label} allows unknown clasp option ${id}.`);
         if (Number(CLASP_OPTIONS[id]?.priceDelta || 0) < 0) {
@@ -1252,13 +1290,18 @@ export function validateProductCatalogue() {
     }
 
     if (config.extender?.enabled) {
-      const lengthCm = Number(config.extender.lengthCm);
-      if (!Number.isFinite(lengthCm) || lengthCm <= 0) {
-        issues.push(`${label} has an invalid extender length.`);
-      }
-      if (Number(config.extender.priceDelta || 0) < 0) {
-        issues.push(`${label} has a negative extender surcharge.`);
-      }
+      const options = extenderOptionsForProduct(product);
+      if (!options.length) issues.push(`${label} has no extender options.`);
+      options.forEach((option) => {
+        const lengthCm = Number(option.value);
+        if (!Number.isFinite(lengthCm) || lengthCm <= 0) {
+          issues.push(`${label} has an invalid extender length.`);
+        }
+        if (!option.label) issues.push(`${label} has an extender option without a label.`);
+        if (Number(option.priceDelta || 0) < 0) {
+          issues.push(`${label} has a negative extender surcharge.`);
+        }
+      });
     }
   });
 

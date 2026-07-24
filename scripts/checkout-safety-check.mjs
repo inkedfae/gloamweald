@@ -84,7 +84,15 @@ const {
 } = await import("../src/checkout-order.js");
 const {
   GLOAMWEALD_PRODUCTS,
+  BRACELET_LENGTH_TOLERANCE_NOTE,
+  NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+  STANDARD_BRACELET_LENGTHS,
+  STANDARD_EXTENDER_OPTIONS,
+  claspOptionsForProduct,
   checkoutProductById,
+  extenderOptionsForProduct,
+  lengthOptionsForProduct,
+  normaliseProductConfiguration,
   productDisplayPrice,
   productPriceAmount,
 } = await import("../src/product-catalog.js");
@@ -211,6 +219,19 @@ check(
   "Product display metadata and checkout prices live in src/product-catalog.js; checkout code reads catalogue prices.",
 );
 
+check(
+  "browser catalogue loader exposes customisation helpers",
+  [
+    "configuredCartLine",
+    "lengthOptionsForProduct",
+    "claspOptionsForProduct",
+    "extenderOptionsForProduct",
+    "findExtenderOption",
+  ].every((helper) => productsStub.includes(helper)) &&
+    script.includes("catalog.extenderOptionsForProduct"),
+  "products.js exposes the catalogue helpers needed by non-module product pages, including extender options.",
+);
+
 const displayedPricesMatchCheckout = checkoutProducts.every(({ product, checkoutProduct }) =>
   productDisplayPrice(product).includes(String(checkoutProduct.unitAmount)),
 );
@@ -230,6 +251,112 @@ check(
   `${blockedProducts.length} non-purchasable/enquiry products are not available to backend checkout.`,
 );
 
+const optionSignature = (options) =>
+  JSON.stringify(
+    options.map((option) => ({
+      value: Number(option.value),
+      priceDelta: Number(option.priceDelta || 0),
+    })),
+  );
+const standardBraceletSignature = optionSignature(STANDARD_BRACELET_LENGTHS);
+const standardExtenderSignature = optionSignature(STANDARD_EXTENDER_OPTIONS);
+const orderableBracelets = GLOAMWEALD_PRODUCTS.filter(
+  (product) => product.orderable && product.type === "bracelets",
+);
+const orderableNecklaces = GLOAMWEALD_PRODUCTS.filter(
+  (product) => product.orderable && product.type === "necklaces",
+);
+const orderableBraceletsAndNecklaces = [...orderableBracelets, ...orderableNecklaces];
+function orderableProductsWithCustomClasp() {
+  return GLOAMWEALD_PRODUCTS.filter(
+    (product) => product.orderable && product.customisation?.clasp?.enabled === true,
+  );
+}
+
+check(
+  "all orderable bracelets use one shared length option set",
+  orderableBracelets.length > 0 &&
+    orderableBracelets.every(
+      (product) =>
+        product.customisation?.length?.enabled === true &&
+        product.customisation.length.toleranceNote === BRACELET_LENGTH_TOLERANCE_NOTE &&
+        optionSignature(lengthOptionsForProduct(product)) === standardBraceletSignature,
+    ),
+  "Every orderable bracelet uses STANDARD_BRACELET_LENGTHS and includes the bracelet measurement tolerance note.",
+);
+
+check(
+  "orderable necklaces use fixed-length adjustment dropdowns",
+  orderableNecklaces.length > 0 &&
+    orderableNecklaces.every((product) => {
+      const config = product.customisation?.length;
+      const options = lengthOptionsForProduct(product);
+      const values = options.map((option) => Number(option.value));
+      const advertised = Number(config?.advertisedLengthCm);
+      return (
+        config?.enabled === true &&
+        config.mode === "adjustment" &&
+        config.inputType === "select" &&
+        config.toleranceNote === NECKLACE_LENGTH_ADJUSTMENT_NOTE &&
+        Number.isFinite(advertised) &&
+        Math.min(...values) === advertised - 5 &&
+        Math.max(...values) === advertised + 2 &&
+        values.includes(advertised) &&
+        options.every((option) => Number(option.priceDelta || 0) === 0)
+      );
+    }),
+  "Orderable necklaces only allow catalogue-listed adjustments from 5 cm shorter to 2 cm longer.",
+);
+
+check(
+  "bracelet and necklace extenders share 2-10 cm pricing",
+  orderableBraceletsAndNecklaces.length > 0 &&
+    orderableBraceletsAndNecklaces.every(
+      (product) =>
+        product.customisation?.extender?.enabled === true &&
+        optionSignature(extenderOptionsForProduct(product)) === standardExtenderSignature,
+    ),
+  "Every orderable bracelet and necklace uses STANDARD_EXTENDER_OPTIONS: 2-5 cm at $0 and 6-10 cm at +$1.",
+);
+
+check(
+  "included clasp is explicit and never reuses product images",
+  orderableProductsWithCustomClasp().every((product) => {
+    const options = claspOptionsForProduct(product);
+    const first = options[0];
+    return (
+      first &&
+      first.id === product.customisation.clasp.includedOptionId &&
+      first.isIncluded === true &&
+      Number(first.priceDelta || 0) === 0 &&
+      options.every((option) => option.image === "")
+    );
+  }),
+  "Each orderable custom clasp product has an explicit included clasp at $0, and clasp option images are blank placeholders rather than copied product photos.",
+);
+
+check(
+  "extender choices normalise with exact free/paid prices",
+  orderableBraceletsAndNecklaces.every((product) => {
+    const length = lengthOptionsForProduct(product)[0]?.value;
+    const clasp = product.customisation?.clasp?.includedOptionId;
+    const selections = { clasp, extender: "no" };
+    if (length !== undefined) selections.length = length;
+
+    const free = normaliseProductConfiguration(product, { ...selections, extender: 5 }).extender;
+    const paid = normaliseProductConfiguration(product, { ...selections, extender: 6 }).extender;
+    return (
+      free.selected === true &&
+      free.lengthCm === 5 &&
+      Number(free.priceDelta || 0) === 0 &&
+      paid.selected === true &&
+      paid.lengthCm === 6 &&
+      Number(paid.priceDelta || 0) === 1
+    );
+  }),
+  "Backend catalogue normalisation keeps 5 cm extenders free and 6 cm extenders at +$1 for bracelets and necklaces.",
+);
+
 const customer = {
   name: "Test Customer",
   email: "test@example.com",
@@ -246,7 +373,7 @@ const darkElfCartItem = {
   quantity: 1,
   selections: {
     length: { value: 18 },
-    clasp: { id: "pictured" },
+    clasp: { id: "ring-clasp" },
     extender: { selected: false },
   },
 };
