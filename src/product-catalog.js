@@ -237,7 +237,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 90,
+      amount: 115,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -300,7 +300,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 40,
+      amount: 85,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -350,7 +350,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: ["gemstone"],
     collection: null,
     price: {
-      amount: 110,
+      amount: 140,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -412,7 +412,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 45,
+      amount: 70,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -467,7 +467,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 70,
+      amount: 75,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -518,7 +518,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 55,
+      amount: 80,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -582,7 +582,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 100,
+      amount: 180,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -633,7 +633,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 150,
+      amount: 215,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -679,7 +679,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 95,
+      amount: 130,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -805,7 +805,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     components: [],
     collection: null,
     price: {
-      amount: 85,
+      amount: 110,
       currency: CATALOG_CURRENCY,
     },
     description:
