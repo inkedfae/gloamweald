@@ -472,7 +472,7 @@ nav a[aria-current="page"]::after {
   text-wrap: balance;
 }
 
-.page-hero > p:last-child {
+.page-hero > p:not(.eyebrow) {
   max-width: 42rem;
   margin: 0.9rem 0 0;
   color: var(--bone-dim);

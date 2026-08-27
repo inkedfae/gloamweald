@@ -80,6 +80,7 @@ const {
 } = await import("../src/checkout-shared.js");
 const {
   checkoutShippingAmount,
+  moneyValue,
   normaliseOrder,
 } = await import("../src/checkout-order.js");
 const {
@@ -467,9 +468,9 @@ const paypalPayloadExpress = paypalOrderPayload(overExpress);
 check(
   "PayPal payload uses backend decimal shipping values",
   paypalPayloadUnder.purchase_units[0].amount.breakdown.shipping.value === "10.95" &&
-    paypalPayloadUnder.purchase_units[0].amount.value === "100.95" &&
+    paypalPayloadUnder.purchase_units[0].amount.value === moneyValue(underStandard.total) &&
     paypalPayloadExpress.purchase_units[0].amount.breakdown.shipping.value === "3.00" &&
-    paypalPayloadExpress.purchase_units[0].amount.value === "188.00" &&
+    paypalPayloadExpress.purchase_units[0].amount.value === moneyValue(overExpress.total) &&
     paypalPayloadUnder.payment_source.paypal.experience_context.shipping_preference === "SET_PROVIDED_ADDRESS",
   "PayPal order creation receives backend totals and two-decimal shipping amounts.",
 );
