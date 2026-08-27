@@ -472,11 +472,21 @@ nav a[aria-current="page"]::after {
   text-wrap: balance;
 }
 
-.page-hero > p:last-child {
+.page-hero > p:not(.eyebrow) {
   max-width: 42rem;
   margin: 0.9rem 0 0;
   color: var(--bone-dim);
   font-size: clamp(0.98rem, 1.55vw, 1.15rem);
+}
+
+.page-hero--maker h1 {
+  max-width: min(100%, 18ch);
+  font-size: clamp(2.4rem, 4.7vw, 4.75rem);
+  line-height: 0.94;
+}
+
+.page-hero--care h1 {
+  max-width: min(100%, 13ch);
 }
 
 .page-hero--shop {
@@ -2224,8 +2234,24 @@ button.product-photo {
   gap: clamp(3rem, 9vw, 9rem);
 }
 
+.about-section--reading {
+  grid-template-columns: minmax(12rem, 0.42fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.about-section--story {
+  background:
+    radial-gradient(circle at 12% 0, rgba(174, 185, 180, 0.06), transparent 24rem),
+    var(--panel);
+}
+
 .about-section h2 {
   max-width: 11ch;
+}
+
+.about-section--reading h2 {
+  max-width: 15ch;
 }
 
 .name-note {
@@ -2254,9 +2280,24 @@ button.product-photo {
   font-size: 1.08rem;
 }
 
+.about-section--reading .about-copy {
+  align-self: start;
+  max-width: 52rem;
+  line-height: 1.68;
+}
+
+.about-section--reading .about-copy p {
+  margin: 0;
+}
+
+.about-section--reading .about-copy p + p {
+  margin-top: 1rem;
+}
+
 .about-copy .lead {
   color: var(--bone);
-  font-size: 1.4rem;
+  font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+  line-height: 1.48;
 }
 
 .process-section {
@@ -2292,7 +2333,7 @@ button.product-photo {
 }
 
 .process-list h3 {
-  margin: 4rem 0 0.75rem;
+  margin: 2.5rem 0 0.75rem;
   font-size: 2rem;
   font-weight: 500;
 }
@@ -2363,7 +2404,7 @@ button.product-photo {
 }
 
 .care-guide article {
-  min-height: 19rem;
+  min-height: 14rem;
   padding: clamp(1.5rem, 5vw, 3rem);
   background: var(--panel);
 }
@@ -2376,7 +2417,7 @@ button.product-photo {
 }
 
 .care-guide h2 {
-  margin: 4rem 0 1rem;
+  margin: 2.25rem 0 1rem;
   font-size: clamp(2rem, 4vw, 3.4rem);
   font-weight: 500;
 }
@@ -2384,6 +2425,52 @@ button.product-photo {
 .care-guide p {
   max-width: 32rem;
   color: var(--bone-dim);
+}
+
+.care-intro,
+.care-concerns {
+  background:
+    radial-gradient(circle at 82% 0, rgba(89, 98, 75, 0.1), transparent 22rem),
+    var(--ink-soft);
+}
+
+.care-concerns {
+  background:
+    radial-gradient(circle at 12% 0, rgba(125, 38, 48, 0.08), transparent 24rem),
+    var(--panel);
+}
+
+.reading-copy {
+  display: grid;
+  gap: 1rem;
+  color: var(--bone-dim);
+  font-size: clamp(1rem, 1.35vw, 1.08rem);
+  line-height: 1.68;
+}
+
+.reading-copy--wide {
+  max-width: 68rem;
+}
+
+.reading-copy h2 {
+  max-width: 18ch;
+  margin: 0 0 0.5rem;
+  color: var(--bone);
+  font-size: clamp(2.05rem, 4.1vw, 3.7rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+
+.reading-copy p {
+  max-width: 64rem;
+  margin: 0;
+}
+
+.reading-copy .lead {
+  color: var(--bone);
+  font-size: clamp(1.12rem, 1.7vw, 1.32rem);
+  line-height: 1.52;
 }
 
 .care-note {
