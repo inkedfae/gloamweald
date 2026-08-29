@@ -1,18 +1,52 @@
+.home-page {
+  position: relative;
+  display: grid;
+  flex: 1 0 auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(125, 38, 48, 0.1), transparent min(32vw, 34rem)),
+    radial-gradient(circle at 86% 34%, rgba(174, 185, 180, 0.08), transparent min(34vw, 38rem)),
+    linear-gradient(145deg, rgba(20, 23, 20, 0.18), rgba(9, 11, 10, 0));
+}
+
+.home-page::before {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 calc(50% - 1px), rgba(229, 221, 202, 0.04) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(circle at 50% 50%, transparent 0 min(42vw, 42rem), rgba(9, 11, 10, 0.36) min(68vw, 68rem));
+  content: "";
+  pointer-events: none;
+}
+
+.home-page > * {
+  position: relative;
+  z-index: 1;
+}
+
 .home-hero {
-  min-height: clamp(18rem, 44svh, 28rem);
-  padding: clamp(1.45rem, 3.2vw, 2.65rem) 0;
-  gap: clamp(1.35rem, 4vw, 3.75rem);
+  align-items: stretch;
+  align-self: stretch;
+  width: min(calc(100% - clamp(2.5rem, 7vw, 10rem)), 1720px);
+  min-height: clamp(25rem, 60svh, 54rem);
+  padding: clamp(1.75rem, 5svh, 5.5rem) 0;
+  gap: clamp(1.75rem, 4.5vw, 6rem);
+}
+
+.home-hero .hero-copy {
+  align-self: center;
 }
 
 .home-hero h1 {
-  max-width: min(100%, 11ch);
-  font-size: clamp(2.7rem, 5.25vw, 5.35rem);
+  max-width: min(100%, 12ch);
+  font-size: clamp(2.7rem, 5.1vw, 6.25rem);
   letter-spacing: -0.05em;
   line-height: 1.02;
 }
 
 .home-hero .hero-intro {
-  max-width: 36rem;
+  max-width: 42rem;
   margin-top: 1rem;
   font-size: clamp(0.98rem, 1.35vw, 1.12rem);
   line-height: 1.55;
@@ -22,17 +56,25 @@
   margin-top: 1.05rem;
 }
 
+.home-hero .material-note {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-self: stretch;
+  min-height: clamp(18rem, 42svh, 40rem);
+}
+
 .home-hero .mail-swatch {
-  min-height: clamp(12.5rem, 24vw, 16.5rem);
+  min-height: 0;
+  height: 100%;
 }
 
 .home-hero .material-note__copy {
-  padding: clamp(1rem, 2.2vw, 1.25rem);
+  padding: clamp(1rem, 2vw, 1.6rem);
 }
 
 .home-gate {
-  min-height: clamp(7.6rem, 15svh, 10.2rem);
-  padding: clamp(1rem, 2.5vw, 1.65rem);
+  min-height: clamp(8rem, 15svh, 14rem);
+  padding: clamp(1rem, 2.6vw, 2rem);
 }
 
 .home-gate strong {
@@ -45,6 +87,10 @@
 }
 
 @media (min-width: 901px) and (max-height: 820px) {
+  .home-page {
+    grid-template-rows: auto auto;
+  }
+
   .home-hero {
     min-height: 0;
     padding-top: 1.15rem;
@@ -59,14 +105,61 @@
     min-height: 11.75rem;
   }
 
+  .home-hero .material-note {
+    min-height: 0;
+  }
+
   .home-gate {
     min-height: 7rem;
   }
 }
 
+@media (min-width: 1200px) and (min-height: 980px) {
+  .home-hero .material-note {
+    min-height: clamp(26rem, 50svh, 48rem);
+  }
+
+  .home-gate {
+    min-height: clamp(10rem, 16svh, 16rem);
+  }
+}
+
+@media (min-width: 1600px) {
+  .home-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.58fr);
+    width: min(calc(100% - clamp(5rem, 8vw, 14rem)), 1920px);
+  }
+
+  .home-hero .hero-intro {
+    max-width: 46rem;
+  }
+
+  .home-hero .raven-sigil {
+    width: min(64%, 22rem);
+  }
+}
+
+@media (min-width: 1200px) and (min-aspect-ratio: 21 / 9) {
+  .home-hero {
+    width: min(calc(100% - clamp(3rem, 6vw, 10rem)), 2100px);
+    gap: clamp(2.5rem, 5vw, 8rem);
+  }
+
+  .home-gate {
+    min-height: clamp(8rem, 18svh, 13rem);
+  }
+}
+
 @media (max-width: 900px) {
+  .home-page {
+    display: block;
+    overflow: visible;
+  }
+
   .home-hero {
     gap: 1.45rem;
+    width: min(100% - 2.5rem, var(--content));
+    min-height: auto;
     padding: 2rem 0;
   }
 
@@ -77,6 +170,11 @@
 
   .home-hero .mail-swatch {
     min-height: 13rem;
+    height: auto;
+  }
+
+  .home-hero .material-note {
+    min-height: 0;
   }
 
   .home-gate {
