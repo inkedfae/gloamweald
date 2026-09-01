@@ -380,7 +380,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 115,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -389,7 +389,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Ring clasp",
     dimensions: "Custom length x 13mm x 9mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -429,7 +429,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 85,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -438,7 +438,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Lobster clasp",
     dimensions: "Custom length x 8mm x 4mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -473,7 +473,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: ["gemstone"],
     collection: null,
     price: {
-      amount: 140,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -486,7 +486,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Lobster clasp",
     dimensions: "Custom length x 5mm x 5mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
