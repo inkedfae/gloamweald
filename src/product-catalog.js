@@ -367,7 +367,7 @@ function launchScaffoldProduct(product) {
     visual: "classic",
     customisation: {},
     ...product,
-    images: [],
+    images: product.images ?? [],
   };
 }
 
@@ -411,7 +411,14 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [],
+    images: [
+      { src: "assets/images/elf-weave-bracelet-1.webp", alt: "Elf Weave Bracelet in stainless steel on a dark surface" },
+      { src: "assets/images/elf-weave-bracelet-2.webp", alt: "Elf Weave Bracelet ring-clasp detail on a dark surface" },
+      { src: "assets/images/elf-weave-bracelet-3.webp", alt: "Close view of the Elf Weave Bracelet pattern" },
+      { src: "assets/images/elf-weave-bracelet-4.webp", alt: "Close view of the Elf Weave Bracelet ring clasp" },
+      { src: "assets/images/elf-weave-bracelet-model-1.webp", alt: "Elf Weave Bracelet worn around a tattooed wrist" },
+      { src: "assets/images/elf-weave-bracelet-model-2.webp", alt: "Elf Weave Bracelet worn on a tattooed wrist" },
+    ],
   },
 
   {
@@ -453,7 +460,10 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [],
+    images: [
+      { src: "assets/images/half-persian-bracelet-mid-build-1.webp", alt: "Half Persian Bracelet - Mid-build clasp detail on a dark surface" },
+      { src: "assets/images/half-persian-bracelet-mid-build-2.webp", alt: "Half Persian Bracelet - Mid-build in stainless steel on a dark surface" },
+    ],
   },
   {
     id: "leoma-amulet",
@@ -827,7 +837,9 @@ And it is still said, all these centuries later, that those with a stubborn, det
       hardwareNote:
         "This in-stock piece is sold at the finished length shown. Contact Gloamweald if you need a different wallet-chain length.",
     },
-    images: [],
+    images: [
+      { src: "assets/images/bonelink-wallet-chain-1.webp", alt: "Bonelink Wallet Chain in stainless steel on a dark surface" },
+    ],
   },
 
   {
@@ -875,7 +887,9 @@ And it is still said, all these centuries later, that those with a stubborn, det
         enabled: false,
       },
     },
-    images: [],
+    images: [
+      { src: "assets/images/half-persian-wallet-chain-1.webp", alt: "Half Persian Wallet Chain in stainless steel on a dark surface" },
+    ],
   },
     {
     id: "waymarker-necklace",
@@ -928,7 +942,9 @@ And it is still said, all these centuries later, that those with a stubborn, det
     status: "Coming soon",
     orderable: false,
     visual: "classic",
-    images: [],
+    images: [
+      { src: "assets/images/briar-imp-earrings-1.webp", alt: "Briar Imp Earrings in stainless steel with polished spikes on a dark surface" },
+    ],
   },
 
   launchScaffoldProduct({
@@ -956,6 +972,11 @@ And it is still said, all these centuries later, that those with a stubborn, det
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "Custom length x approximately 11mm x 6mm",
+    images: [
+      { src: "assets/images/half-persian-bracelet-heavy-build-1.webp", alt: "Half Persian Bracelet - Heavy-build clasp detail on a dark surface" },
+      { src: "assets/images/half-persian-bracelet-heavy-build-2.webp", alt: "Half Persian Bracelet - Heavy-build in stainless steel on a dark surface" },
+      { src: "assets/images/half-persian-bracelet-heavy-build-3.webp", alt: "Close view of the Half Persian Bracelet - Heavy-build weave" },
+    ],
     customisation: braceletCustomisation({
       includedOptionId: "medium-carabiner",
       allowedOptionIds: ["medium-carabiner", "large-carabiner", "toggle"],
@@ -1072,6 +1093,12 @@ And it is still said, all these centuries later, that those with a stubborn, det
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "450mm x approximately 5mm x 3mm",
+    images: [
+      { src: "assets/images/half-persian-necklace-light-build-1.webp", alt: "Half Persian Necklace - Light-build on a black display bust" },
+      { src: "assets/images/half-persian-necklace-light-build-2.webp", alt: "Side view of Half Persian Necklace - Light-build on a black display bust" },
+      { src: "assets/images/half-persian-necklace-light-build-3.webp", alt: "Close view of the Half Persian Necklace - Light-build weave" },
+      { src: "assets/images/half-persian-necklace-light-build-model-1.webp", alt: "Half Persian Necklace - Light-build worn around a tattooed neck" },
+    ],
     customisation: necklaceCustomisation(45),
   }),
 
@@ -1100,6 +1127,12 @@ And it is still said, all these centuries later, that those with a stubborn, det
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "470mm x approximately 5mm x 5mm",
+    images: [
+      { src: "assets/images/jpl-necklace-mid-build-1.webp", alt: "JPL Necklace - Mid-build on a black display bust" },
+      { src: "assets/images/jpl-necklace-mid-build-2.webp", alt: "Side view of JPL Necklace - Mid-build on a black display bust" },
+      { src: "assets/images/jpl-necklace-mid-build-3.webp", alt: "JPL Necklace - Mid-build clasp detail on a black display bust" },
+      { src: "assets/images/jpl-necklace-mid-build-4.webp", alt: "Close view of the JPL Necklace - Mid-build weave" },
+    ],
     customisation: necklaceCustomisation(47, {
       allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
     }),
@@ -1162,6 +1195,11 @@ And it is still said, all these centuries later, that those with a stubborn, det
     material: "Stainless steel · moonstone",
     clasp: "Lobster clasp",
     dimensions: "550mm x approximately 4mm x 4mm",
+    images: [
+      { src: "assets/images/aine-lariat-1.webp", alt: "Áine's Lariat on a black display bust" },
+      { src: "assets/images/aine-lariat-2.webp", alt: "Side view of Áine's Lariat on a black display bust" },
+      { src: "assets/images/aine-lariat-3.webp", alt: "Close view of Áine's Lariat moonstone detail" },
+    ],
     customisation: necklaceCustomisation(55),
   }),
 
@@ -1175,6 +1213,12 @@ And it is still said, all these centuries later, that those with a stubborn, det
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "550mm x pendant dimensions to be confirmed",
+    images: [
+      { src: "assets/images/faeblade-chain-1.webp", alt: "Faeblade Chain with dagger pendant on a black display bust" },
+      { src: "assets/images/faeblade-chain-2.webp", alt: "Side view of the Faeblade Chain on a black display bust" },
+      { src: "assets/images/faeblade-chain-3.webp", alt: "Close view of the Faeblade Chain pendant section" },
+      { src: "assets/images/faeblade-chain-4.webp", alt: "Close view of the Faeblade Chain upper chain" },
+    ],
     customisation: necklaceCustomisation(55),
   }),
 
@@ -1188,6 +1232,9 @@ And it is still said, all these centuries later, that those with a stubborn, det
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "400mm x approximately 14mm x 6mm",
+    images: [
+      { src: "assets/images/vertebrae-weave-chunky-choker-1.webp", alt: "Vertebrae Weave Chunky Choker on a black display bust" },
+    ],
     customisation: necklaceCustomisation(40, {
       includedOptionId: "medium-carabiner",
       allowedOptionIds: ["medium-carabiner", "large-carabiner"],
