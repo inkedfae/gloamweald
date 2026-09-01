@@ -1283,6 +1283,34 @@
     `;
   }
 
+  function renderPendantSelector(product) {
+    const config = product.customisation?.pendant;
+    if (!config?.enabled) return "";
+
+    const options = catalog.pendantOptionsForProduct?.(product) || [];
+    if (!options.length) return "";
+
+    return `
+      <fieldset class="customisation-field customisation-field--pendant">
+        <legend>Choose your pendant</legend>
+        <p>The default pendant is selected. Choose no pendant if you prefer the chain without it.</p>
+        <div class="size-options">
+          ${options
+            .map(
+              (option, index) => `
+                <label class="size-option">
+                  <input type="radio" name="pendant" value="${escapeHtml(option.id)}" ${index === 0 ? "checked" : ""} />
+                  <span>${escapeHtml(option.label || option.name)}</span>
+                  <small>${escapeHtml(option.isDefault ? "Default" : addOnPriceLabel(option.priceDelta))}</small>
+                </label>
+              `,
+            )
+            .join("")}
+        </div>
+      </fieldset>
+    `;
+  }
+
   function renderExtenderSelector(product) {
     const config = product.customisation?.extender;
     if (!config?.enabled) return "";
@@ -1333,6 +1361,7 @@
       <form class="product-purchase-form" data-product-form data-product-id="${escapeHtml(product.id)}">
         ${renderLengthSelector(product)}
         ${renderClaspSelector(product)}
+        ${renderPendantSelector(product)}
         ${renderExtenderSelector(product)}
         ${note}
         <section class="price-summary" aria-live="polite" data-price-summary></section>
@@ -1350,6 +1379,7 @@
     return {
       length: data.get("length") || "",
       clasp: data.get("clasp") || "",
+      pendant: data.get("pendant") || "",
       extender: data.get("extender") || "no",
     };
   }
@@ -1395,6 +1425,7 @@
 
     setFormControlValue(form, "length", params.get("length") || savedSelections.length?.value);
     setFormControlValue(form, "clasp", params.get("clasp") || savedSelections.clasp?.id);
+    setFormControlValue(form, "pendant", params.get("pendant") || savedSelections.pendant?.id);
 
     const savedExtender = savedSelections.extender;
     const extender =
@@ -1491,6 +1522,11 @@
             ${
               line.selections.clasp?.priceDelta
                 ? `<div><dt>${escapeHtml(line.selections.clasp.label)}</dt><dd>+${money.format(line.selections.clasp.priceDelta)}</dd></div>`
+                : ""
+            }
+            ${
+              line.selections.pendant
+                ? `<div><dt>Pendant: ${escapeHtml(line.selections.pendant.label)}</dt><dd>${escapeHtml(addOnPriceLabel(line.selections.pendant.priceDelta))}</dd></div>`
                 : ""
             }
             ${

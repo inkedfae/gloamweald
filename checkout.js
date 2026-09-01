@@ -156,6 +156,7 @@
     const selections = item.selections || {};
     if (selections.length?.value) params.set("length", String(selections.length.value));
     if (selections.clasp?.id) params.set("clasp", selections.clasp.id);
+    if (selections.pendant?.id) params.set("pendant", selections.pendant.id);
     if (selections.extender) {
       const extenderValue = selections.extender.selected
         ? selections.extender.value || selections.extender.lengthCm || "yes"
@@ -181,6 +182,13 @@
       rows.push({
         label: `Clasp: ${selections.clasp.label}`,
         price: priceDeltaLabel(selections.clasp.priceDelta),
+      });
+    }
+
+    if (selections.pendant?.label) {
+      rows.push({
+        label: `Pendant: ${selections.pendant.label}`,
+        price: addOnPriceLabel(selections.pendant.priceDelta),
       });
     }
 
