@@ -68,6 +68,17 @@
   height: 100%;
 }
 
+.home-hero .mail-swatch--photo {
+  place-items: stretch;
+}
+
+.home-hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .home-hero .material-note__copy {
   padding: clamp(1rem, 2vw, 1.6rem);
 }

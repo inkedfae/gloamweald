@@ -1,15 +1,69 @@
 /*
   Product catalogue source of truth.
 
-  To add or edit a product:
-  - Keep id and slug unique, lowercase, and URL-safe.
-  - Set price.amount for purchasable products, or price.label for enquiry/coming soon.
-  - Add images as { src, alt } objects.
-  - Add lore only when a product needs story text.
-  - Enable customisation only for options that can genuinely be made.
-  - Change clasp prices globally in CLASP_OPTIONS, then allow compatible IDs per product.
-  - Change bracelet length surcharges in helper ranges.
-  - Change extender length choices in STANDARD_EXTENDER_OPTIONS.
+  This file is meant to be edited by a human. Each item in
+  GLOAMWEALD_PRODUCTS is a complete product object; there are no wrapper
+  functions hiding product-specific defaults.
+
+  How to add or edit a product:
+  - Duplicate a similar product object and edit the copy.
+  - id and slug must both be unique. Keep them lowercase, URL-safe, and stable.
+  - type must be one of: bracelets, necklaces, wallet-chains, earrings, other.
+  - collection can be null or one of the keys in GLOAMWEALD_COLLECTIONS.
+  - For a normal price, use price.amount and CATALOG_CURRENCY.
+  - For price TBC / coming soon, set price.amount to null and use price.label.
+  - orderable: true means the item can go through cart/checkout; false shows enquiry text instead.
+  - Add images as { src: "assets/images/file.webp", alt: "Useful description" }.
+  - Product order in GLOAMWEALD_PRODUCTS controls the catalogue display order.
+  - Bracelet lengths usually use STANDARD_BRACELET_LENGTHS.
+  - Necklace adjustments usually use necklaceAdjustmentOptions(advertisedLengthCm).
+  - Wallet chains usually use STANDARD_WALLET_CHAIN_LENGTHS.
+  - Use includedOptionId for the clasp included at $0, and allowedOptionIds for compatible clasp choices.
+  - Disable an option with enabled: false, or use customisation: {} when there are no options.
+  - Shared global rules such as clasp pricing, length lists, extender pricing, and product type copy live above the product list.
+
+  PRODUCT TEMPLATE — copy this when adding a similar product
+  {
+    id: "unique-product-id",
+    slug: "unique-product-url",
+    name: "Customer-facing product name",
+    type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
+    description: "Short product description.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "Custom length x width x depth",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  }
 */
 
 export const CATALOG_CURRENCY = "AUD";
@@ -245,131 +299,6 @@ export const GLOAMWEALD_COLLECTIONS = Object.freeze({
     url: "collection-wyrms-hoard.html",
   },
 });
-
-function priceToBeConfirmed() {
-  return {
-    amount: null,
-    label: "Price to be confirmed",
-    currency: CATALOG_CURRENCY,
-  };
-}
-
-function braceletCustomisation({
-  includedOptionId = "lobster",
-  allowedOptionIds = ["lobster", "toggle", "small-carabiner", "medium-carabiner"],
-  helperText = "",
-} = {}) {
-  const allowed = [
-    includedOptionId,
-    ...allowedOptionIds.filter((id) => id && id !== includedOptionId),
-  ];
-  const length = {
-    enabled: true,
-    required: true,
-    label: "Finished bracelet length",
-    mode: "standard",
-    options: STANDARD_BRACELET_LENGTHS,
-    toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
-  };
-
-  if (helperText) length.helperText = helperText;
-
-  return {
-    length,
-    clasp: {
-      enabled: true,
-      required: false,
-      includedOptionId,
-      allowedOptionIds: allowed,
-    },
-    extender: {
-      enabled: true,
-      options: STANDARD_EXTENDER_OPTIONS,
-    },
-  };
-}
-
-function necklaceCustomisation(
-  advertisedLengthCm,
-  {
-    includedOptionId = "lobster",
-    allowedOptionIds = ["lobster", "toggle", "small-carabiner"],
-    helperText = "Choose the completed end-to-end necklace length, including the clasp.",
-  } = {},
-) {
-  const allowed = [
-    includedOptionId,
-    ...allowedOptionIds.filter((id) => id && id !== includedOptionId),
-  ];
-
-  return {
-    length: {
-      enabled: true,
-      required: true,
-      label: "Finished necklace length",
-      mode: "adjustment",
-      inputType: "select",
-      advertisedLengthCm,
-      options: necklaceAdjustmentOptions(advertisedLengthCm),
-      helperText,
-      toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
-    },
-    clasp: {
-      enabled: true,
-      required: false,
-      includedOptionId,
-      allowedOptionIds: allowed,
-    },
-    extender: {
-      enabled: true,
-      options: STANDARD_EXTENDER_OPTIONS,
-    },
-  };
-}
-
-function walletChainCustomisation({
-  includedOptionId = "medium-carabiner",
-  allowedOptionIds = ["medium-carabiner", "large-carabiner"],
-} = {}) {
-  const allowed = [
-    includedOptionId,
-    ...allowedOptionIds.filter((id) => id && id !== includedOptionId),
-  ];
-
-  return {
-    length: {
-      enabled: true,
-      required: true,
-      label: "Finished wallet-chain length",
-      mode: "standard",
-      options: STANDARD_WALLET_CHAIN_LENGTHS,
-      helperText: "Choose the complete end-to-end length, including attachment hardware.",
-    },
-    clasp: {
-      enabled: true,
-      required: false,
-      includedOptionId,
-      allowedOptionIds: allowed,
-    },
-    extender: {
-      enabled: false,
-    },
-  };
-}
-
-function launchScaffoldProduct(product) {
-  return {
-    components: [],
-    collection: null,
-    price: priceToBeConfirmed(),
-    status: "Price to be confirmed",
-    orderable: false,
-    visual: "classic",
-    customisation: {},
-    ...product,
-    images: product.images ?? [],
-  };
-}
 
 export const GLOAMWEALD_PRODUCTS = Object.freeze([
   {
@@ -947,392 +876,1020 @@ And it is still said, all these centuries later, that those with a stubborn, det
     ],
   },
 
-  launchScaffoldProduct({
+  {
     id: "half-persian-bracelet-light-build",
     slug: "half-persian-bracelet-light-build",
     name: "Half Persian Bracelet - Light-build",
     type: "bracelets",
+    components: [],
     collection: "classics",
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A lighter-scale Half Persian bracelet with the same flowing, flexible pattern in a finer everyday build.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "Custom length x approximately 6mm x 3mm",
-    customisation: braceletCustomisation(),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner", "medium-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "half-persian-bracelet-heavy-build",
     slug: "half-persian-bracelet-heavy-build",
     name: "Half Persian Bracelet - Heavy-build",
     type: "bracelets",
+    components: [],
     collection: "classics",
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A heavier-scale Half Persian bracelet with a broader drape and more substantial hand-feel.",
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "Custom length x approximately 11mm x 6mm",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "medium-carabiner",
+        allowedOptionIds: ["medium-carabiner", "large-carabiner", "toggle"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
     images: [
       { src: "assets/images/half-persian-bracelet-heavy-build-1.webp", alt: "Half Persian Bracelet - Heavy-build clasp detail on a dark surface" },
       { src: "assets/images/half-persian-bracelet-heavy-build-2.webp", alt: "Half Persian Bracelet - Heavy-build in stainless steel on a dark surface" },
       { src: "assets/images/half-persian-bracelet-heavy-build-3.webp", alt: "Close view of the Half Persian Bracelet - Heavy-build weave" },
     ],
-    customisation: braceletCustomisation({
-      includedOptionId: "medium-carabiner",
-      allowedOptionIds: ["medium-carabiner", "large-carabiner", "toggle"],
-    }),
-  }),
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-bracelet-light-build",
     slug: "jpl-bracelet-light-build",
     name: "JPL Bracelet - Light-build",
     type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A fine Jens Pind Linkage bracelet with a smooth, cord-like structure and compact profile.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "Custom length x approximately 4mm x 4mm",
-    customisation: braceletCustomisation({
-      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-bracelet-mid-build",
     slug: "jpl-bracelet-mid-build",
     name: "JPL Bracelet - Mid-build",
     type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A mid-scale Jens Pind Linkage bracelet with a dense rounded weave and steady weight.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "Custom length x approximately 5mm x 5mm",
-    customisation: braceletCustomisation({
-      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-bracelet-heavy-build",
     slug: "jpl-bracelet-heavy-build",
     name: "JPL Bracelet - Heavy-build",
     type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A heavier Jens Pind Linkage bracelet with a firm rounded profile and pronounced chainmaille texture.",
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "Custom length x approximately 7mm x 7mm",
-    customisation: braceletCustomisation({
-      includedOptionId: "medium-carabiner",
-      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "medium-carabiner",
+        allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "barbed-wire-bracelet-heavy-build",
     slug: "barbed-wire-bracelet-heavy-build",
     name: "Barbed Wire Bracelet - Heavy-build",
     type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A larger-scale Barbed Wire bracelet with an intricate raised construction and a stronger, more imposing silhouette.",
     material: "Stainless steel",
     clasp: "Toggle clasp",
     dimensions: "Custom length x approximately 20mm x 9mm",
-    customisation: braceletCustomisation({
-      includedOptionId: "toggle",
-      allowedOptionIds: ["toggle", "medium-carabiner", "large-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "toggle",
+        allowedOptionIds: ["toggle", "medium-carabiner", "large-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "chainmaille-cuff-light-build",
     slug: "chainmaille-cuff-light-build",
     name: "Chainmaille Cuff - Light-build",
     type: "bracelets",
+    components: [],
     collection: "classics",
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A lighter European 4-in-1 chainmaille cuff with a flexible sheet-like weave and refined armour-inspired texture.",
     material: "Stainless steel",
     clasp: "Slide-lock clasp",
     dimensions: "Custom length x approximately 18mm x 3mm",
-    customisation: braceletCustomisation({
-      includedOptionId: "slide-lock",
-      allowedOptionIds: ["slide-lock"],
-      helperText:
-        "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        helperText: "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "slide-lock",
+        allowedOptionIds: ["slide-lock"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-cuff-light-build",
     slug: "jpl-cuff-light-build",
     name: "JPL Cuff - Light-build",
     type: "bracelets",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A light cuff-style piece built from linked Jens Pind sections for a structured, flexible band.",
     material: "Stainless steel",
     clasp: "Slide-lock clasp",
     dimensions: "Custom length x approximately 20mm x 4mm",
-    customisation: braceletCustomisation({
-      includedOptionId: "slide-lock",
-      allowedOptionIds: ["slide-lock"],
-      helperText:
-        "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished bracelet length",
+        mode: "standard",
+        options: STANDARD_BRACELET_LENGTHS,
+        helperText: "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
+        toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "slide-lock",
+        allowedOptionIds: ["slide-lock"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "half-persian-necklace-light-build",
     slug: "half-persian-necklace-light-build",
     name: "Half Persian Necklace - Light-build",
     type: "necklaces",
+    components: [],
     collection: "classics",
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A lighter Half Persian necklace with a narrow flowing profile suited to everyday wear and layering.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "450mm x approximately 5mm x 3mm",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 45,
+        options: necklaceAdjustmentOptions(45),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
     images: [
       { src: "assets/images/half-persian-necklace-light-build-1.webp", alt: "Half Persian Necklace - Light-build on a black display bust" },
       { src: "assets/images/half-persian-necklace-light-build-2.webp", alt: "Side view of Half Persian Necklace - Light-build on a black display bust" },
       { src: "assets/images/half-persian-necklace-light-build-3.webp", alt: "Close view of the Half Persian Necklace - Light-build weave" },
       { src: "assets/images/half-persian-necklace-light-build-model-1.webp", alt: "Half Persian Necklace - Light-build worn around a tattooed neck" },
     ],
-    customisation: necklaceCustomisation(45),
-  }),
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-necklace-light-build",
     slug: "jpl-necklace-light-build",
     name: "JPL Necklace - Light-build",
     type: "necklaces",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A fine Jens Pind Linkage necklace with a rounded cord-like chain and subtle shine.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "450mm x approximately 4mm x 4mm",
-    customisation: necklaceCustomisation(45, {
-      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 45,
+        options: necklaceAdjustmentOptions(45),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-necklace-mid-build",
     slug: "jpl-necklace-mid-build",
     name: "JPL Necklace - Mid-build",
     type: "necklaces",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A mid-scale Jens Pind Linkage necklace with a dense, even structure and clean rounded drape.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "470mm x approximately 5mm x 5mm",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 47,
+        options: necklaceAdjustmentOptions(47),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
     images: [
       { src: "assets/images/jpl-necklace-mid-build-1.webp", alt: "JPL Necklace - Mid-build on a black display bust" },
       { src: "assets/images/jpl-necklace-mid-build-2.webp", alt: "Side view of JPL Necklace - Mid-build on a black display bust" },
       { src: "assets/images/jpl-necklace-mid-build-3.webp", alt: "JPL Necklace - Mid-build clasp detail on a black display bust" },
       { src: "assets/images/jpl-necklace-mid-build-4.webp", alt: "Close view of the JPL Necklace - Mid-build weave" },
     ],
-    customisation: necklaceCustomisation(47, {
-      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
-    }),
-  }),
+  },
 
-  launchScaffoldProduct({
+  {
     id: "jpl-necklace-heavy-build",
     slug: "jpl-necklace-heavy-build",
     name: "JPL Necklace - Heavy-build",
     type: "necklaces",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A heavier Jens Pind Linkage necklace with a pronounced rounded chain and substantial weight.",
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "500mm x approximately 7mm x 7mm",
-    customisation: necklaceCustomisation(50, {
-      includedOptionId: "medium-carabiner",
-      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 50,
+        options: necklaceAdjustmentOptions(50),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "medium-carabiner",
+        allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "chainmaille-necklace-light-build",
     slug: "chainmaille-necklace-light-build",
     name: "Chainmaille Necklace - Light-build",
     type: "necklaces",
+    components: [],
     collection: "classics",
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A lighter chainmaille necklace with a close-linked texture and flexible, armour-inspired drape.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "450mm x approximately 6mm x 4mm",
-    customisation: necklaceCustomisation(45),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 45,
+        options: necklaceAdjustmentOptions(45),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "chainmaille-necklace-mid-build",
     slug: "chainmaille-necklace-mid-build",
     name: "Chainmaille Necklace - Mid-build",
     type: "necklaces",
+    components: [],
     collection: "classics",
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A mid-scale chainmaille necklace with a denser interlinked pattern and more visible structure.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "500mm x approximately 8mm x 5mm",
-    customisation: necklaceCustomisation(50, {
-      allowedOptionIds: ["lobster", "toggle", "medium-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 50,
+        options: necklaceAdjustmentOptions(50),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "medium-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "aine-lariat",
     slug: "aine-lariat",
     name: "Áine's Lariat",
     type: "necklaces",
     components: ["gemstone"],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A delicate stainless-steel lariat-style necklace intended for moonstone or other luminous stone detailing.",
     material: "Stainless steel · moonstone",
     clasp: "Lobster clasp",
     dimensions: "550mm x approximately 4mm x 4mm",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 55,
+        options: necklaceAdjustmentOptions(55),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
     images: [
       { src: "assets/images/aine-lariat-1.webp", alt: "Áine's Lariat on a black display bust" },
       { src: "assets/images/aine-lariat-2.webp", alt: "Side view of Áine's Lariat on a black display bust" },
       { src: "assets/images/aine-lariat-3.webp", alt: "Close view of Áine's Lariat moonstone detail" },
     ],
-    customisation: necklaceCustomisation(55),
-  }),
+  },
 
-  launchScaffoldProduct({
+  {
     id: "faeblade-chain",
     slug: "faeblade-chain",
     name: "Faeblade Chain",
     type: "necklaces",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A stainless-steel necklace with a blade-like pendant detail and a dark, talismanic profile.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "550mm x pendant dimensions to be confirmed",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 55,
+        options: necklaceAdjustmentOptions(55),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
     images: [
       { src: "assets/images/faeblade-chain-1.webp", alt: "Faeblade Chain with dagger pendant on a black display bust" },
       { src: "assets/images/faeblade-chain-2.webp", alt: "Side view of the Faeblade Chain on a black display bust" },
       { src: "assets/images/faeblade-chain-3.webp", alt: "Close view of the Faeblade Chain pendant section" },
       { src: "assets/images/faeblade-chain-4.webp", alt: "Close view of the Faeblade Chain upper chain" },
     ],
-    customisation: necklaceCustomisation(55),
-  }),
+  },
 
-  launchScaffoldProduct({
+  {
     id: "vertebrae-weave-chunky-choker",
     slug: "vertebrae-weave-chunky-choker",
     name: "Vertebrae Weave Chunky Choker",
     type: "necklaces",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A chunky choker-scale piece using a raised vertebrae-like weave for a compact, spine-inspired silhouette.",
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "400mm x approximately 14mm x 6mm",
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 40,
+        options: necklaceAdjustmentOptions(40),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "medium-carabiner",
+        allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
     images: [
       { src: "assets/images/vertebrae-weave-chunky-choker-1.webp", alt: "Vertebrae Weave Chunky Choker on a black display bust" },
     ],
-    customisation: necklaceCustomisation(40, {
-      includedOptionId: "medium-carabiner",
-      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
-    }),
-  }),
+  },
 
-  launchScaffoldProduct({
+  {
     id: "mini-snake-vertebrae-garnet-necklace",
     slug: "mini-snake-vertebrae-garnet-necklace",
     name: "Mini Snake Vertebrae + Garnet Necklace",
     type: "necklaces",
     components: ["gemstone", "bone"],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A smaller snake-vertebrae-inspired necklace accented with garnet for a compact relic-like finish.",
     material: "Stainless steel · garnet · bone",
     clasp: "Lobster clasp",
     dimensions: "450mm x pendant dimensions to be confirmed",
-    customisation: necklaceCustomisation(45),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 45,
+        options: necklaceAdjustmentOptions(45),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "raven-pendant-necklace",
     slug: "raven-pendant-necklace",
     name: "Raven Pendant Necklace",
     type: "necklaces",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A stainless-steel chain carrying a raven pendant, intended as a simple dark talisman.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "500mm x pendant dimensions to be confirmed",
-    customisation: necklaceCustomisation(50),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished necklace length",
+        mode: "adjustment",
+        inputType: "select",
+        advertisedLengthCm: 50,
+        options: necklaceAdjustmentOptions(50),
+        helperText: "Choose the completed end-to-end necklace length, including the clasp.",
+        toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "lobster",
+        allowedOptionIds: ["lobster", "toggle", "small-carabiner"],
+      },
+      extender: {
+        enabled: true,
+        options: STANDARD_EXTENDER_OPTIONS,
+      },
+    },
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "moonstone-delicate-earrings",
     slug: "moonstone-delicate-earrings",
     name: "Moonstone Delicate Earrings",
     type: "earrings",
     components: ["gemstone"],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "Delicate stainless-steel earrings intended for moonstone detailing and light everyday movement.",
     material: "Stainless steel · moonstone",
     clasp: "Earring hardware",
     dimensions: "Dimensions to be confirmed",
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {},
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "trailing-earrings",
     slug: "trailing-earrings",
     name: "Trailing Earrings",
     type: "earrings",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "Trailing stainless-steel earrings with a longer drop and gentle chainmaille movement.",
     material: "Stainless steel",
     clasp: "Earring hardware",
     dimensions: "Dimensions to be confirmed",
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {},
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "dagger-earrings",
     slug: "dagger-earrings",
     name: "Dagger Earrings",
     type: "earrings",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "Stainless-steel earrings with a small dagger-like drop and sharp, minimal profile.",
     material: "Stainless steel",
     clasp: "Earring hardware",
     dimensions: "Dimensions to be confirmed",
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {},
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "snake-vertebrae-garnet-earrings",
     slug: "snake-vertebrae-garnet-earrings",
     name: "Snake Vertebrae + Garnet Earrings",
     type: "earrings",
     components: ["gemstone", "bone"],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "Snake-vertebrae-inspired stainless-steel earrings accented with garnet.",
     material: "Stainless steel · garnet · bone",
     clasp: "Earring hardware",
     dimensions: "Dimensions to be confirmed",
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {},
+    images: [],
+  },
 
-  launchScaffoldProduct({
+  {
     id: "barbed-wire-wallet-chain",
     slug: "barbed-wire-wallet-chain",
     name: "Barbed Wire Wallet Chain",
     type: "wallet-chains",
+    components: [],
+    collection: null,
+    price: {
+      amount: null,
+      label: "Price to be confirmed",
+      currency: CATALOG_CURRENCY,
+    },
     description:
       "A heavy-build Barbed Wire wallet chain with the same raised, intricate construction adapted into a substantial draping chain.",
     material: "Stainless steel",
     clasp: "Medium carabiner",
     dimensions: "Custom wallet-chain length x approximately 20mm x 9mm",
-    customisation: walletChainCustomisation({
-      includedOptionId: "medium-carabiner",
-      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
-    }),
-  }),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {
+      length: {
+        enabled: true,
+        required: true,
+        label: "Finished wallet-chain length",
+        mode: "standard",
+        options: STANDARD_WALLET_CHAIN_LENGTHS,
+        helperText: "Choose the complete end-to-end length, including attachment hardware.",
+      },
+      clasp: {
+        enabled: true,
+        required: false,
+        includedOptionId: "medium-carabiner",
+        allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+      },
+      extender: {
+        enabled: false,
+      },
+    },
+    images: [],
+  },
 ]);
 
 export function productById(id) {
