@@ -380,7 +380,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 115,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -389,7 +389,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Ring clasp",
     dimensions: "Custom length x 13mm x 9mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -429,7 +429,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 85,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -438,7 +438,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Lobster clasp",
     dimensions: "Custom length x 8mm x 4mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -473,7 +473,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: ["gemstone"],
     collection: null,
     price: {
-      amount: 140,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -486,7 +486,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Lobster clasp",
     dimensions: "Custom length x 5mm x 5mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -515,19 +515,19 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     slug: "vertebrae-bracelet",
     name: "Snake Vertebrae Bracelet",
     type: "bracelets",
-    components: [],
-    collection: "classics",
+    components: ["gemstone", "bone"],
+    collection: null,
     price: {
-      amount: 70,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A distinctive raised weave with a repeating pattern that creates depth and texture. Bold without being bulky, it echoes the strength and flexibility of a spine.",
+      "Delicate chain with snake vertebrae and garnet.",
     material: "Stainless steel",
     clasp: "Lobster clasp",
     dimensions: "Custom length x 12mm x 3.5mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -560,7 +560,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 75,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -569,7 +569,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Toggle bar",
     dimensions: "Custom length x 17mm x 8mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -602,7 +602,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 80,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -611,7 +611,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Slide lock",
     dimensions: "Custom length x 24mm x 3.5mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -645,7 +645,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 180,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -654,7 +654,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Lobster clasp",
     dimensions: "470mm x 6mm x 3.5mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -691,7 +691,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: "classics",
     price: {
-      amount: 215,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -700,7 +700,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     clasp: "Lobster clasp",
     dimensions: "600mm x 8mm x 8mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -737,7 +737,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     components: [],
     collection: null,
     price: {
-      amount: 130,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -822,7 +822,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     clasp: "Carabiner",
     dimensions: "638mm x 12mm x 12mm",
     status: "Available - In stock",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -850,7 +850,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     components: [],
     collection: null,
     price: {
-      amount: 110,
+      amount: 1,
       currency: CATALOG_CURRENCY,
     },
     description:
@@ -859,7 +859,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     clasp: "Carabiner",
     dimensions: "620mm x 15mm x 8mm",
     status: "Available - Made to order",
-    orderable: true,
+    orderable: false,
     visual: "classic",
     customisation: {
       length: {
@@ -1246,10 +1246,10 @@ And it is still said, all these centuries later, that those with a stubborn, det
     slug: "mini-snake-vertebrae-garnet-necklace",
     name: "Mini Snake Vertebrae + Garnet Necklace",
     type: "necklaces",
-    components: ["gemstone"],
+    components: ["gemstone", "bone"],
     description:
       "A smaller snake-vertebrae-inspired necklace accented with garnet for a compact relic-like finish.",
-    material: "Stainless steel · garnet",
+    material: "Stainless steel · garnet · bone",
     clasp: "Lobster clasp",
     dimensions: "450mm x pendant dimensions to be confirmed",
     customisation: necklaceCustomisation(45),
@@ -1310,10 +1310,10 @@ And it is still said, all these centuries later, that those with a stubborn, det
     slug: "snake-vertebrae-garnet-earrings",
     name: "Snake Vertebrae + Garnet Earrings",
     type: "earrings",
-    components: ["gemstone"],
+    components: ["gemstone", "bone"],
     description:
       "Snake-vertebrae-inspired stainless-steel earrings accented with garnet.",
-    material: "Stainless steel · garnet",
+    material: "Stainless steel · garnet · bone",
     clasp: "Earring hardware",
     dimensions: "Dimensions to be confirmed",
   }),
