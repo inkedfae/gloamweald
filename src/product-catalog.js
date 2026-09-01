@@ -209,6 +209,24 @@ export const STANDARD_WALLET_CHAIN_LENGTHS = Object.freeze(
   ]),
 );
 
+export const WALLET_CHAIN_PENDANT_OPTIONS = Object.freeze({
+  sword: {
+    id: "sword",
+    label: "Sword pendant",
+    priceDelta: 0,
+  },
+  raven: {
+    id: "raven",
+    label: "Raven pendant",
+    priceDelta: 0,
+  },
+  none: {
+    id: "none",
+    label: "No pendant",
+    priceDelta: 0,
+  },
+});
+
 export const GLOAMWEALD_COLLECTIONS = Object.freeze({
   classics: {
     name: "Classics",
@@ -228,11 +246,136 @@ export const GLOAMWEALD_COLLECTIONS = Object.freeze({
   },
 });
 
+function priceToBeConfirmed() {
+  return {
+    amount: null,
+    label: "Price to be confirmed",
+    currency: CATALOG_CURRENCY,
+  };
+}
+
+function braceletCustomisation({
+  includedOptionId = "lobster",
+  allowedOptionIds = ["lobster", "toggle", "small-carabiner", "medium-carabiner"],
+  helperText = "",
+} = {}) {
+  const allowed = [
+    includedOptionId,
+    ...allowedOptionIds.filter((id) => id && id !== includedOptionId),
+  ];
+  const length = {
+    enabled: true,
+    required: true,
+    label: "Finished bracelet length",
+    mode: "standard",
+    options: STANDARD_BRACELET_LENGTHS,
+    toleranceNote: BRACELET_LENGTH_TOLERANCE_NOTE,
+  };
+
+  if (helperText) length.helperText = helperText;
+
+  return {
+    length,
+    clasp: {
+      enabled: true,
+      required: false,
+      includedOptionId,
+      allowedOptionIds: allowed,
+    },
+    extender: {
+      enabled: true,
+      options: STANDARD_EXTENDER_OPTIONS,
+    },
+  };
+}
+
+function necklaceCustomisation(
+  advertisedLengthCm,
+  {
+    includedOptionId = "lobster",
+    allowedOptionIds = ["lobster", "toggle", "small-carabiner"],
+    helperText = "Choose the completed end-to-end necklace length, including the clasp.",
+  } = {},
+) {
+  const allowed = [
+    includedOptionId,
+    ...allowedOptionIds.filter((id) => id && id !== includedOptionId),
+  ];
+
+  return {
+    length: {
+      enabled: true,
+      required: true,
+      label: "Finished necklace length",
+      mode: "adjustment",
+      inputType: "select",
+      advertisedLengthCm,
+      options: necklaceAdjustmentOptions(advertisedLengthCm),
+      helperText,
+      toleranceNote: NECKLACE_LENGTH_ADJUSTMENT_NOTE,
+    },
+    clasp: {
+      enabled: true,
+      required: false,
+      includedOptionId,
+      allowedOptionIds: allowed,
+    },
+    extender: {
+      enabled: true,
+      options: STANDARD_EXTENDER_OPTIONS,
+    },
+  };
+}
+
+function walletChainCustomisation({
+  includedOptionId = "medium-carabiner",
+  allowedOptionIds = ["medium-carabiner", "large-carabiner"],
+} = {}) {
+  const allowed = [
+    includedOptionId,
+    ...allowedOptionIds.filter((id) => id && id !== includedOptionId),
+  ];
+
+  return {
+    length: {
+      enabled: true,
+      required: true,
+      label: "Finished wallet-chain length",
+      mode: "standard",
+      options: STANDARD_WALLET_CHAIN_LENGTHS,
+      helperText: "Choose the complete end-to-end length, including attachment hardware.",
+    },
+    clasp: {
+      enabled: true,
+      required: false,
+      includedOptionId,
+      allowedOptionIds: allowed,
+    },
+    extender: {
+      enabled: false,
+    },
+  };
+}
+
+function launchScaffoldProduct(product) {
+  return {
+    components: [],
+    collection: null,
+    price: priceToBeConfirmed(),
+    status: "Price to be confirmed",
+    orderable: false,
+    visual: "classic",
+    customisation: {},
+    ...product,
+    images: [],
+  };
+}
+
 export const GLOAMWEALD_PRODUCTS = Object.freeze([
   {
     id: "dark-elf-bracelet",
     slug: "dark-elf-bracelet",
-    name: "Dark Elf Bracelet",
+    name: "Elf Weave Bracelet",
     type: "bracelets",
     components: [],
     collection: null,
@@ -268,34 +411,13 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/dark-elf-1.webp",
-        alt: "Dark Elf Bracelet in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/dark-elf-2.webp",
-        alt: "Dark Elf Bracelet worn around a tattooed wrist",
-      },
-      {
-        src: "assets/images/dark-elf-3.webp",
-        alt: "Dark Elf Bracelet worn against a weathered metal background",
-      },
-      {
-        src: "assets/images/dark-elf-4.webp",
-        alt: "Close detail of the Dark Elf Bracelet ring clasp and weave",
-      },
-      {
-        src: "assets/images/dark-elf-5.webp",
-        alt: "Close detail of the Dark Elf Bracelet weave held in hand",
-      },
-    ],
+    images: [],
   },
 
   {
     id: "half-persian-bracelet",
     slug: "half-persian-bracelet",
-    name: "Half Persian Bracelet",
+    name: "Half Persian Bracelet - Mid-build",
     type: "bracelets",
     components: [],
     collection: "classics",
@@ -331,16 +453,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/half-persian-b-1.webp",
-        alt: "Half Persian Bracelet in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/half-persian-b-2.webp",
-        alt: "Half Persian Bracelet worn around a tattooed wrist",
-      },
-    ],
+    images: [],
   },
   {
     id: "leoma-amulet",
@@ -385,29 +498,12 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/leoma-1.webp",
-        alt: "Lēoma Amulet in stainless steel with a labradorite centrepiece on a dark surface",
-      },
-      {
-        src: "assets/images/leoma-2.webp",
-        alt: "Lēoma Amulet worn around a tattooed wrist",
-      },
-      {
-        src: "assets/images/leoma-3.webp",
-        alt: "Lēoma Amulet worn around a wrist beside dark fabric",
-      },
-      {
-        src: "assets/images/leoma-4.webp",
-        alt: "Close detail of the Lēoma Amulet labradorite centrepiece on a leaf",
-      },
-    ],
+    images: [],
   },
   {
     id: "vertebrae-bracelet",
     slug: "vertebrae-bracelet",
-    name: "Vertebrae Bracelet",
+    name: "Snake Vertebrae Bracelet",
     type: "bracelets",
     components: [],
     collection: "classics",
@@ -443,26 +539,13 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/vertebrae-1.webp",
-        alt: "Vertebrae Bracelet in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/vertebrae-2.webp",
-        alt: "Vertebrae Bracelet worn across a tattooed hand",
-      },
-      {
-        src: "assets/images/vertebrae-3.webp",
-        alt: "Vertebrae Bracelet beside bone props on a dark surface",
-      },
-    ],
+    images: [],
   },
 
   {
     id: "celtic-visions-bracelet",
     slug: "celtic-visions-bracelet",
-    name: "Celtic Visions Bracelet",
+    name: "Barbed Wire Bracelet - Mid-build",
     type: "bracelets",
     components: [],
     collection: null,
@@ -498,22 +581,13 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/celtic-visions-1.webp",
-        alt: "Celtic Visions Bracelet in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/celtic-visions-2.webp",
-        alt: "Celtic Visions Bracelet worn around a tattooed wrist",
-      },
-    ],
+    images: [],
   },
 
   {
     id: "european-4-in-1-cuff-6mm",
     slug: "european-4-in-1-cuff-6mm",
-    name: "Chainmaille Cuff",
+    name: "Chainmaille Cuff - Mid-build",
     type: "bracelets",
     components: [],
     collection: "classics",
@@ -551,33 +625,12 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/4in1-small-1.webp",
-        alt: "Chainmaille Cuff in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/4in1-small-2.webp",
-        alt: "Chainmaille Cuff worn around a tattooed wrist",
-      },
-      {
-        src: "assets/images/4in1-small-3.webp",
-        alt: "Chainmaille Cuff showing its slide lock clasp",
-      },
-      {
-        src: "assets/images/4in1-small-4.webp",
-        alt: "Close detail of the Chainmaille Cuff weave and clasp",
-      },
-      {
-        src: "assets/images/4in1-small-5.webp",
-        alt: "Chainmaille Cuff worn around the underside of a wrist",
-      },
-    ],
+    images: [],
   },
   {
     id: "small-half-persian-necklace",
     slug: "small-half-persian-necklace",
-    name: "Small Half Persian Necklace",
+    name: "Half Persian Necklace - Mid-build",
     type: "necklaces",
     components: [],
     collection: "classics",
@@ -617,12 +670,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
         options: STANDARD_EXTENDER_OPTIONS,
       },
     },
-    images: [
-      {
-        src: "assets/images/half-persian-n-1.webp",
-        alt: "Small Half Persian Necklace worn close around a tattooed neck",
-      },
-    ],
+    images: [],
   },
 
   {
@@ -770,37 +818,22 @@ And it is still said, all these centuries later, that those with a stubborn, det
       length: {
         enabled: false,
       },
+      pendant: {
+        enabled: true,
+        required: true,
+        includedOptionId: "raven",
+        allowedOptionIds: ["raven", "none"],
+      },
       hardwareNote:
         "This in-stock piece is sold at the finished length shown. Contact Gloamweald if you need a different wallet-chain length.",
     },
-    images: [
-      {
-        src: "assets/images/bonelink-1.webp",
-        alt: "Bonelink Wallet Chain in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/bonelink-2.webp",
-        alt: "Bonelink Wallet Chain hanging from weathered wood and metal",
-      },
-      {
-        src: "assets/images/bonelink-3.webp",
-        alt: "Close detail of the Bonelink Wallet Chain clasp and links",
-      },
-      {
-        src: "assets/images/bonelink-4.webp",
-        alt: "Close detail of the Bonelink Wallet Chain link pattern",
-      },
-      {
-        src: "assets/images/bonelink-5.webp",
-        alt: "Bonelink Wallet Chain arranged beside bone props on dark wood",
-      },
-    ],
+    images: [],
   },
 
   {
     id: "half-persian-wallet-chain-pendant",
     slug: "half-persian-wallet-chain-pendant",
-    name: "Half Persian Wallet Chain with Charm",
+    name: "Half Persian Wallet Chain",
     type: "wallet-chains",
     components: [],
     collection: null,
@@ -809,7 +842,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
       currency: CATALOG_CURRENCY,
     },
     description:
-      "A flowing Half Persian wallet chain finished with a small charm suspended from Byzantine links. The fine hanging detail moves freely beneath the heavier main chain.",
+      "A flowing Half Persian wallet chain finished by default with a small sword pendant suspended from Byzantine links. The fine hanging detail moves freely beneath the heavier main chain, or can be removed for a cleaner chain-only configuration.",
     material: "Stainless steel",
     clasp: "Carabiner",
     dimensions: "620mm x 15mm x 8mm",
@@ -832,37 +865,22 @@ And it is still said, all these centuries later, that those with a stubborn, det
         includedOptionId: "medium-carabiner",
         allowedOptionIds: ["medium-carabiner", "large-carabiner"],
       },
+      pendant: {
+        enabled: true,
+        required: true,
+        includedOptionId: "sword",
+        allowedOptionIds: ["sword", "none"],
+      },
       extender: {
         enabled: false,
       },
     },
-    images: [
-      {
-        src: "assets/images/half-persian-w-1.webp",
-        alt: "Half Persian Wallet Chain with Charm in stainless steel on a dark surface",
-      },
-      {
-        src: "assets/images/half-persian-w-2.webp",
-        alt: "Half Persian Wallet Chain with Charm clipped to a belt loop",
-      },
-      {
-        src: "assets/images/half-persian-w-3.webp",
-        alt: "Close detail of the Half Persian Wallet Chain charm and Byzantine link detail",
-      },
-      {
-        src: "assets/images/half-persian-w-4.webp",
-        alt: "Half Persian Wallet Chain with Charm hanging from a branch",
-      },
-      {
-        src: "assets/images/half-persian-w-5.webp",
-        alt: "Half Persian Wallet Chain with Charm worn from a belt loop",
-      },
-    ],
+    images: [],
   },
     {
     id: "waymarker-necklace",
     slug: "waymarker-necklace",
-    name: "Waymarker Necklace",
+    name: "Wayfinder Necklace",
     type: "necklaces",
     components: ["gemstone"],
     collection: null,
@@ -910,13 +928,364 @@ And it is still said, all these centuries later, that those with a stubborn, det
     status: "Coming soon",
     orderable: false,
     visual: "classic",
-    images: [
-      {
-        src: "assets/images/briar-imp-1.webp",
-        alt: "Pair of Briar Imp stainless steel earrings with horn-like polished spikes",
-      },
-    ],
+    images: [],
   },
+
+  launchScaffoldProduct({
+    id: "half-persian-bracelet-light-build",
+    slug: "half-persian-bracelet-light-build",
+    name: "Half Persian Bracelet - Light-build",
+    type: "bracelets",
+    collection: "classics",
+    description:
+      "A lighter-scale Half Persian bracelet with the same flowing, flexible pattern in a finer everyday build.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "Custom length x approximately 6mm x 3mm",
+    customisation: braceletCustomisation(),
+  }),
+
+  launchScaffoldProduct({
+    id: "half-persian-bracelet-heavy-build",
+    slug: "half-persian-bracelet-heavy-build",
+    name: "Half Persian Bracelet - Heavy-build",
+    type: "bracelets",
+    collection: "classics",
+    description:
+      "A heavier-scale Half Persian bracelet with a broader drape and more substantial hand-feel.",
+    material: "Stainless steel",
+    clasp: "Medium carabiner",
+    dimensions: "Custom length x approximately 11mm x 6mm",
+    customisation: braceletCustomisation({
+      includedOptionId: "medium-carabiner",
+      allowedOptionIds: ["medium-carabiner", "large-carabiner", "toggle"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-bracelet-light-build",
+    slug: "jpl-bracelet-light-build",
+    name: "JPL Bracelet - Light-build",
+    type: "bracelets",
+    description:
+      "A fine Jens Pind Linkage bracelet with a smooth, cord-like structure and compact profile.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "Custom length x approximately 4mm x 4mm",
+    customisation: braceletCustomisation({
+      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-bracelet-mid-build",
+    slug: "jpl-bracelet-mid-build",
+    name: "JPL Bracelet - Mid-build",
+    type: "bracelets",
+    description:
+      "A mid-scale Jens Pind Linkage bracelet with a dense rounded weave and steady weight.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "Custom length x approximately 5mm x 5mm",
+    customisation: braceletCustomisation({
+      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-bracelet-heavy-build",
+    slug: "jpl-bracelet-heavy-build",
+    name: "JPL Bracelet - Heavy-build",
+    type: "bracelets",
+    description:
+      "A heavier Jens Pind Linkage bracelet with a firm rounded profile and pronounced chainmaille texture.",
+    material: "Stainless steel",
+    clasp: "Medium carabiner",
+    dimensions: "Custom length x approximately 7mm x 7mm",
+    customisation: braceletCustomisation({
+      includedOptionId: "medium-carabiner",
+      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "barbed-wire-bracelet-heavy-build",
+    slug: "barbed-wire-bracelet-heavy-build",
+    name: "Barbed Wire Bracelet - Heavy-build",
+    type: "bracelets",
+    description:
+      "A larger-scale Barbed Wire bracelet with an intricate raised construction and a stronger, more imposing silhouette.",
+    material: "Stainless steel",
+    clasp: "Toggle clasp",
+    dimensions: "Custom length x approximately 20mm x 9mm",
+    customisation: braceletCustomisation({
+      includedOptionId: "toggle",
+      allowedOptionIds: ["toggle", "medium-carabiner", "large-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "chainmaille-cuff-light-build",
+    slug: "chainmaille-cuff-light-build",
+    name: "Chainmaille Cuff - Light-build",
+    type: "bracelets",
+    collection: "classics",
+    description:
+      "A lighter European 4-in-1 chainmaille cuff with a flexible sheet-like weave and refined armour-inspired texture.",
+    material: "Stainless steel",
+    clasp: "Slide-lock clasp",
+    dimensions: "Custom length x approximately 18mm x 3mm",
+    customisation: braceletCustomisation({
+      includedOptionId: "slide-lock",
+      allowedOptionIds: ["slide-lock"],
+      helperText:
+        "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-cuff-light-build",
+    slug: "jpl-cuff-light-build",
+    name: "JPL Cuff - Light-build",
+    type: "bracelets",
+    description:
+      "A light cuff-style piece built from linked Jens Pind sections for a structured, flexible band.",
+    material: "Stainless steel",
+    clasp: "Slide-lock clasp",
+    dimensions: "Custom length x approximately 20mm x 4mm",
+    customisation: braceletCustomisation({
+      includedOptionId: "slide-lock",
+      allowedOptionIds: ["slide-lock"],
+      helperText:
+        "This cuff is wider than a fine chain bracelet. Choose the finished length carefully and size up if you are between sizes.",
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "half-persian-necklace-light-build",
+    slug: "half-persian-necklace-light-build",
+    name: "Half Persian Necklace - Light-build",
+    type: "necklaces",
+    collection: "classics",
+    description:
+      "A lighter Half Persian necklace with a narrow flowing profile suited to everyday wear and layering.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "450mm x approximately 5mm x 3mm",
+    customisation: necklaceCustomisation(45),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-necklace-light-build",
+    slug: "jpl-necklace-light-build",
+    name: "JPL Necklace - Light-build",
+    type: "necklaces",
+    description:
+      "A fine Jens Pind Linkage necklace with a rounded cord-like chain and subtle shine.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "450mm x approximately 4mm x 4mm",
+    customisation: necklaceCustomisation(45, {
+      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-necklace-mid-build",
+    slug: "jpl-necklace-mid-build",
+    name: "JPL Necklace - Mid-build",
+    type: "necklaces",
+    description:
+      "A mid-scale Jens Pind Linkage necklace with a dense, even structure and clean rounded drape.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "470mm x approximately 5mm x 5mm",
+    customisation: necklaceCustomisation(47, {
+      allowedOptionIds: ["lobster", "small-carabiner", "medium-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "jpl-necklace-heavy-build",
+    slug: "jpl-necklace-heavy-build",
+    name: "JPL Necklace - Heavy-build",
+    type: "necklaces",
+    description:
+      "A heavier Jens Pind Linkage necklace with a pronounced rounded chain and substantial weight.",
+    material: "Stainless steel",
+    clasp: "Medium carabiner",
+    dimensions: "500mm x approximately 7mm x 7mm",
+    customisation: necklaceCustomisation(50, {
+      includedOptionId: "medium-carabiner",
+      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "chainmaille-necklace-light-build",
+    slug: "chainmaille-necklace-light-build",
+    name: "Chainmaille Necklace - Light-build",
+    type: "necklaces",
+    collection: "classics",
+    description:
+      "A lighter chainmaille necklace with a close-linked texture and flexible, armour-inspired drape.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "450mm x approximately 6mm x 4mm",
+    customisation: necklaceCustomisation(45),
+  }),
+
+  launchScaffoldProduct({
+    id: "chainmaille-necklace-mid-build",
+    slug: "chainmaille-necklace-mid-build",
+    name: "Chainmaille Necklace - Mid-build",
+    type: "necklaces",
+    collection: "classics",
+    description:
+      "A mid-scale chainmaille necklace with a denser interlinked pattern and more visible structure.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "500mm x approximately 8mm x 5mm",
+    customisation: necklaceCustomisation(50, {
+      allowedOptionIds: ["lobster", "toggle", "medium-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "aine-lariat",
+    slug: "aine-lariat",
+    name: "Áine's Lariat",
+    type: "necklaces",
+    components: ["gemstone"],
+    description:
+      "A delicate stainless-steel lariat-style necklace intended for moonstone or other luminous stone detailing.",
+    material: "Stainless steel · moonstone",
+    clasp: "Lobster clasp",
+    dimensions: "550mm x approximately 4mm x 4mm",
+    customisation: necklaceCustomisation(55),
+  }),
+
+  launchScaffoldProduct({
+    id: "faeblade-chain",
+    slug: "faeblade-chain",
+    name: "Faeblade Chain",
+    type: "necklaces",
+    description:
+      "A stainless-steel necklace with a blade-like pendant detail and a dark, talismanic profile.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "550mm x pendant dimensions to be confirmed",
+    customisation: necklaceCustomisation(55),
+  }),
+
+  launchScaffoldProduct({
+    id: "vertebrae-weave-chunky-choker",
+    slug: "vertebrae-weave-chunky-choker",
+    name: "Vertebrae Weave Chunky Choker",
+    type: "necklaces",
+    description:
+      "A chunky choker-scale piece using a raised vertebrae-like weave for a compact, spine-inspired silhouette.",
+    material: "Stainless steel",
+    clasp: "Medium carabiner",
+    dimensions: "400mm x approximately 14mm x 6mm",
+    customisation: necklaceCustomisation(40, {
+      includedOptionId: "medium-carabiner",
+      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+    }),
+  }),
+
+  launchScaffoldProduct({
+    id: "mini-snake-vertebrae-garnet-necklace",
+    slug: "mini-snake-vertebrae-garnet-necklace",
+    name: "Mini Snake Vertebrae + Garnet Necklace",
+    type: "necklaces",
+    components: ["gemstone"],
+    description:
+      "A smaller snake-vertebrae-inspired necklace accented with garnet for a compact relic-like finish.",
+    material: "Stainless steel · garnet",
+    clasp: "Lobster clasp",
+    dimensions: "450mm x pendant dimensions to be confirmed",
+    customisation: necklaceCustomisation(45),
+  }),
+
+  launchScaffoldProduct({
+    id: "raven-pendant-necklace",
+    slug: "raven-pendant-necklace",
+    name: "Raven Pendant Necklace",
+    type: "necklaces",
+    description:
+      "A stainless-steel chain carrying a raven pendant, intended as a simple dark talisman.",
+    material: "Stainless steel",
+    clasp: "Lobster clasp",
+    dimensions: "500mm x pendant dimensions to be confirmed",
+    customisation: necklaceCustomisation(50),
+  }),
+
+  launchScaffoldProduct({
+    id: "moonstone-delicate-earrings",
+    slug: "moonstone-delicate-earrings",
+    name: "Moonstone Delicate Earrings",
+    type: "earrings",
+    components: ["gemstone"],
+    description:
+      "Delicate stainless-steel earrings intended for moonstone detailing and light everyday movement.",
+    material: "Stainless steel · moonstone",
+    clasp: "Earring hardware",
+    dimensions: "Dimensions to be confirmed",
+  }),
+
+  launchScaffoldProduct({
+    id: "trailing-earrings",
+    slug: "trailing-earrings",
+    name: "Trailing Earrings",
+    type: "earrings",
+    description:
+      "Trailing stainless-steel earrings with a longer drop and gentle chainmaille movement.",
+    material: "Stainless steel",
+    clasp: "Earring hardware",
+    dimensions: "Dimensions to be confirmed",
+  }),
+
+  launchScaffoldProduct({
+    id: "dagger-earrings",
+    slug: "dagger-earrings",
+    name: "Dagger Earrings",
+    type: "earrings",
+    description:
+      "Stainless-steel earrings with a small dagger-like drop and sharp, minimal profile.",
+    material: "Stainless steel",
+    clasp: "Earring hardware",
+    dimensions: "Dimensions to be confirmed",
+  }),
+
+  launchScaffoldProduct({
+    id: "snake-vertebrae-garnet-earrings",
+    slug: "snake-vertebrae-garnet-earrings",
+    name: "Snake Vertebrae + Garnet Earrings",
+    type: "earrings",
+    components: ["gemstone"],
+    description:
+      "Snake-vertebrae-inspired stainless-steel earrings accented with garnet.",
+    material: "Stainless steel · garnet",
+    clasp: "Earring hardware",
+    dimensions: "Dimensions to be confirmed",
+  }),
+
+  launchScaffoldProduct({
+    id: "barbed-wire-wallet-chain",
+    slug: "barbed-wire-wallet-chain",
+    name: "Barbed Wire Wallet Chain",
+    type: "wallet-chains",
+    description:
+      "A heavy-build Barbed Wire wallet chain with the same raised, intricate construction adapted into a substantial draping chain.",
+    material: "Stainless steel",
+    clasp: "Medium carabiner",
+    dimensions: "Custom wallet-chain length x approximately 20mm x 9mm",
+    customisation: walletChainCustomisation({
+      includedOptionId: "medium-carabiner",
+      allowedOptionIds: ["medium-carabiner", "large-carabiner"],
+    }),
+  }),
 ]);
 
 export function productById(id) {
@@ -1038,6 +1407,29 @@ export function extenderOptionsForProduct(product) {
   ];
 }
 
+export function pendantOptionsForProduct(product) {
+  const config = customisationForProduct(product).pendant;
+  if (!config?.enabled) return [];
+
+  const allowed = Array.isArray(config.allowedOptionIds) ? config.allowedOptionIds : [];
+  const includedId = String(config.includedOptionId || allowed[0] || "").trim();
+  const ids = [
+    includedId,
+    ...allowed.filter((id) => id && id !== includedId),
+  ].filter(Boolean);
+
+  return ids
+    .map((id) => WALLET_CHAIN_PENDANT_OPTIONS[id])
+    .filter(Boolean)
+    .map((option) => ({
+      ...option,
+      name: option.name || option.label,
+      priceDelta: option.id === includedId ? 0 : normalisePriceDelta(option.priceDelta),
+      isIncluded: option.id === includedId,
+      isDefault: option.id === includedId,
+    }));
+}
+
 export function findLengthOption(product, value) {
   const wanted = selectedValue(value);
   return lengthOptionsForProduct(product).find((option) => valuesMatch(option.value, wanted)) || null;
@@ -1061,6 +1453,12 @@ export function findExtenderOption(product, value) {
   }
 
   return options.find((option) => valuesMatch(option.value, wanted)) || null;
+}
+
+export function findPendantOption(product, id) {
+  const options = pendantOptionsForProduct(product);
+  const wanted = String(selectedId(id) || options[0]?.id || "").trim() || options[0]?.id || "";
+  return options.find((option) => option.id === wanted) || null;
 }
 
 export function normaliseProductConfiguration(product, selections = {}) {
@@ -1097,6 +1495,16 @@ export function normaliseProductConfiguration(product, selections = {}) {
       label: option.label || option.name,
       priceDelta: normalisePriceDelta(option.priceDelta),
       supportsExtender: option.supportsExtender !== false,
+    };
+  }
+
+  if (config.pendant?.enabled) {
+    const option = findPendantOption(product, selections.pendant);
+    if (!option) throw new Error("Choose a valid pendant option for this product.");
+    normalised.pendant = {
+      id: option.id,
+      label: option.label || option.name,
+      priceDelta: normalisePriceDelta(option.priceDelta),
     };
   }
 
@@ -1142,6 +1550,7 @@ export function selectionSummary(configuration = {}) {
   return [
     configuration.length?.label,
     configuration.clasp?.label,
+    configuration.pendant?.label,
     configuration.extender?.selected ? configuration.extender.label : "",
   ]
     .map((value) => String(value || "").trim())
@@ -1152,10 +1561,11 @@ export function selectionSummary(configuration = {}) {
 export function cartLineKey(productId, configuration = {}) {
   const length = configuration.length?.value ?? "";
   const clasp = configuration.clasp?.id ?? "";
+  const pendant = configuration.pendant?.id ?? "";
   const extender = configuration.extender?.selected
     ? `extender:${configuration.extender.lengthCm || configuration.extender.value}`
     : "no-extender";
-  return [productId, `length:${length}`, `clasp:${clasp}`, extender].join("|");
+  return [productId, `length:${length}`, `clasp:${clasp}`, `pendant:${pendant}`, extender].join("|");
 }
 
 export function configuredCartLine(input = {}) {
@@ -1300,6 +1710,29 @@ export function validateProductCatalogue() {
         if (!option.label) issues.push(`${label} has an extender option without a label.`);
         if (Number(option.priceDelta || 0) < 0) {
           issues.push(`${label} has a negative extender surcharge.`);
+        }
+      });
+    }
+
+    if (config.pendant?.enabled) {
+      const allowed = Array.isArray(config.pendant.allowedOptionIds) ? config.pendant.allowedOptionIds : [];
+      const options = pendantOptionsForProduct(product);
+      if (config.pendant.required && !options.length) {
+        issues.push(`${label} requires pendant selection but has no pendant options.`);
+      }
+
+      if (!config.pendant.includedOptionId) {
+        issues.push(`${label} needs an included pendant option.`);
+      } else if (!WALLET_CHAIN_PENDANT_OPTIONS[config.pendant.includedOptionId]) {
+        issues.push(`${label} includes unknown pendant option ${config.pendant.includedOptionId}.`);
+      } else if (!allowed.includes(config.pendant.includedOptionId)) {
+        issues.push(`${label} included pendant must also be in allowedOptionIds.`);
+      }
+
+      allowed.forEach((id) => {
+        if (!WALLET_CHAIN_PENDANT_OPTIONS[id]) issues.push(`${label} allows unknown pendant option ${id}.`);
+        if (Number(WALLET_CHAIN_PENDANT_OPTIONS[id]?.priceDelta || 0) < 0) {
+          issues.push(`${label} pendant option ${id} has a negative surcharge.`);
         }
       });
     }
