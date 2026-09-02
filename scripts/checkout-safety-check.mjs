@@ -261,6 +261,14 @@ check(
 );
 
 check(
+  "lore buttons do not render a floating read-story cue",
+  script.includes("lore-button__label") &&
+    !script.includes("lore-button__hover") &&
+    !loreCss.includes("lore-button__hover"),
+  "Lore buttons keep the compact ~ LORE ~ label and no longer include the hover/floating Read the story text layer.",
+);
+
+check(
   "lore dialog can show related product thumbnails from tale cards",
   wealdJs.includes("data-lore-related-products") &&
     script.includes("loreRelatedProducts") &&

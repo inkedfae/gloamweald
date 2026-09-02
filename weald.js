@@ -13,7 +13,7 @@ import {
 
 const WEALD_RETURN_STORAGE_KEY = "gloamweald-weald-return";
 const RETURN_STATE_TTL = 1000 * 60 * 60;
-const WORLD_BOOK_TARGET_CHARACTERS = 850;
+const WORLD_BOOK_TARGET_CHARACTERS = 420;
 const productsById = new Map(GLOAMWEALD_PRODUCTS.map((product) => [product.id, product]));
 const worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
 let worldBookSpreadStart = 0;
@@ -41,10 +41,7 @@ function buildWorldBookPages(paragraphs) {
   let currentPage = [];
   let currentLength = 0;
 
-  paragraphs.forEach((paragraph) => {
-    const copy = String(paragraph || "").trim();
-    if (!copy) return;
-
+  paragraphs.flatMap(splitWorldBookParagraph).forEach((copy) => {
     const nextLength = currentLength + copy.length + (currentPage.length ? 2 : 0);
     if (currentPage.length && nextLength > WORLD_BOOK_TARGET_CHARACTERS) {
       pages.push(currentPage);
@@ -58,6 +55,60 @@ function buildWorldBookPages(paragraphs) {
 
   if (currentPage.length) pages.push(currentPage);
   return pages.length ? pages : [[]];
+}
+
+function splitWorldBookParagraph(paragraph) {
+  const copy = String(paragraph || "").trim();
+  if (!copy) return [];
+  if (copy.length <= WORLD_BOOK_TARGET_CHARACTERS) return [copy];
+
+  const sentences = copy.match(/[^.!?]+[.!?]+(?:["”’])?|[^.!?]+$/g) || [copy];
+  const chunks = [];
+  let currentChunk = "";
+
+  sentences
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .forEach((sentence) => {
+      if (sentence.length > WORLD_BOOK_TARGET_CHARACTERS) {
+        if (currentChunk) {
+          chunks.push(currentChunk);
+          currentChunk = "";
+        }
+        chunks.push(...splitWorldBookSentence(sentence));
+        return;
+      }
+
+      const nextChunk = currentChunk ? `${currentChunk} ${sentence}` : sentence;
+      if (nextChunk.length > WORLD_BOOK_TARGET_CHARACTERS) {
+        chunks.push(currentChunk);
+        currentChunk = sentence;
+      } else {
+        currentChunk = nextChunk;
+      }
+    });
+
+  if (currentChunk) chunks.push(currentChunk);
+  return chunks;
+}
+
+function splitWorldBookSentence(sentence) {
+  const words = sentence.split(/\s+/).filter(Boolean);
+  const chunks = [];
+  let currentChunk = "";
+
+  words.forEach((word) => {
+    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word;
+    if (currentChunk && nextChunk.length > WORLD_BOOK_TARGET_CHARACTERS) {
+      chunks.push(currentChunk);
+      currentChunk = word;
+    } else {
+      currentChunk = nextChunk;
+    }
+  });
+
+  if (currentChunk) chunks.push(currentChunk);
+  return chunks;
 }
 
 function lastWorldBookSpreadStart() {

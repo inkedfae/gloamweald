@@ -91,7 +91,6 @@
         aria-label="Read lore for ${escapeHtml(product.name)}"
       >
         <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
-        <span class="lore-button__hover" aria-hidden="true">Read the story</span>
       </button>
     `;
   }
@@ -1338,10 +1337,9 @@
             class="lore-button lore-button--inline"
             href="#lore"
             data-product-lore-jump
-            aria-label="Read the story for ${escapeHtml(product.name)}"
+            aria-label="Jump to lore for ${escapeHtml(product.name)}"
           >
             <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
-            <span class="lore-button__hover" aria-hidden="true">Read the story</span>
           </a>
           <a class="quiet-button" href="weald.html">More about the Gloamweald</a>
         </div>
