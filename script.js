@@ -1342,27 +1342,53 @@
     `;
   }
 
+  function productCanBePurchased(product) {
+    return Boolean(product?.orderable && productPrice(product) !== null);
+  }
+
+  function renderCustomisationFields(product) {
+    return `
+      ${renderLengthSelector(product)}
+      ${renderClaspSelector(product)}
+      ${renderPendantSelector(product)}
+      ${renderExtenderSelector(product)}
+    `;
+  }
+
+  function renderInquiryPanel(product) {
+    return `
+      <div class="product-purchase-panel product-purchase-panel--inquiry">
+        <p>${escapeHtml(product.status || "This piece is not currently available to order.")}</p>
+        ${contactPageLink("Send an inquiry", "button button--solid")}
+      </div>
+    `;
+  }
+
   function renderCustomisationForm(product) {
-    const orderable = product.orderable && productPrice(product) !== null;
+    const purchasable = productCanBePurchased(product);
+    const customisationFields = renderCustomisationFields(product);
+    const hasCustomisationFields = customisationFields.trim().length > 0;
     const note = product.customisation?.hardwareNote
       ? `<p class="field-note">${escapeHtml(product.customisation.hardwareNote)}</p>`
       : "";
 
-    if (!orderable) {
+    if (!purchasable && !hasCustomisationFields) {
+      return renderInquiryPanel(product);
+    }
+
+    if (!purchasable) {
       return `
-        <div class="product-purchase-panel product-purchase-panel--inquiry">
-          <p>${escapeHtml(product.status || "This piece is not currently available to order.")}</p>
-          ${contactPageLink("Send an inquiry", "button button--solid")}
-        </div>
+        <form class="product-purchase-form product-purchase-form--preview" data-product-form data-product-preview-form data-product-id="${escapeHtml(product.id)}">
+          ${customisationFields}
+          ${note}
+          ${renderInquiryPanel(product)}
+        </form>
       `;
     }
 
     return `
       <form class="product-purchase-form" data-product-form data-product-id="${escapeHtml(product.id)}">
-        ${renderLengthSelector(product)}
-        ${renderClaspSelector(product)}
-        ${renderPendantSelector(product)}
-        ${renderExtenderSelector(product)}
+        ${customisationFields}
         ${note}
         <section class="price-summary" aria-live="polite" data-price-summary></section>
         <p class="form-error" data-product-form-error role="alert"></p>
@@ -1486,6 +1512,8 @@
         });
       }
     }
+
+    if (!productCanBePurchased(product)) return;
 
     const complete = formHasRequiredSelections(product, selections);
     if (!complete) {
@@ -1916,6 +1944,11 @@
     const error = form.querySelector("[data-product-form-error]");
     const addButton = form.querySelector("[data-product-add-button]");
     if (!product) return;
+
+    if (!productCanBePurchased(product)) {
+      updateProductPurchaseForm(form);
+      return;
+    }
 
     try {
       const editCartKey = form.dataset.editCartKey || "";
