@@ -13,7 +13,7 @@ import {
 
 const WEALD_RETURN_STORAGE_KEY = "gloamweald-weald-return";
 const RETURN_STATE_TTL = 1000 * 60 * 60;
-const WORLD_BOOK_TARGET_CHARACTERS = 420;
+const WORLD_BOOK_TARGET_CHARACTERS = 760;
 const productsById = new Map(GLOAMWEALD_PRODUCTS.map((product) => [product.id, product]));
 const worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
 let worldBookSpreadStart = 0;
@@ -163,6 +163,26 @@ function turnWorldBook(direction) {
   renderWorldBookSpread();
 }
 
+function targetForHash(hash) {
+  if (!hash?.startsWith("#") || hash.length <= 1) return null;
+
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return document.getElementById(hash.slice(1));
+  }
+}
+
+function scrollTargetToTop(target, behavior = "smooth") {
+  if (!target) return;
+
+  window.scrollTo({
+    left: window.scrollX,
+    top: target.getBoundingClientRect().top + window.scrollY,
+    behavior,
+  });
+}
+
 function relatedProductsForEntry(entry) {
   const ids = Array.isArray(entry.relatedProductIds)
     ? entry.relatedProductIds
@@ -199,7 +219,7 @@ function relationshipHtml(entry) {
   if (products.length) {
     return `
       <div class="tale-card__relationship">
-        <p class="tale-card__relationship-title">${escapeHtml(entry.relationship || (products.length > 1 ? "Related products" : "Related product"))}</p>
+        <p class="tale-card__relationship-title">Related products</p>
         <div class="tale-card__product-links">
           ${products.map(productTextLinkHtml).join("")}
         </div>
@@ -390,6 +410,22 @@ document.addEventListener("click", (event) => {
   const pageTurn = event.target.closest("[data-weald-book-turn]");
   if (pageTurn) {
     turnWorldBook(Number(pageTurn.dataset.wealdBookTurn));
+    return;
+  }
+
+  const sectionLink = event.target.closest(".weald-jump-nav a[href^='#']");
+  if (sectionLink) {
+    const target = targetForHash(sectionLink.hash);
+    if (target) {
+      event.preventDefault();
+      scrollTargetToTop(target);
+
+      try {
+        history.pushState(null, "", `${location.pathname}${location.search}${sectionLink.hash}`);
+      } catch {
+        /* Keep the scroll behavior even if history cannot be updated. */
+      }
+    }
     return;
   }
 
