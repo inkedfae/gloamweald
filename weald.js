@@ -59,13 +59,6 @@ function productTextLinkHtml(product) {
   `;
 }
 
-function storyCueHtml(entry) {
-  const product = storyProductForEntry(entry);
-  if (!product) return "";
-
-  return `<span class="tale-card__cue" aria-hidden="true">~ LORE ~</span>`;
-}
-
 function relatedProductIdsAttribute(entry) {
   const ids = relatedProductsForEntry(entry).map((product) => product.id);
   return ids.length ? ` data-lore-related-products="${escapeHtml(ids.join(","))}"` : "";
@@ -202,7 +195,6 @@ function renderLoreFromEdge() {
           <p>${escapeHtml(entry.excerpt)}</p>
           <div class="tale-card__actions">
             ${relationshipHtml(entry)}
-            ${storyCueHtml(entry)}
           </div>
         </article>
       `;

@@ -636,7 +636,7 @@
     target.classList.add("is-lore-glowing");
     productLoreGlowTimer = window.setTimeout(() => {
       target.classList.remove("is-lore-glowing");
-    }, 750);
+    }, 520);
   }
 
   function scrollToProductLore() {
@@ -648,7 +648,6 @@
       block: "start",
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
-    focusWithoutScroll(target);
     triggerProductLoreGlow(target);
 
     try {
@@ -1743,21 +1742,25 @@
       <section class="section product-page">
         <a class="quiet-button product-back-link" href="${escapeHtml(continueShoppingUrl(product))}" data-continue-shopping>Continue shopping</a>
         <div class="product-page-layout${productHasLore(product) ? " product-page-layout--has-lore" : ""}">
-          <div class="product-page__heading">
-            <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
-            <h1>${escapeHtml(product.name)}</h1>
+          <div class="product-page__media-stack">
+            <div class="product-page__media">
+              ${renderProductPageGallery(product)}
+            </div>
+            ${productLoreSection(product)}
           </div>
-          <div class="product-page__media">
-            ${renderProductPageGallery(product)}
+          <div class="product-page__details">
+            <div class="product-page__heading">
+              <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
+              <h1>${escapeHtml(product.name)}</h1>
+            </div>
+            <div class="product-page__info">
+              <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
+              <p>${escapeHtml(product.description)}</p>
+              ${renderProductSpecs(product)}
+              ${productLoreTeaser(product)}
+              ${renderCustomisationForm(product)}
+            </div>
           </div>
-          <div class="product-page__info">
-            <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
-            <p>${escapeHtml(product.description)}</p>
-            ${renderProductSpecs(product)}
-            ${productLoreTeaser(product)}
-            ${renderCustomisationForm(product)}
-          </div>
-          ${productLoreSection(product)}
         </div>
       </section>
     `;

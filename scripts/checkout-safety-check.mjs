@@ -55,6 +55,7 @@ function frontendText() {
 }
 
 const script = read("script.js");
+const style = read("style.css");
 const checkoutScript = read("checkout.js");
 const checkoutFrontend = `${script}\n${checkoutScript}`;
 const frontend = frontendText();
@@ -223,10 +224,13 @@ check(
       wealdHtml.includes("data-lore-from-edge") &&
       wealdJs.includes("tale-card--interactive") &&
       wealdJs.includes("data-lore-related-products") &&
-      !new RegExp(`${obsoleteCardClass}|${obsoleteDataAttr}|storyButtonHtml`).test(`${wealdHtml}\n${wealdJs}\n${wealdCss}`)
+      !wealdJs.includes("~ LORE ~") &&
+      !new RegExp(`${obsoleteCardClass}|${obsoleteDataAttr}|storyButtonHtml|tale-card__cue`).test(
+        `${wealdHtml}\n${wealdJs}\n${wealdCss}`,
+      )
     );
   })(),
-  "The Weald uses tale-card naming, card-level lore triggers, and no longer renders related thumbnails inside the card.",
+  "The Weald uses tale-card naming, card-level lore triggers, and no longer renders related thumbnails or a visible lore cue inside the card.",
 );
 
 check(
@@ -238,6 +242,17 @@ check(
     loreCss.includes(".lore-dialog__related-products") &&
     loreCss.includes(".lore-dialog__product-thumbnail"),
   "The shared lore dialog supports an optional related-product rail for Weald tale-card openings.",
+);
+
+check(
+  "product page lore sits under media and flashes outside the text panel",
+  script.includes("product-page__media-stack") &&
+    script.indexOf("product-page__media-stack") < script.indexOf("product-page__details") &&
+    style.includes(".product-page__media-stack") &&
+    style.includes("display: contents") &&
+    style.includes("box-shadow") &&
+    !script.includes("focusWithoutScroll(target);"),
+  "Product pages stack lore immediately below photos on desktop, flatten to the requested mobile order, and use a quick non-focus glow flash.",
 );
 
 check(
