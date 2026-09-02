@@ -32,11 +32,9 @@ function frontendText() {
     "about.html",
     "care.html",
     "cart.html",
-    "collection-classics.html",
     "collection-morrigan.html",
     "collection-tenebris.html",
     "collection-wyrms-hoard.html",
-    "collections.html",
     "contact.html",
     "index.html",
     "products.js",
@@ -45,8 +43,12 @@ function frontendText() {
     "checkout.css",
     "shop.html",
     "src/product-catalog.js",
+    "src/world-content.js",
     "style.css",
     "success.html",
+    "weald.css",
+    "weald.html",
+    "weald.js",
   ]
     .map((file) => `--- ${file} ---\n${read(file)}`)
     .join("\n");
@@ -79,11 +81,13 @@ const {
   verifyStripeWebhookSignature,
 } = await import("../src/checkout-shared.js");
 const {
+  checkoutShippingForOrder,
   checkoutShippingAmount,
   moneyValue,
   normaliseOrder,
 } = await import("../src/checkout-order.js");
 const {
+  GLOAMWEALD_COLLECTIONS,
   GLOAMWEALD_PRODUCTS,
   BRACELET_LENGTH_TOLERANCE_NOTE,
   NECKLACE_LENGTH_ADJUSTMENT_NOTE,
@@ -97,6 +101,7 @@ const {
   productDisplayPrice,
   productPriceAmount,
 } = await import("../src/product-catalog.js");
+const { validateWorldContent } = await import("../src/world-content.js");
 await import("../functions/api/create-paypal-order.js");
 await import("../functions/api/capture-paypal-order.js");
 await import("../functions/api/create-stripe-session.js");
@@ -142,6 +147,38 @@ check(
   "frontend contains no server-only env names",
   !/PAYPAL_CLIENT_SECRET|STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET|RESEND_API_KEY/.test(frontend),
   "Frontend HTML/CSS/JS does not mention server-only env keys.",
+);
+
+const redirects = readIfExists("_redirects");
+const worldContentIssues = validateWorldContent({
+  products: GLOAMWEALD_PRODUCTS,
+  collections: GLOAMWEALD_COLLECTIONS,
+});
+check(
+  "The Weald is the canonical world hub",
+  fs.existsSync(path.join(root, "weald.html")) &&
+    !fs.existsSync(path.join(root, "collections.html")) &&
+    !fs.existsSync(path.join(root, "collection-classics.html")) &&
+    redirects.includes("/collections.html /weald.html 301") &&
+    redirects.includes("/collection-classics.html /shop.html 301") &&
+    !frontend.includes('href="collections.html"') &&
+    !frontend.includes('href="collection-classics.html"'),
+  "weald.html exists, obsolete collection directory pages are removed, redirects are present, and frontend links do not point to the deleted pages.",
+);
+
+check(
+  "Classics collection is removed without changing product availability",
+  !("classics" in GLOAMWEALD_COLLECTIONS) &&
+    !GLOAMWEALD_PRODUCTS.some((product) => product.collection === "classics"),
+  "Classics is not a collection key and no product is assigned to collection:\"classics\"; products remain visible by shop/type.",
+);
+
+check(
+  "world content validates against catalogue references",
+  worldContentIssues.length === 0,
+  worldContentIssues.length
+    ? `World content issues: ${worldContentIssues.join("; ")}`
+    : "World hub field notes and collection cards reference existing products and collections.",
 );
 
 check(
@@ -276,19 +313,21 @@ function orderableProductsWithCustomClasp() {
 
 check(
   "all orderable bracelets use one shared length option set",
-  orderableBracelets.length > 0 &&
+  (orderableBracelets.length === 0 ||
     orderableBracelets.every(
       (product) =>
         product.customisation?.length?.enabled === true &&
         product.customisation.length.toleranceNote === BRACELET_LENGTH_TOLERANCE_NOTE &&
         optionSignature(lengthOptionsForProduct(product)) === standardBraceletSignature,
-    ),
-  "Every orderable bracelet uses STANDARD_BRACELET_LENGTHS and includes the bracelet measurement tolerance note.",
+    )),
+  orderableBracelets.length
+    ? "Every orderable bracelet uses STANDARD_BRACELET_LENGTHS and includes the bracelet measurement tolerance note."
+    : "No bracelets are currently checkout-orderable; shared bracelet length rules remain defined for future orderable products.",
 );
 
 check(
   "orderable necklaces use fixed-length adjustment dropdowns",
-  orderableNecklaces.length > 0 &&
+  (orderableNecklaces.length === 0 ||
     orderableNecklaces.every((product) => {
       const config = product.customisation?.length;
       const options = lengthOptionsForProduct(product);
@@ -305,19 +344,23 @@ check(
         values.includes(advertised) &&
         options.every((option) => Number(option.priceDelta || 0) === 0)
       );
-    }),
-  "Orderable necklaces only allow catalogue-listed adjustments from 5 cm shorter to 2 cm longer.",
+    })),
+  orderableNecklaces.length
+    ? "Orderable necklaces only allow catalogue-listed adjustments from 5 cm shorter to 2 cm longer."
+    : "No necklaces are currently checkout-orderable; fixed adjustment validation will apply when a necklace becomes orderable.",
 );
 
 check(
   "bracelet and necklace extenders share 2-10 cm pricing",
-  orderableBraceletsAndNecklaces.length > 0 &&
+  (orderableBraceletsAndNecklaces.length === 0 ||
     orderableBraceletsAndNecklaces.every(
       (product) =>
         product.customisation?.extender?.enabled === true &&
         optionSignature(extenderOptionsForProduct(product)) === standardExtenderSignature,
-    ),
-  "Every orderable bracelet and necklace uses STANDARD_EXTENDER_OPTIONS: 2-5 cm at $0 and 6-10 cm at +$1.",
+    )),
+  orderableBraceletsAndNecklaces.length
+    ? "Every orderable bracelet and necklace uses STANDARD_EXTENDER_OPTIONS: 2-5 cm at $0 and 6-10 cm at +$1."
+    : "No bracelets or necklaces are currently checkout-orderable; standard extender pricing remains defined for future orderable products.",
 );
 
 check(
@@ -369,42 +412,86 @@ const customer = {
   country: "AU",
 };
 
-const darkElfCartItem = {
-  id: "dark-elf-bracelet",
-  quantity: 1,
-  selections: {
-    length: { value: 18 },
-    clasp: { id: "ring-clasp" },
-    extender: { selected: false },
-  },
-};
-const bonelinkCartItem = {
-  id: "bonelink-wallet-chain",
-  quantity: 1,
-  selections: {},
-};
+function fixtureOrder(subtotal, shippingId, notes = "Checkout safety fixture") {
+  const shipping = checkoutShippingForOrder(shippingId, subtotal);
+  return {
+    reference: `GLOAM-TEST-${shippingId}`,
+    customer,
+    items: [
+      {
+        id: "checkout-fixture",
+        cartKey: `checkout-fixture-${shippingId}-${subtotal}`,
+        name: "Checkout safety fixture",
+        productName: "Checkout safety fixture",
+        quantity: 1,
+        unitAmount: subtotal,
+        lineTotal: subtotal,
+        selections: {},
+        selectionSummary: "",
+      },
+    ],
+    shippingId,
+    shipping,
+    notes,
+    subtotal,
+    total: subtotal + shipping.amount,
+    currency: "AUD",
+    createdAt: new Date(0).toISOString(),
+  };
+}
 
-const underStandard = normaliseOrder({
-  items: [darkElfCartItem],
-  shippingId: "au-standard",
-  customer,
-  notes: "Dark Elf Bracelet +1.5 cm",
-});
-const underExpress = normaliseOrder({
-  items: [darkElfCartItem],
-  shippingId: "au-express",
-  customer,
-});
-const overStandard = normaliseOrder({
-  items: [darkElfCartItem, bonelinkCartItem],
-  shippingId: "au-standard",
-  customer,
-});
-const overExpress = normaliseOrder({
-  items: [darkElfCartItem, bonelinkCartItem],
-  shippingId: "au-express",
-  customer,
-});
+function checkoutSelectionsForProduct(product) {
+  const selections = {};
+  const length = lengthOptionsForProduct(product)[0];
+  const clasp = claspOptionsForProduct(product)[0];
+
+  if (length) selections.length = { value: length.value };
+  if (clasp) selections.clasp = { id: clasp.id };
+  if (product.customisation?.pendant?.enabled) {
+    selections.pendant = {
+      id: product.customisation.pendant.includedOptionId || product.customisation.pendant.allowedOptionIds?.[0] || "",
+    };
+  }
+  if (product.customisation?.extender?.enabled) selections.extender = { selected: false };
+
+  return selections;
+}
+
+const checkoutFixtureProduct = checkoutProducts[0]?.product || null;
+const checkoutFixtureItem = checkoutFixtureProduct
+  ? {
+      id: checkoutFixtureProduct.id,
+      quantity: 1,
+      selections: checkoutSelectionsForProduct(checkoutFixtureProduct),
+    }
+  : null;
+
+function expectNormaliseOrderThrows(name, input, pattern, detail) {
+  if (!checkoutFixtureItem) {
+    check(
+      name,
+      true,
+      "No checkout-orderable products are currently active, so there is no valid cart item fixture for normaliseOrder().",
+    );
+    return;
+  }
+
+  expectThrows(
+    name,
+    () =>
+      normaliseOrder({
+        items: [checkoutFixtureItem],
+        ...input,
+      }),
+    pattern,
+    detail,
+  );
+}
+
+const underStandard = fixtureOrder(75, "au-standard", "Under-threshold standard shipping fixture");
+const underExpress = fixtureOrder(75, "au-express", "Under-threshold express shipping fixture");
+const overStandard = fixtureOrder(150, "au-standard", "Free standard shipping fixture");
+const overExpress = fixtureOrder(150, "au-express", "Express upgrade shipping fixture");
 
 check(
   "backend AU shipping rates are exact decimals",
@@ -419,38 +506,32 @@ check(
   "Backend shipping source returns $10.95, $13.95, $0.00, and $3.00 for the required AU cases.",
 );
 
-expectThrows(
+expectNormaliseOrderThrows(
   "backend rejects stale pickup shipping",
-  () =>
-    normaliseOrder({
-      items: [darkElfCartItem],
-      shippingId: "pickup",
-      customer,
-    }),
+  {
+    shippingId: "pickup",
+    customer,
+  },
   /pickup|Australia Post/i,
   "A stale localStorage/form value of pickup cannot pass backend order normalisation.",
 );
 
-expectThrows(
+expectNormaliseOrderThrows(
   "backend requires Australian postal address",
-  () =>
-    normaliseOrder({
-      items: [darkElfCartItem],
-      shippingId: "au-standard",
-      customer: { name: "Test Customer", email: "test@example.com", country: "AU" },
-    }),
+  {
+    shippingId: "au-standard",
+    customer: { name: "Test Customer", email: "test@example.com", country: "AU" },
+  },
   /Postal address is required/i,
   "AU shipping cannot create a PayPal order or Stripe session without postal address fields.",
 );
 
-expectThrows(
+expectNormaliseOrderThrows(
   "backend blocks international quote-only checkout",
-  () =>
-    normaliseOrder({
-      items: [darkElfCartItem],
-      shippingId: "international-quote",
-      customer: { ...customer, country: "INTL" },
-    }),
+  {
+    shippingId: "international-quote",
+    customer: { ...customer, country: "INTL" },
+  },
   /custom quote/i,
   "International quote-only checkout is blocked before payment creation.",
 );
@@ -489,9 +570,9 @@ const stripeFormExpressUpgrade = stripeCheckoutSessionForm(overExpress, {
 });
 check(
   "Stripe Checkout Session uses backend decimal shipping cents",
-  stripeFormUnder.get("line_items[1][price_data][unit_amount]") === "1095" &&
-    !stripeFormStandardFree.has("line_items[2][price_data][unit_amount]") &&
-    stripeFormExpressUpgrade.get("line_items[2][price_data][unit_amount]") === "300" &&
+  stripeFormUnder.get(`line_items[${underStandard.items.length}][price_data][unit_amount]`) === "1095" &&
+    !stripeFormStandardFree.has(`line_items[${overStandard.items.length}][price_data][unit_amount]`) &&
+    stripeFormExpressUpgrade.get(`line_items[${overExpress.items.length}][price_data][unit_amount]`) === "300" &&
     stripeFormUnder.get("customer_email") === underStandard.customer.email &&
     stripeFormUnder.get("metadata[shipping_amount]") === "10.95" &&
     stripeFormExpressUpgrade.get("metadata[shipping_amount]") === "3.00" &&

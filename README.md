@@ -7,7 +7,7 @@ accessories. It uses HTML, CSS, and a little JavaScript.
 
 - `index.html` — Home
 - `shop.html` — The full catalogue, filtered by type and component
-- `collections.html` — Collection directory
+- `weald.html` — World, lore, and collection hub
 - `collection-*.html` — One story and product page per collection
 - `about.html` — The maker, name, and process
 - `care.html` — Materials and care
@@ -76,7 +76,6 @@ collection: null
 A product made specifically for a collection uses one of:
 
 ```js
-collection: "classics"
 collection: "morrigan"
 collection: "tenebris"
 collection: "wyrms-hoard"
@@ -84,6 +83,10 @@ collection: "wyrms-hoard"
 
 The product then appears automatically in the full shop and on that
 collection's page.
+
+World-hub notes, short excerpts, and collection-card metadata live in
+`src/world-content.js`. Product lore itself remains in `src/product-catalog.js`
+on the relevant product object.
 
 ## Concept products
 

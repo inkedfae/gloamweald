@@ -495,12 +495,6 @@ nav a[aria-current="page"]::after {
     linear-gradient(145deg, rgba(20, 23, 20, 0.72), rgba(9, 11, 10, 0.94));
 }
 
-.page-hero--collections {
-  background:
-    radial-gradient(circle at 74% 26%, rgba(125, 38, 48, 0.14), transparent 25rem),
-    linear-gradient(145deg, rgba(20, 23, 20, 0.76), rgba(9, 11, 10, 0.96));
-}
-
 .page-hero--cart {
   background:
     radial-gradient(circle at 74% 22%, rgba(161, 57, 69, 0.13), transparent 22rem),
@@ -1870,6 +1864,23 @@ button.product-photo {
   cursor: not-allowed;
 }
 
+.product-lore-teaser {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 85% 18%, rgba(161, 57, 69, 0.12), transparent 11rem),
+    rgba(20, 23, 20, 0.72);
+}
+
+.product-lore-teaser h2 {
+  margin: 0 0 0.8rem;
+  color: var(--bone);
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
 .product-page-lore {
   max-width: 760px;
   margin: clamp(2rem, 5vw, 4rem) auto 0;
@@ -2015,17 +2026,6 @@ button.product-photo {
   transition: transform 240ms ease;
 }
 
-.collection-card--sharp::after {
-  border-radius: 0;
-  transform: rotate(45deg);
-}
-
-.collection-card--bone::after {
-  width: 7rem;
-  height: 14rem;
-  border-radius: 50%;
-}
-
 .collection-card--morrigan::after {
   width: 10rem;
   height: 15rem;
@@ -2055,10 +2055,6 @@ button.product-photo {
 
 .collection-card:hover::after {
   transform: translate(-0.5rem, -0.5rem);
-}
-
-.collection-card--sharp:hover::after {
-  transform: translate(-0.5rem, -0.5rem) rotate(45deg);
 }
 
 .collection-card--morrigan:hover::after {
@@ -2097,14 +2093,6 @@ button.product-photo {
   font-size: 0.68rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-}
-
-.collection-grid--four {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.collection-grid--four .collection-card {
-  min-height: 24rem;
 }
 
 .collection-hero {

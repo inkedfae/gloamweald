@@ -72,11 +72,35 @@
   white-space: nowrap;
 }
 
+.lore-button__label,
+.lore-button__hover {
+  transition: opacity 180ms ease;
+}
+
+.lore-button__hover {
+  position: absolute;
+  inset: 0.35rem;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  white-space: normal;
+}
+
 .lore-button:hover,
 .lore-button:focus-visible {
   border-color: var(--blood-bright);
   color: var(--bone);
   transform: translateY(-1px);
+}
+
+.lore-button:hover .lore-button__label,
+.lore-button:focus-visible .lore-button__label {
+  opacity: 0;
+}
+
+.lore-button:hover .lore-button__hover,
+.lore-button:focus-visible .lore-button__hover {
+  opacity: 1;
 }
 
 .product-actions:not(.product-actions--center) {

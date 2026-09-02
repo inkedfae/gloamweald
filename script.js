@@ -89,7 +89,10 @@
         type="button"
         data-lore-open="${escapeHtml(product.id)}"
         aria-label="Read lore for ${escapeHtml(product.name)}"
-      ><span aria-hidden="true">~ LORE ~</span></button>
+      >
+        <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
+        <span class="lore-button__hover" aria-hidden="true">Read the story</span>
+      </button>
     `;
   }
 
@@ -1152,11 +1155,23 @@
   function productLoreSection(product) {
     if (!productHasLore(product)) return "";
     return `
-      <section class="product-page-lore" aria-labelledby="product-page-lore-title">
+      <section class="product-page-lore" id="lore" aria-labelledby="product-page-lore-title">
         <p class="eyebrow">From the Gloamweald</p>
         <h2 id="product-page-lore-title">Lore</h2>
         <div class="product-page-lore__copy">${loreTextHtml(product.lore)}</div>
       </section>
+    `;
+  }
+
+  function productLoreTeaser(product) {
+    if (!productHasLore(product)) return "";
+
+    return `
+      <aside class="product-lore-teaser" aria-labelledby="product-lore-teaser-title">
+        <p class="eyebrow">From the Gloamweald</p>
+        <h2 id="product-lore-teaser-title">A story lives with this piece.</h2>
+        <a class="quiet-button" href="#lore">Read the story</a>
+      </aside>
     `;
   }
 
@@ -1603,6 +1618,7 @@
             <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
             <p>${escapeHtml(product.description)}</p>
             ${renderProductSpecs(product)}
+            ${productLoreTeaser(product)}
             ${renderCustomisationForm(product)}
           </div>
         </div>
