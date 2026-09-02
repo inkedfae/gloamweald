@@ -194,6 +194,13 @@
 
 .lore-dialog[open] {
   display: grid;
+  align-items: start;
+}
+
+.lore-dialog--with-related-products {
+  width: min(960px, calc(100vw - 2rem));
+  grid-template-columns: minmax(7rem, 11rem) minmax(0, 700px);
+  gap: clamp(0.75rem, 2vw, 1.1rem);
 }
 
 .lore-dialog::before {
@@ -209,6 +216,83 @@
   filter: blur(22px);
   opacity: 0.7;
   pointer-events: none;
+}
+
+.lore-dialog__related-products {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  padding: 0.8rem;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(rgba(20, 23, 20, 0.9), rgba(9, 11, 10, 0.96)),
+    radial-gradient(circle at 20% 0, rgba(229, 221, 202, 0.08), transparent 12rem);
+  box-shadow: inset 0 0 0 1px rgba(229, 221, 202, 0.06);
+}
+
+.lore-dialog__related-products[hidden] {
+  display: none;
+}
+
+.lore-dialog__related-title {
+  margin: 0 0 0.65rem;
+  color: var(--lore-accent-pale);
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.lore-dialog__related-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lore-dialog__product-link {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--bone-dim);
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.lore-dialog__product-link:hover,
+.lore-dialog__product-link:focus-visible {
+  color: var(--bone);
+}
+
+.lore-dialog__product-thumbnail {
+  display: grid;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: #050605;
+}
+
+.lore-dialog__product-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lore-dialog__product-thumbnail-placeholder {
+  max-width: 4.2rem;
+  color: var(--steel-dark);
+  font-size: 0.54rem;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.lore-dialog__product-name {
+  overflow-wrap: anywhere;
 }
 
 .lore-dialog::backdrop {
@@ -396,13 +480,27 @@
     max-height: calc(100dvh - 1rem);
   }
 
+  .lore-dialog--with-related-products {
+    grid-template-columns: 1fr;
+    width: min(100vw - 1rem, 700px);
+  }
+
   .lore-dialog::before {
     inset: -0.9rem;
     filter: blur(16px);
   }
 
   .lore-dialog__panel {
+    order: 1;
     max-height: calc(100dvh - 1rem);
+  }
+
+  .lore-dialog__related-products {
+    order: 2;
+  }
+
+  .lore-dialog__related-list {
+    grid-template-columns: repeat(auto-fit, minmax(5.25rem, 1fr));
   }
 
   .lore-dialog h2 {

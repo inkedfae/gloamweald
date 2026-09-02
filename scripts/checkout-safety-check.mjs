@@ -62,6 +62,7 @@ const shopPage = read("shop.html");
 const wealdHtml = read("weald.html");
 const wealdJs = read("weald.js");
 const wealdCss = read("weald.css");
+const loreCss = read("lore.css");
 const worldContent = read("src/world-content.js");
 const checkoutShared = read("src/checkout-shared.js");
 const checkoutOrder = read("src/checkout-order.js");
@@ -183,7 +184,7 @@ check(
   worldContentIssues.length === 0,
   worldContentIssues.length
     ? `World content issues: ${worldContentIssues.join("; ")}`
-    : "World hub field notes and collection cards reference existing products and collections.",
+    : "World hub lore-from-the-edge entries and collection cards reference existing products and collections.",
 );
 
 check(
@@ -210,6 +211,33 @@ check(
       read(file).includes('href="weald.html#collections"'),
     ),
   "Collection card clicks save the Weald scroll state and collection breadcrumbs return to weald.html#collections.",
+);
+
+check(
+  "Weald tale cards open lore without inline thumbnails",
+  (() => {
+    const obsoleteCardClass = ["field", "note", "card"].join("-");
+    const obsoleteDataAttr = ["data", "field", "notes"].join("-");
+    return (
+      wealdHtml.includes("Lore from the edge.") &&
+      wealdHtml.includes("data-lore-from-edge") &&
+      wealdJs.includes("tale-card--interactive") &&
+      wealdJs.includes("data-lore-related-products") &&
+      !new RegExp(`${obsoleteCardClass}|${obsoleteDataAttr}|storyButtonHtml`).test(`${wealdHtml}\n${wealdJs}\n${wealdCss}`)
+    );
+  })(),
+  "The Weald uses tale-card naming, card-level lore triggers, and no longer renders related thumbnails inside the card.",
+);
+
+check(
+  "lore dialog can show related product thumbnails from tale cards",
+  wealdJs.includes("data-lore-related-products") &&
+    script.includes("loreRelatedProducts") &&
+    script.includes("data-lore-related-panel") &&
+    script.includes("lore-dialog--with-related-products") &&
+    loreCss.includes(".lore-dialog__related-products") &&
+    loreCss.includes(".lore-dialog__product-thumbnail"),
+  "The shared lore dialog supports an optional related-product rail for Weald tale-card openings.",
 );
 
 check(

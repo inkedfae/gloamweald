@@ -88,11 +88,11 @@ collection: "wyrms-hoard"
 The product then appears automatically in the full shop and on that
 collection's page.
 
-World-hub notes, short excerpts, and collection-card metadata live in
+World-hub lore-from-the-edge entries, short excerpts, and collection-card metadata live in
 `src/world-content.js`. Product lore itself remains in `src/product-catalog.js`
-on the relevant product object. Field notes use `storyProductId` to open that
-existing product lore, and `relatedProductIds` to show clickable related-product
-thumbnails.
+on the relevant product object. Lore-from-the-edge entries use `storyProductId`
+to open that existing product lore, and `relatedProductIds` to show clickable
+related-product thumbnails in the lore dialog.
 
 ## Concept products
 

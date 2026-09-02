@@ -108,7 +108,7 @@
   margin: 0;
 }
 
-.field-note-grid {
+.tale-card-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
@@ -116,19 +116,44 @@
   background: var(--line);
 }
 
-.field-note-card {
+.tale-card {
   display: flex;
   min-height: 21rem;
   flex-direction: column;
   align-items: flex-start;
   padding: clamp(1.15rem, 2.5vw, 1.75rem);
+  border: 1px solid transparent;
   background:
     radial-gradient(circle at 78% 18%, rgba(174, 185, 180, 0.1), transparent 11rem),
     rgba(20, 23, 20, 0.86);
   color: var(--bone-dim);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    background-color 180ms ease;
 }
 
-.field-note-card__category {
+.tale-card--interactive {
+  cursor: pointer;
+}
+
+.tale-card--interactive:hover,
+.tale-card--interactive:focus-visible {
+  border-color: rgba(229, 221, 202, 0.18);
+  background-color: rgba(20, 23, 20, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(9, 11, 10, 0.55),
+    inset 0 0.6rem 1.6rem rgba(0, 0, 0, 0.24);
+  transform: translateY(1px);
+  outline: none;
+}
+
+.tale-card--interactive:active {
+  transform: translateY(2px);
+}
+
+.tale-card__category {
   margin: 0 0 1.4rem;
   color: var(--blood-bright);
   font-family: var(--sans);
@@ -138,7 +163,7 @@
   text-transform: uppercase;
 }
 
-.field-note-card h3 {
+.tale-card h3 {
   margin: 0 0 0.85rem;
   color: var(--bone);
   font-size: clamp(1.55rem, 3vw, 2.35rem);
@@ -147,15 +172,15 @@
   line-height: 0.98;
 }
 
-.field-note-card p {
+.tale-card p {
   line-height: 1.65;
 }
 
-.field-note-card > p:not(.field-note-card__category) {
+.tale-card > p:not(.tale-card__category) {
   margin: 0;
 }
 
-.field-note-card__relationship {
+.tale-card__relationship {
   display: grid;
   gap: 0.75rem;
   color: var(--steel);
@@ -164,7 +189,7 @@
   letter-spacing: 0.02em;
 }
 
-.field-note-card__relationship-title {
+.tale-card__relationship-title {
   margin: 0;
   color: var(--steel);
   font-family: var(--sans);
@@ -174,12 +199,12 @@
   text-transform: uppercase;
 }
 
-.field-note-card__relationship a {
+.tale-card__relationship a {
   color: var(--bone);
   text-underline-offset: 0.22em;
 }
 
-.field-note-card__actions {
+.tale-card__actions {
   display: flex;
   flex-wrap: nowrap;
   align-items: end;
@@ -188,60 +213,37 @@
   padding-top: 2rem;
 }
 
-.field-note-card__products {
+.tale-card__product-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: 0.45rem 0.7rem;
 }
 
-.field-note-card__product-link {
-  display: grid;
-  width: 4.8rem;
-  gap: 0.35rem;
-  color: var(--bone-dim);
+.tale-card__product-link {
+  position: relative;
+  z-index: 1;
+  color: var(--bone);
   font-family: var(--sans);
-  font-size: 0.58rem;
-  font-weight: 800;
-  line-height: 1.2;
-  text-decoration: none;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-underline-offset: 0.24em;
   text-transform: uppercase;
 }
 
-.field-note-card__product-link:hover,
-.field-note-card__product-link:focus-visible {
-  color: var(--bone);
+.tale-card__product-link:hover,
+.tale-card__product-link:focus-visible {
+  color: var(--blood-bright);
 }
 
-.field-note-card__thumbnail {
-  display: grid;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  place-items: center;
-  border: 1px solid var(--line);
-  background: #050605;
-}
-
-.field-note-card__thumbnail img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.field-note-card__thumbnail-placeholder {
-  max-width: 3.3rem;
-  color: var(--steel-dark);
-  font-size: 0.5rem;
-  line-height: 1.2;
-  text-align: center;
-}
-
-.field-note-card__product-name {
-  overflow-wrap: anywhere;
-}
-
-.field-note-card__story-button {
+.tale-card__cue {
   flex: 0 0 auto;
+  color: var(--blood-bright);
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 1040px) {
@@ -253,7 +255,7 @@
     max-width: 24rem;
   }
 
-  .field-note-grid {
+  .tale-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -278,16 +280,16 @@
     justify-content: center;
   }
 
-  .field-note-grid {
+  .tale-card-grid {
     grid-template-columns: 1fr;
   }
 
-  .field-note-card {
+  .tale-card {
     min-height: 0;
   }
 
-  .field-note-card__actions {
-    flex-direction: column-reverse;
+  .tale-card__actions {
+    flex-direction: column;
     align-items: flex-start;
   }
 }

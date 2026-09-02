@@ -117,6 +117,27 @@
     return color;
   }
 
+  function productThumbnailMarkup(product) {
+    const image = product?.images?.[0];
+    return image
+      ? `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" />`
+      : `<span class="lore-dialog__product-thumbnail-placeholder" aria-hidden="true">No image yet</span>`;
+  }
+
+  function loreRelatedProductHtml(product) {
+    return `
+      <a
+        class="lore-dialog__product-link"
+        href="${escapeHtml(productUrl(product))}"
+        data-product-link
+        data-product-id="${escapeHtml(product.id)}"
+      >
+        <span class="lore-dialog__product-thumbnail">${productThumbnailMarkup(product)}</span>
+        <span class="lore-dialog__product-name">${escapeHtml(product.name)}</span>
+      </a>
+    `;
+  }
+
   function readCart() {
     try {
       const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || "[]");
@@ -526,6 +547,7 @@
       "beforeend",
       `
         <dialog class="lore-dialog" id="product-lore-dialog" aria-labelledby="product-lore-title" aria-describedby="product-lore-copy">
+          <aside class="lore-dialog__related-products" data-lore-related-panel hidden></aside>
           <div class="lore-dialog__panel" data-lore-panel>
             <button class="lore-dialog__close" type="button" data-lore-close aria-label="Close lore">
               <span aria-hidden="true">&times;</span>
@@ -581,6 +603,7 @@
       copy: document.querySelector("[data-lore-copy]"),
       scroll: document.querySelector("[data-lore-scroll]"),
       close: document.querySelector("[data-lore-close]"),
+      relatedProducts: document.querySelector("[data-lore-related-panel]"),
     };
   }
 
@@ -613,7 +636,7 @@
     target.classList.add("is-lore-glowing");
     productLoreGlowTimer = window.setTimeout(() => {
       target.classList.remove("is-lore-glowing");
-    }, 4200);
+    }, 750);
   }
 
   function scrollToProductLore() {
@@ -681,6 +704,44 @@
     } else {
       dialog.style.removeProperty("--lore-accent-pale");
     }
+  }
+
+  function relatedProductsForLoreOpener(opener) {
+    const ids = String(opener?.dataset?.loreRelatedProducts || "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    const seen = new Set();
+    return ids
+      .map((id) => productById(id))
+      .filter((product) => {
+        if (!product || seen.has(product.id)) return false;
+        seen.add(product.id);
+        return true;
+      });
+  }
+
+  function renderLoreRelatedProducts(opener) {
+    const { dialog, relatedProducts } = loreElements();
+    if (!relatedProducts) return;
+
+    const related = relatedProductsForLoreOpener(opener);
+    if (!related.length) {
+      relatedProducts.hidden = true;
+      relatedProducts.innerHTML = "";
+      dialog?.classList.remove("lore-dialog--with-related-products");
+      return;
+    }
+
+    relatedProducts.hidden = false;
+    relatedProducts.innerHTML = `
+      <p class="lore-dialog__related-title">${related.length > 1 ? "Related pieces" : "Related piece"}</p>
+      <div class="lore-dialog__related-list">
+        ${related.map(loreRelatedProductHtml).join("")}
+      </div>
+    `;
+    dialog?.classList.add("lore-dialog--with-related-products");
   }
 
   function lightboxIndex(track) {
@@ -759,6 +820,7 @@
     loreState.opener = opener || null;
     setLoreScale(1);
     applyLoreTheme(product);
+    renderLoreRelatedProducts(opener);
     title.innerHTML = escapeHtml(product.name);
     copy.innerHTML = loreTextHtml(product.lore);
     if (scroll) scroll.scrollTop = 0;
@@ -807,12 +869,17 @@
   }
 
   function cleanupLore() {
-    const { title, copy, dialog } = loreElements();
+    const { title, copy, dialog, relatedProducts } = loreElements();
     const scrollX = loreState.scrollX;
     const scrollY = loreState.scrollY;
     document.documentElement.classList.remove("lightbox-open");
     if (title) title.textContent = "";
     if (copy) copy.innerHTML = "";
+    if (relatedProducts) {
+      relatedProducts.hidden = true;
+      relatedProducts.innerHTML = "";
+    }
+    dialog?.classList.remove("lore-dialog--with-related-products");
     dialog?.style.removeProperty("--lore-text-scale");
     dialog?.style.removeProperty("--lore-accent");
     dialog?.style.removeProperty("--lore-glow");
@@ -1938,6 +2005,10 @@
       return;
     }
 
+    if (event.target.closest("[data-lore-card-link]")) {
+      return;
+    }
+
     const loreButton = event.target.closest("[data-lore-open]");
     if (loreButton) {
       openLore(loreButton.dataset.loreOpen, loreButton);
@@ -2013,6 +2084,19 @@
       closeAddToCartDialog();
       window.location.assign(url);
     }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || (event.key !== "Enter" && event.key !== " ")) return;
+
+    const loreTrigger = event.target.closest('[data-lore-open][role="button"]');
+    if (!loreTrigger) return;
+
+    const nestedInteractive = event.target.closest("a, button, input, select, textarea, summary");
+    if (nestedInteractive && nestedInteractive !== loreTrigger) return;
+
+    event.preventDefault();
+    openLore(loreTrigger.dataset.loreOpen, loreTrigger);
   });
 
   document.addEventListener("change", (event) => {

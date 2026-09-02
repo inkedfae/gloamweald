@@ -6,8 +6,8 @@ import {
 import {
   WORLD_BEGIN_HERE,
   WORLD_COLLECTION_CARDS,
-  WORLD_FIELD_NOTES,
   WORLD_HUB_HERO,
+  WORLD_LORE_FROM_EDGE,
   validateWorldContent,
 } from "./src/world-content.js";
 
@@ -48,50 +48,37 @@ function storyProductForEntry(entry) {
   return productHasLore(product) ? product : null;
 }
 
-function productThumbnailHtml(product) {
-  const image = product.images?.[0];
-  const thumbnail = image
-    ? `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" />`
-    : `<span class="field-note-card__thumbnail-placeholder" aria-hidden="true">No image yet</span>`;
-
+function productTextLinkHtml(product) {
   return `
     <a
-      class="field-note-card__product-link"
+      class="tale-card__product-link"
       href="${escapeHtml(productPageHref(product))}"
       data-product-link
       data-product-id="${escapeHtml(product.id)}"
-    >
-      <span class="field-note-card__thumbnail">${thumbnail}</span>
-      <span class="field-note-card__product-name">${escapeHtml(product.name)}</span>
-    </a>
+    >${escapeHtml(product.name)}</a>
   `;
 }
 
-function storyButtonHtml(entry) {
+function storyCueHtml(entry) {
   const product = storyProductForEntry(entry);
   if (!product) return "";
 
-  return `
-    <button
-      class="lore-button field-note-card__story-button"
-      type="button"
-      data-lore-open="${escapeHtml(product.id)}"
-      aria-label="Read story for ${escapeHtml(product.name)}"
-    >
-      <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
-      <span class="lore-button__hover" aria-hidden="true">${escapeHtml(entry.storyLabel || "Read the story")}</span>
-    </button>
-  `;
+  return `<span class="tale-card__cue" aria-hidden="true">~ LORE ~</span>`;
+}
+
+function relatedProductIdsAttribute(entry) {
+  const ids = relatedProductsForEntry(entry).map((product) => product.id);
+  return ids.length ? ` data-lore-related-products="${escapeHtml(ids.join(","))}"` : "";
 }
 
 function relationshipHtml(entry) {
   const products = relatedProductsForEntry(entry);
   if (products.length) {
     return `
-      <div class="field-note-card__relationship">
-        <p class="field-note-card__relationship-title">${escapeHtml(entry.relationship || (products.length > 1 ? "Related products" : "Related product"))}</p>
-        <div class="field-note-card__products">
-          ${products.map(productThumbnailHtml).join("")}
+      <div class="tale-card__relationship">
+        <p class="tale-card__relationship-title">${escapeHtml(entry.relationship || (products.length > 1 ? "Related products" : "Related product"))}</p>
+        <div class="tale-card__product-links">
+          ${products.map(productTextLinkHtml).join("")}
         </div>
       </div>
     `;
@@ -100,13 +87,13 @@ function relationshipHtml(entry) {
   if (entry.relatedCollectionId) {
     const collection = GLOAMWEALD_COLLECTIONS[entry.relatedCollectionId];
     if (!collection) {
-      return `<p class="field-note-card__relationship">${escapeHtml(entry.relationship || "Related collection")}: unavailable</p>`;
+      return `<p class="tale-card__relationship">${escapeHtml(entry.relationship || "Related collection")}: unavailable</p>`;
     }
 
     return `
-      <p class="field-note-card__relationship">
+      <p class="tale-card__relationship">
         ${escapeHtml(entry.relationship || "Related collection")}:
-        <a href="${escapeHtml(collection.url)}">${escapeHtml(collection.name)}</a>
+        <a href="${escapeHtml(collection.url)}" data-lore-card-link>${escapeHtml(collection.name)}</a>
       </p>
     `;
   }
@@ -195,24 +182,31 @@ function renderWorldIntro() {
   `;
 }
 
-function renderFieldNotes() {
-  const grid = document.querySelector("[data-field-notes]");
+function renderLoreFromEdge() {
+  const grid = document.querySelector("[data-lore-from-edge]");
   if (!grid) return;
 
-  const visibleNotes = WORLD_FIELD_NOTES.filter((entry) => !entry.hidden);
-  grid.innerHTML = visibleNotes
+  const visibleEntries = WORLD_LORE_FROM_EDGE.filter((entry) => !entry.hidden);
+  grid.innerHTML = visibleEntries
     .map(
-      (entry) => `
-        <article class="field-note-card">
-          <p class="field-note-card__category">${escapeHtml(entry.category)}</p>
+      (entry) => {
+        const storyProduct = storyProductForEntry(entry);
+        const cardAttributes = storyProduct
+          ? ` role="button" tabindex="0" data-lore-open="${escapeHtml(storyProduct.id)}"${relatedProductIdsAttribute(entry)} aria-label="Read lore for ${escapeHtml(entry.title)}"`
+          : "";
+
+        return `
+        <article class="tale-card${storyProduct ? " tale-card--interactive" : ""}"${cardAttributes}>
+          <p class="tale-card__category">${escapeHtml(entry.category)}</p>
           <h3>${escapeHtml(entry.title)}</h3>
           <p>${escapeHtml(entry.excerpt)}</p>
-          <div class="field-note-card__actions">
+          <div class="tale-card__actions">
             ${relationshipHtml(entry)}
-            ${storyButtonHtml(entry)}
+            ${storyCueHtml(entry)}
           </div>
         </article>
-      `,
+      `;
+      },
     )
     .join("");
 }
@@ -263,7 +257,7 @@ function reportValidationIssues() {
 reportValidationIssues();
 renderHero();
 renderWorldIntro();
-renderFieldNotes();
+renderLoreFromEdge();
 renderCollections();
 restoreWealdScrollWhenReady();
 

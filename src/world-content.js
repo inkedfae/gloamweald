@@ -9,17 +9,17 @@
   How to edit this hub:
   - Reorder arrays to change display order.
   - Keep every id unique, lowercase, and stable.
-  - Use category values from WORLD_FIELD_NOTE_CATEGORIES.
-  - Link a field note to one or more products with relatedProductIds, or to a
+  - Use category values from WORLD_LORE_FROM_EDGE_CATEGORIES.
+  - Link a lore-from-the-edge entry to one or more products with relatedProductIds, or to a
     collection with relatedCollectionId.
   - Use storyProductId when "Read the story" should open existing product lore.
   - Use hidden: true to keep an entry in the file without showing it.
 
-  FIELD NOTE TEMPLATE — copy this when adding a similar note
+  LORE FROM THE EDGE TEMPLATE — copy this when adding a similar entry
   // {
-  //   id: "short-field-note-id",
+  //   id: "short-lore-entry-id",
   //   category: "Being",
-  //   title: "Field note title",
+  //   title: "Entry title",
   //   excerpt: "A short, explicit excerpt or summary drawn from existing lore.",
   //   storyProductId: "product-id",
   //   storyLabel: "Read the story",
@@ -30,7 +30,7 @@
   // },
 */
 
-export const WORLD_FIELD_NOTE_CATEGORIES = Object.freeze([
+export const WORLD_LORE_FROM_EDGE_CATEGORIES = Object.freeze([
   "Being",
   "Place",
   "Phenomenon",
@@ -56,7 +56,7 @@ export const WORLD_BEGIN_HERE = Object.freeze({
   ]),
 });
 
-export const WORLD_FIELD_NOTES = Object.freeze([
+export const WORLD_LORE_FROM_EDGE = Object.freeze([
   {
     id: "leoma",
     category: "Phenomenon",
@@ -114,7 +114,7 @@ export const WORLD_FIELD_NOTES = Object.freeze([
     category: "Place",
     title: "Placeholder place",
     excerpt:
-      "Placeholder field note for testing a place entry connected to more than one product. Replace this with established place lore when ready.",
+      "Placeholder lore-from-the-edge entry for testing a place connected to more than one product. Replace this with established place lore when ready.",
     storyProductId: "leoma-amulet",
     storyLabel: "Read the story",
     relatedProductIds: ["leoma-amulet", "waymarker-necklace"],
@@ -156,13 +156,13 @@ export function validateWorldContent({ products = [], collections = {} } = {}) {
   const ids = new Set();
   const productIds = new Set(products.map((product) => product.id));
   const collectionIds = new Set(Object.keys(collections));
-  const categories = new Set(WORLD_FIELD_NOTE_CATEGORIES);
+  const categories = new Set(WORLD_LORE_FROM_EDGE_CATEGORIES);
 
-  WORLD_FIELD_NOTES.forEach((entry) => {
-    const label = entry?.id || entry?.title || "Unnamed field note";
+  WORLD_LORE_FROM_EDGE.forEach((entry) => {
+    const label = entry?.id || entry?.title || "Unnamed lore-from-the-edge entry";
 
-    if (!entry?.id) issues.push("A field note is missing an id.");
-    if (ids.has(entry.id)) issues.push(`Duplicate field note id: ${entry.id}`);
+    if (!entry?.id) issues.push("A lore-from-the-edge entry is missing an id.");
+    if (ids.has(entry.id)) issues.push(`Duplicate lore-from-the-edge entry id: ${entry.id}`);
     ids.add(entry.id);
 
     if (!entry?.title) issues.push(`${label} is missing a title.`);
