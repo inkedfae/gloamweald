@@ -2356,6 +2356,23 @@ button.product-photo {
   line-height: 1.48;
 }
 
+.maker-bench-photo {
+  max-width: min(100%, 22rem);
+  margin: 1.75rem 0 1.75rem auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #050605;
+  box-shadow: 0 1rem 2.2rem rgba(0, 0, 0, 0.22);
+}
+
+.maker-bench-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
 .process-section {
   background:
     linear-gradient(rgba(9, 11, 10, 0.88), rgba(9, 11, 10, 0.96)),
@@ -2767,6 +2784,11 @@ footer p {
 
   .process-list h3 {
     margin-top: 2rem;
+  }
+
+  .maker-bench-photo {
+    max-width: min(100%, 18rem);
+    margin-right: auto;
   }
 
   .lore-section,
