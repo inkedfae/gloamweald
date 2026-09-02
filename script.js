@@ -89,8 +89,16 @@
         type="button"
         data-lore-open="${escapeHtml(product.id)}"
         aria-label="Read lore for ${escapeHtml(product.name)}"
-      ><span aria-hidden="true">~ LORE ~</span></button>
+      >
+        <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
+      </button>
     `;
+  }
+
+  function productComponentList(product) {
+    const components = [...(product?.components || [])];
+    if (productHasLore(product) && !components.includes("lore")) components.push("lore");
+    return components;
   }
 
   function loreTextHtml(lore) {
@@ -106,6 +114,27 @@
     const color = String(value || "").trim();
     if (!color || /[;{}<>]/.test(color)) return "";
     return color;
+  }
+
+  function productThumbnailMarkup(product) {
+    const image = product?.images?.[0];
+    return image
+      ? `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" />`
+      : `<span class="lore-dialog__product-thumbnail-placeholder" aria-hidden="true">No image yet</span>`;
+  }
+
+  function loreRelatedProductHtml(product) {
+    return `
+      <a
+        class="lore-dialog__product-link"
+        href="${escapeHtml(productUrl(product))}"
+        data-product-link
+        data-product-id="${escapeHtml(product.id)}"
+      >
+        <span class="lore-dialog__product-thumbnail">${productThumbnailMarkup(product)}</span>
+        <span class="lore-dialog__product-name">${escapeHtml(product.name)}</span>
+      </a>
+    `;
   }
 
   function readCart() {
@@ -387,7 +416,8 @@
   }
 
   function productCard(product) {
-    const componentTags = product.components
+    const components = productComponentList(product);
+    const componentTags = components
       .map((component) => `<span>${escapeHtml(component)}</span>`)
       .join("");
     const collection = product.collection ? collections[product.collection] : null;
@@ -405,7 +435,7 @@
         data-product-slug="${escapeHtml(productSlug(product))}"
         data-type="${escapeHtml(product.type)}"
         data-collection="${escapeHtml(product.collection || "")}"
-        data-components="${escapeHtml(product.components.join(" "))}"
+        data-components="${escapeHtml(components.join(" "))}"
         data-price-value="${price === null ? "" : escapeHtml(String(price))}"
         data-orderable="${product.orderable ? "true" : "false"}"
         data-made-to-order="${madeToOrder ? "true" : "false"}"
@@ -516,6 +546,7 @@
       "beforeend",
       `
         <dialog class="lore-dialog" id="product-lore-dialog" aria-labelledby="product-lore-title" aria-describedby="product-lore-copy">
+          <aside class="lore-dialog__related-products" data-lore-related-panel hidden></aside>
           <div class="lore-dialog__panel" data-lore-panel>
             <button class="lore-dialog__close" type="button" data-lore-close aria-label="Close lore">
               <span aria-hidden="true">&times;</span>
@@ -530,6 +561,9 @@
             <div class="lore-dialog__scroll" tabindex="0" data-lore-scroll>
               <div class="lore-dialog__copy" id="product-lore-copy" data-lore-copy></div>
             </div>
+            <p class="lore-dialog__weald-link">
+              <a href="weald.html">Read more about the Gloamweald</a>
+            </p>
           </div>
         </dialog>
       `,
@@ -548,6 +582,7 @@
     scrollX: 0,
     scrollY: 0,
   };
+  let productLoreGlowTimer = null;
 
   function lightboxElements() {
     return {
@@ -567,6 +602,7 @@
       copy: document.querySelector("[data-lore-copy]"),
       scroll: document.querySelector("[data-lore-scroll]"),
       close: document.querySelector("[data-lore-close]"),
+      relatedProducts: document.querySelector("[data-lore-related-panel]"),
     };
   }
 
@@ -588,6 +624,35 @@
       element.focus({ preventScroll: true });
     } catch {
       element.focus();
+    }
+  }
+
+  function triggerProductLoreGlow(target = document.querySelector("#lore")) {
+    if (!target) return;
+    window.clearTimeout(productLoreGlowTimer);
+    target.classList.remove("is-lore-glowing");
+    void target.offsetWidth;
+    target.classList.add("is-lore-glowing");
+    productLoreGlowTimer = window.setTimeout(() => {
+      target.classList.remove("is-lore-glowing");
+    }, 520);
+  }
+
+  function scrollToProductLore() {
+    const target = document.querySelector("#lore");
+    if (!target) return;
+
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    target.scrollIntoView({
+      block: "start",
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+    triggerProductLoreGlow(target);
+
+    try {
+      history.replaceState(null, "", `${location.pathname}${location.search}#lore`);
+    } catch {
+      /* Keep the visual behavior even if history cannot be updated. */
     }
   }
 
@@ -637,6 +702,44 @@
     } else {
       dialog.style.removeProperty("--lore-accent-pale");
     }
+  }
+
+  function relatedProductsForLoreOpener(opener) {
+    const ids = String(opener?.dataset?.loreRelatedProducts || "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    const seen = new Set();
+    return ids
+      .map((id) => productById(id))
+      .filter((product) => {
+        if (!product || seen.has(product.id)) return false;
+        seen.add(product.id);
+        return true;
+      });
+  }
+
+  function renderLoreRelatedProducts(opener) {
+    const { dialog, relatedProducts } = loreElements();
+    if (!relatedProducts) return;
+
+    const related = relatedProductsForLoreOpener(opener);
+    if (!related.length) {
+      relatedProducts.hidden = true;
+      relatedProducts.innerHTML = "";
+      dialog?.classList.remove("lore-dialog--with-related-products");
+      return;
+    }
+
+    relatedProducts.hidden = false;
+    relatedProducts.innerHTML = `
+      <p class="lore-dialog__related-title">${related.length > 1 ? "Related pieces" : "Related piece"}</p>
+      <div class="lore-dialog__related-list">
+        ${related.map(loreRelatedProductHtml).join("")}
+      </div>
+    `;
+    dialog?.classList.add("lore-dialog--with-related-products");
   }
 
   function lightboxIndex(track) {
@@ -715,6 +818,7 @@
     loreState.opener = opener || null;
     setLoreScale(1);
     applyLoreTheme(product);
+    renderLoreRelatedProducts(opener);
     title.innerHTML = escapeHtml(product.name);
     copy.innerHTML = loreTextHtml(product.lore);
     if (scroll) scroll.scrollTop = 0;
@@ -763,12 +867,17 @@
   }
 
   function cleanupLore() {
-    const { title, copy, dialog } = loreElements();
+    const { title, copy, dialog, relatedProducts } = loreElements();
     const scrollX = loreState.scrollX;
     const scrollY = loreState.scrollY;
     document.documentElement.classList.remove("lightbox-open");
     if (title) title.textContent = "";
     if (copy) copy.innerHTML = "";
+    if (relatedProducts) {
+      relatedProducts.hidden = true;
+      relatedProducts.innerHTML = "";
+    }
+    dialog?.classList.remove("lore-dialog--with-related-products");
     dialog?.style.removeProperty("--lore-text-scale");
     dialog?.style.removeProperty("--lore-accent");
     dialog?.style.removeProperty("--lore-glow");
@@ -873,11 +982,29 @@
     if (!filterButtons.length || !shopProducts.length || !status || !clearButton || !emptyState) return;
 
     const params = new URLSearchParams(location.search);
+    const validValuesByGroup = filterButtons.reduce((groups, button) => {
+      const { filterGroup, filterValue } = button.dataset;
+      if (!filterGroup || !filterValue || filterValue === "all") return groups;
+      if (!groups.has(filterGroup)) groups.set(filterGroup, new Set());
+      groups.get(filterGroup).add(filterValue);
+      return groups;
+    }, new Map());
     const selected = {
-      type: params.get("type") || "all",
-      component: params.get("component") || "all",
+      type: selectedValuesFromParams("type"),
+      component: selectedValuesFromParams("component"),
     };
     const defaultOrder = new Map(shopProducts.map((product, index) => [product, index]));
+
+    function selectedValuesFromParams(group) {
+      const validValues = validValuesByGroup.get(group) || new Set();
+      return new Set(
+        params
+          .getAll(group)
+          .flatMap((value) => value.split(","))
+          .map((value) => value.trim())
+          .filter((value) => value && value !== "all" && validValues.has(value)),
+      );
+    }
 
     function productSortPrice(card) {
       const rawPrice = card.dataset.priceValue;
@@ -942,23 +1069,45 @@
       shopGrid.append(...sortedProducts);
     }
 
-    function setPressedState(group, value) {
-      const hasMatchingButton = filterButtons.some(
-        (button) => button.dataset.filterGroup === group && button.dataset.filterValue === value,
-      );
-      const safeValue = hasMatchingButton ? value : "all";
-      selected[group] = safeValue;
+    function selectedValuesInButtonOrder(group) {
+      const selectedValues = selected[group] || new Set();
+      return filterButtons
+        .filter((button) => button.dataset.filterGroup === group && button.dataset.filterValue !== "all")
+        .map((button) => button.dataset.filterValue)
+        .filter((value) => selectedValues.has(value));
+    }
+
+    function setPressedState(group) {
+      const selectedValues = selected[group] || new Set();
       filterButtons
         .filter((button) => button.dataset.filterGroup === group)
         .forEach((button) => {
-          button.setAttribute("aria-pressed", String(button.dataset.filterValue === safeValue));
+          const { filterValue } = button.dataset;
+          const isPressed = filterValue === "all" ? selectedValues.size === 0 : selectedValues.has(filterValue);
+          button.setAttribute("aria-pressed", String(isPressed));
         });
+    }
+
+    function toggleFilter(group, value) {
+      if (!(selected[group] instanceof Set)) selected[group] = new Set();
+
+      if (value === "all") {
+        selected[group].clear();
+      } else if (selected[group].has(value)) {
+        selected[group].delete(value);
+      } else {
+        selected[group].add(value);
+      }
+
+      setPressedState(group);
     }
 
     function updateShopUrl() {
       const next = new URLSearchParams(location.search);
-      selected.type === "all" ? next.delete("type") : next.set("type", selected.type);
-      selected.component === "all" ? next.delete("component") : next.set("component", selected.component);
+      const selectedTypes = selectedValuesInButtonOrder("type");
+      const selectedComponents = selectedValuesInButtonOrder("component");
+      selectedTypes.length ? next.set("type", selectedTypes.join(",")) : next.delete("type");
+      selectedComponents.length ? next.set("component", selectedComponents.join(",")) : next.delete("component");
       sortSelect?.value && sortSelect.value !== "default" ? next.set("sort", sortSelect.value) : next.delete("sort");
       const query = next.toString();
       history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
@@ -970,10 +1119,12 @@
 
       shopProducts.forEach((product) => {
         const components = product.dataset.components.split(/\s+/).filter(Boolean);
+        const selectedTypes = selected.type;
+        const selectedComponents = selected.component;
         const matchesType =
-          selected.type === "all" || product.dataset.type === selected.type;
+          selectedTypes.size === 0 || selectedTypes.has(product.dataset.type);
         const matchesComponent =
-          selected.component === "all" || components.includes(selected.component);
+          selectedComponents.size === 0 || components.some((component) => selectedComponents.has(component));
         const matchesAvailability = !availabilityOnly || product.dataset.orderable === "true";
         const isVisible = matchesType && matchesComponent && matchesAvailability;
 
@@ -982,7 +1133,7 @@
       });
 
       const filtersAreClear =
-        selected.type === "all" && selected.component === "all";
+        selected.type.size === 0 && selected.component.size === 0;
       const productSetIsClear = filtersAreClear && !availabilityOnly;
 
       clearButton.hidden = filtersAreClear;
@@ -997,18 +1148,17 @@
     filterButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const { filterGroup, filterValue } = button.dataset;
-        selected[filterGroup] = filterValue;
-        setPressedState(filterGroup, filterValue);
+        toggleFilter(filterGroup, filterValue);
         updateShopUrl();
         updateProducts();
       });
     });
 
     clearButton.addEventListener("click", () => {
-      selected.type = "all";
-      selected.component = "all";
-      setPressedState("type", "all");
-      setPressedState("component", "all");
+      selected.type.clear();
+      selected.component.clear();
+      setPressedState("type");
+      setPressedState("component");
       updateShopUrl();
       updateProducts();
     });
@@ -1019,8 +1169,8 @@
       updateProducts();
     });
 
-    setPressedState("type", selected.type);
-    setPressedState("component", selected.component);
+    setPressedState("type");
+    setPressedState("component");
     if (sortSelect) {
       const requestedSort = params.get("sort") || "default";
       sortSelect.value = [...sortSelect.options].some((option) => option.value === requestedSort)
@@ -1151,12 +1301,49 @@
 
   function productLoreSection(product) {
     if (!productHasLore(product)) return "";
+    const accent = loreCssValue(product.loreAccent);
+    const glow = loreCssValue(product.loreGlow);
+    const accentPale = loreCssValue(product.loreAccentPale);
+    const style = [
+      accent ? `--lore-accent: ${accent}` : "",
+      glow ? `--lore-glow: ${glow}` : "",
+      accentPale ? `--lore-accent-pale: ${accentPale}` : "",
+    ].filter(Boolean).join("; ");
+
     return `
-      <section class="product-page-lore" aria-labelledby="product-page-lore-title">
+      <section
+        class="product-page-lore"
+        id="lore"
+        tabindex="-1"
+        aria-labelledby="product-page-lore-title"
+        ${style ? `style="${escapeHtml(style)}"` : ""}
+      >
         <p class="eyebrow">From the Gloamweald</p>
         <h2 id="product-page-lore-title">Lore</h2>
         <div class="product-page-lore__copy">${loreTextHtml(product.lore)}</div>
       </section>
+    `;
+  }
+
+  function productLoreTeaser(product) {
+    if (!productHasLore(product)) return "";
+
+    return `
+      <aside class="product-lore-teaser" aria-labelledby="product-lore-teaser-title">
+        <p class="eyebrow">From the Gloamweald</p>
+        <h2 id="product-lore-teaser-title">A story lives with this piece.</h2>
+        <div class="product-lore-teaser__actions">
+          <a
+            class="lore-button lore-button--inline"
+            href="#lore"
+            data-product-lore-jump
+            aria-label="Jump to lore for ${escapeHtml(product.name)}"
+          >
+            <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
+          </a>
+          <a class="quiet-button" href="weald.html">More about the Gloamweald</a>
+        </div>
+      </aside>
     `;
   }
 
@@ -1593,20 +1780,27 @@
     root.innerHTML = `
       <section class="section product-page">
         <a class="quiet-button product-back-link" href="${escapeHtml(continueShoppingUrl(product))}" data-continue-shopping>Continue shopping</a>
-        <div class="product-page-layout">
-          <div class="product-page__media">
-            ${renderProductPageGallery(product)}
+        <div class="product-page-layout${productHasLore(product) ? " product-page-layout--has-lore" : ""}">
+          <div class="product-page__media-stack">
+            <div class="product-page__media">
+              ${renderProductPageGallery(product)}
+            </div>
+            ${productLoreSection(product)}
           </div>
-          <div class="product-page__info">
-            <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
-            <h1>${escapeHtml(product.name)}</h1>
-            <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
-            <p>${escapeHtml(product.description)}</p>
-            ${renderProductSpecs(product)}
-            ${renderCustomisationForm(product)}
+          <div class="product-page__details">
+            <div class="product-page__heading">
+              <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
+              <h1>${escapeHtml(product.name)}</h1>
+            </div>
+            <div class="product-page__info">
+              <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
+              <p>${escapeHtml(product.description)}</p>
+              ${renderProductSpecs(product)}
+              ${productLoreTeaser(product)}
+              ${renderCustomisationForm(product)}
+            </div>
           </div>
         </div>
-        ${productLoreSection(product)}
       </section>
     `;
 
@@ -1615,6 +1809,9 @@
       updateProductPurchaseForm(form);
     });
     initialiseProductGalleries();
+    if (location.hash === "#lore") {
+      requestAnimationFrame(scrollToProductLore);
+    }
   }
 
   function installAddToCartDialog() {
@@ -1843,6 +2040,17 @@
       return;
     }
 
+    const productLoreJump = event.target.closest("[data-product-lore-jump]");
+    if (productLoreJump) {
+      event.preventDefault();
+      scrollToProductLore();
+      return;
+    }
+
+    if (event.target.closest("[data-lore-card-link]")) {
+      return;
+    }
+
     const loreButton = event.target.closest("[data-lore-open]");
     if (loreButton) {
       openLore(loreButton.dataset.loreOpen, loreButton);
@@ -1918,6 +2126,19 @@
       closeAddToCartDialog();
       window.location.assign(url);
     }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || (event.key !== "Enter" && event.key !== " ")) return;
+
+    const loreTrigger = event.target.closest('[data-lore-open][role="button"]');
+    if (!loreTrigger) return;
+
+    const nestedInteractive = event.target.closest("a, button, input, select, textarea, summary");
+    if (nestedInteractive && nestedInteractive !== loreTrigger) return;
+
+    event.preventDefault();
+    openLore(loreTrigger.dataset.loreOpen, loreTrigger);
   });
 
   document.addEventListener("change", (event) => {

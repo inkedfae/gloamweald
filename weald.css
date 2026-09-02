@@ -1,0 +1,385 @@
+.weald-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.58fr);
+  min-height: clamp(28rem, 76svh, 45rem);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
+  padding: clamp(3.5rem, 7vw, 6rem) max(1.25rem, calc((100vw - var(--content)) / 2)) clamp(2rem, 4vw, 3.5rem);
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 78% 20%, rgba(125, 38, 48, 0.18), transparent 23rem),
+    radial-gradient(circle at 18% 68%, rgba(89, 98, 75, 0.18), transparent 19rem),
+    linear-gradient(145deg, rgba(20, 23, 20, 0.78), rgba(9, 11, 10, 0.97));
+}
+
+.weald-hero__copy {
+  max-width: 46rem;
+}
+
+.weald-hero h1 {
+  max-width: min(100%, 11ch);
+  margin: 0;
+  color: var(--bone);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 0.86;
+  text-wrap: balance;
+}
+
+.weald-hero__copy > p:not(.eyebrow) {
+  max-width: 44rem;
+  margin: 1.2rem 0 0;
+  color: var(--bone-dim);
+  font-size: clamp(1rem, 1.55vw, 1.22rem);
+  line-height: 1.75;
+}
+
+.weald-hero__image {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.weald-hero__image::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(9, 11, 10, 0.08), rgba(9, 11, 10, 0.45)),
+    radial-gradient(circle at 70% 10%, transparent, rgba(9, 11, 10, 0.46));
+  content: "";
+  pointer-events: none;
+}
+
+.weald-hero__image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.weald-jump-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: clamp(1.5rem, 4vw, 2.4rem);
+}
+
+.weald-jump-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--line);
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.weald-jump-nav a:hover,
+.weald-jump-nav a:focus-visible {
+  border-color: var(--blood-bright);
+  color: var(--bone);
+  background: rgba(161, 57, 69, 0.12);
+}
+
+.weald-section {
+  scroll-margin-top: 7rem;
+}
+
+.weald-reading {
+  display: grid;
+  width: min(100%, 58rem);
+  gap: 0.75rem;
+  color: var(--bone-dim);
+}
+
+.weald-reading p {
+  margin: 0;
+}
+
+.weald-book__hint {
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.weald-book__spread {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: clamp(20rem, 38vw, 24rem);
+  gap: 1px;
+  padding: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(229, 221, 202, 0.15);
+  background:
+    linear-gradient(90deg, rgba(229, 221, 202, 0.1), rgba(229, 221, 202, 0.02) 48%, rgba(0, 0, 0, 0.55) 50%, rgba(229, 221, 202, 0.02) 52%, rgba(229, 221, 202, 0.1)),
+    var(--line);
+  box-shadow: 0 1.3rem 2.8rem rgba(0, 0, 0, 0.28);
+}
+
+.weald-book__page {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: clamp(1rem, 2.4vw, 1.7rem);
+  border: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(174, 185, 180, 0.07), transparent 14rem),
+    linear-gradient(135deg, rgba(27, 30, 27, 0.96), rgba(14, 16, 15, 0.98));
+  color: var(--bone-dim);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.weald-book__page--left {
+  box-shadow: inset -0.85rem 0 1.5rem rgba(0, 0, 0, 0.24);
+}
+
+.weald-book__page--right {
+  box-shadow: inset 0.85rem 0 1.5rem rgba(0, 0, 0, 0.24);
+}
+
+.weald-book__page:not(:disabled):hover,
+.weald-book__page:not(:disabled):focus-visible {
+  background:
+    radial-gradient(circle at 30% 0%, rgba(174, 185, 180, 0.1), transparent 14rem),
+    linear-gradient(135deg, rgba(31, 35, 31, 0.98), rgba(16, 18, 17, 0.99));
+  outline: 1px solid rgba(229, 221, 202, 0.22);
+  outline-offset: -1px;
+}
+
+.weald-book__page:disabled {
+  cursor: default;
+}
+
+.weald-book__page--blank {
+  cursor: default;
+}
+
+.weald-book__copy {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.35rem 0.45rem 0;
+  scrollbar-gutter: stable;
+  font-size: clamp(0.92rem, 1.2vw, 1.04rem);
+  line-height: 1.58;
+}
+
+.weald-book__number {
+  justify-self: end;
+  margin-top: 0.7rem;
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.tale-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  padding: 1px;
+  background: var(--line);
+}
+
+.tale-card {
+  display: flex;
+  min-height: 21rem;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(1.15rem, 2.5vw, 1.75rem);
+  border: 1px solid transparent;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(174, 185, 180, 0.1), transparent 11rem),
+    rgba(20, 23, 20, 0.86);
+  color: var(--bone-dim);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.tale-card--interactive {
+  cursor: pointer;
+}
+
+.tale-card--interactive:hover,
+.tale-card--interactive:focus-visible {
+  border-color: rgba(229, 221, 202, 0.18);
+  background-color: rgba(20, 23, 20, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(9, 11, 10, 0.55),
+    inset 0 0.6rem 1.6rem rgba(0, 0, 0, 0.24);
+  transform: translateY(1px);
+  outline: none;
+}
+
+.tale-card--interactive:active {
+  transform: translateY(2px);
+}
+
+.tale-card__category {
+  margin: 0 0 1.4rem;
+  color: var(--blood-bright);
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.tale-card h3 {
+  margin: 0 0 0.85rem;
+  color: var(--bone);
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.tale-card p {
+  line-height: 1.65;
+}
+
+.tale-card > p:not(.tale-card__category) {
+  margin: 0;
+}
+
+.tale-card__relationship {
+  display: grid;
+  gap: 0.75rem;
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.tale-card__relationship-title {
+  margin: 0;
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tale-card__relationship a {
+  color: var(--bone);
+  text-underline-offset: 0.22em;
+}
+
+.tale-card__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: end;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.tale-card__product-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
+}
+
+.tale-card__product-link {
+  position: relative;
+  z-index: 1;
+  color: var(--bone);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-underline-offset: 0.24em;
+  text-transform: uppercase;
+}
+
+.tale-card__product-link:hover,
+.tale-card__product-link:focus-visible {
+  color: var(--blood-bright);
+}
+
+@media (max-width: 1040px) {
+  .weald-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .weald-hero__image {
+    max-width: 24rem;
+  }
+
+  .tale-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .weald-hero {
+    min-height: auto;
+    padding-top: 2.75rem;
+  }
+
+  .weald-hero h1 {
+    font-size: clamp(2.65rem, 18vw, 4rem);
+    line-height: 0.92;
+  }
+
+  .weald-jump-nav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .weald-jump-nav a {
+    justify-content: center;
+  }
+
+  .weald-book__spread {
+    height: clamp(20rem, 88vw, 24rem);
+  }
+
+  .weald-book__page {
+    padding: 0.9rem;
+  }
+
+  .weald-book__copy {
+    gap: 0.7rem;
+    font-size: clamp(0.72rem, 3vw, 0.86rem);
+    line-height: 1.48;
+  }
+
+  .tale-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tale-card {
+    min-height: 0;
+  }
+
+  .tale-card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

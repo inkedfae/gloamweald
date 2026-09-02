@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Weald | Gloamweald</title>
+  <meta name="description" content="Enter the Gloamweald: tales, beings, and collections from the world behind the work." />
+  <meta name="theme-color" content="#090b0a" />
+  <link rel="icon" href="assets/images/many-eyed-raven-logo.jpg" type="image/jpeg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="lore.css" />
+  <link rel="stylesheet" href="weald.css" />
+  <script src="products.js" defer></script>
+  <script src="script.js" defer></script>
+  <script type="module" src="weald.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Gloamweald home">
+      <img class="brand-mark" src="assets/images/many-eyed-raven-logo.jpg" alt="" width="48" height="48" />
+      <span><strong>Gloamweald</strong><small>Chainmail for the contemporary changeling</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="shop.html">Shop</a>
+      <a href="weald.html" aria-current="page">The Weald</a>
+      <a href="about.html">The maker</a>
+      <a href="care.html">Care</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <header class="weald-hero" data-weald-hero></header>
+
+    <noscript>
+      <section class="section">
+        <p class="eyebrow">The world behind the work</p>
+        <h1>Enter the Gloamweald.</h1>
+        <p>JavaScript is needed to display the full Weald hub. You can still browse the shop and collection pages directly.</p>
+        <p><a class="button button--solid" href="shop.html">Enter the shop</a></p>
+      </section>
+    </noscript>
+
+    <section class="section weald-section weald-section--world" id="the-world" aria-labelledby="the-world-title" data-weald-world></section>
+
+    <section class="section weald-section weald-section--notes" id="tales-and-beings" aria-labelledby="lore-from-edge-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Tales &amp; Beings</p>
+          <h2 id="lore-from-edge-title">Lore from the edge.</h2>
+        </div>
+        <p>
+          Short entries gathered from existing Gloamweald lore. Each tale card points
+          back to the product or collection where its full story belongs. To browse
+          only pieces with lore, use the <a href="shop.html?component=lore">Lore component</a>
+          in the shop filters.
+        </p>
+      </div>
+      <div class="tale-card-grid" data-lore-from-edge></div>
+    </section>
+
+    <section class="section collections-section weald-section" id="collections" aria-labelledby="weald-collections-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Collections</p>
+          <h2 id="weald-collections-title">Current collections.</h2>
+        </div>
+        <p>
+          Collections are small groups made for a shared story, place, or omen.
+          More collections can be added here as the Weald grows.
+        </p>
+      </div>
+      <div class="collection-grid" data-weald-collections></div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="footer-brand" href="index.html">Gloamweald</a>
+    <p>Handmade chainmail jewellery &amp; accessories · Brisbane, Australia</p>
+    <p>© 2026 Gloamweald</p>
+  </footer>
+</body>
+</html>

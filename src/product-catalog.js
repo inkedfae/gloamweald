@@ -282,10 +282,6 @@ export const WALLET_CHAIN_PENDANT_OPTIONS = Object.freeze({
 });
 
 export const GLOAMWEALD_COLLECTIONS = Object.freeze({
-  classics: {
-    name: "Classics",
-    url: "collection-classics.html",
-  },
   morrigan: {
     name: "The Morrigan",
     url: "collection-morrigan.html",
@@ -356,7 +352,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Half Persian Bracelet - Mid-build",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 1,
       currency: CATALOG_CURRENCY,
@@ -529,7 +525,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Chainmaille Cuff - Mid-build",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 1,
       currency: CATALOG_CURRENCY,
@@ -572,7 +568,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Half Persian Necklace - Mid-build",
     type: "necklaces",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 1,
       currency: CATALOG_CURRENCY,
@@ -618,7 +614,7 @@ export const GLOAMWEALD_PRODUCTS = Object.freeze([
     name: "Full Persian Necklace",
     type: "necklaces",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: 1,
       currency: CATALOG_CURRENCY,
@@ -882,7 +878,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     name: "Half Persian Bracelet - Light-build",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: null,
       label: "Price to be confirmed",
@@ -925,7 +921,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     name: "Half Persian Bracelet - Heavy-build",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: null,
       label: "Price to be confirmed",
@@ -1144,7 +1140,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     name: "Chainmaille Cuff - Light-build",
     type: "bracelets",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: null,
       label: "Price to be confirmed",
@@ -1232,7 +1228,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     name: "Half Persian Necklace - Light-build",
     type: "necklaces",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: null,
       label: "Price to be confirmed",
@@ -1426,7 +1422,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     name: "Chainmaille Necklace - Light-build",
     type: "necklaces",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: null,
       label: "Price to be confirmed",
@@ -1472,7 +1468,7 @@ And it is still said, all these centuries later, that those with a stubborn, det
     name: "Chainmaille Necklace - Mid-build",
     type: "necklaces",
     components: [],
-    collection: "classics",
+    collection: null,
     price: {
       amount: null,
       label: "Price to be confirmed",
