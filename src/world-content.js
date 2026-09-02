@@ -10,13 +10,10 @@
   - Reorder arrays to change display order.
   - Keep every id unique, lowercase, and stable.
   - Use category values from WORLD_FIELD_NOTE_CATEGORIES.
-  - Link a field note to a product with relatedProductId, or to a collection
-    with relatedCollectionId.
+  - Link a field note to one or more products with relatedProductIds, or to a
+    collection with relatedCollectionId.
+  - Use storyProductId when "Read the story" should open existing product lore.
   - Use hidden: true to keep an entry in the file without showing it.
-  - Use featuredRelic: true only for lore-bearing products that should appear
-    in the "Relics from the shop" section.
-  - storyHref should point to the authoritative story location, usually a
-    product page #lore anchor or an existing collection page.
 
   FIELD NOTE TEMPLATE — copy this when adding a similar note
   // {
@@ -24,12 +21,11 @@
   //   category: "Being",
   //   title: "Field note title",
   //   excerpt: "A short, explicit excerpt or summary drawn from existing lore.",
-  //   storyHref: "product.html?product=product-slug#lore",
+  //   storyProductId: "product-id",
   //   storyLabel: "Read the story",
-  //   relatedProductId: "product-id",
+  //   relatedProductIds: ["product-id"],
   //   relatedCollectionId: "",
   //   relationship: "Related product",
-  //   featuredRelic: false,
   //   hidden: false,
   // },
 */
@@ -67,12 +63,11 @@ export const WORLD_FIELD_NOTES = Object.freeze([
     title: "Lēoma",
     excerpt:
       "Wandering lights are sometimes seen between the thick trees, dancing just beyond the path and vanishing whenever pursued. Healers and elders of the old ways are said to coax such light into certain stones.",
-    storyHref: "product.html?product=leoma-amulet#lore",
+    storyProductId: "leoma-amulet",
     storyLabel: "Read the story",
-    relatedProductId: "leoma-amulet",
+    relatedProductIds: ["leoma-amulet"],
     relatedCollectionId: "",
-    relationship: "Related relic",
-    featuredRelic: true,
+    relationship: "Related product",
     hidden: false,
   },
   {
@@ -81,12 +76,11 @@ export const WORLD_FIELD_NOTES = Object.freeze([
     title: "Briar Imps",
     excerpt:
       "Briar imps nest in the thick undergrowth, where thorn-like horns and twisting tails make them easy to mistake for burrs. A bright scrap may earn safe passage; refusal may wake every thorn along the path.",
-    storyHref: "product.html?product=briar-imp-earrings#lore",
+    storyProductId: "briar-imp-earrings",
     storyLabel: "Read the story",
-    relatedProductId: "briar-imp-earrings",
+    relatedProductIds: ["briar-imp-earrings"],
     relatedCollectionId: "",
     relationship: "Related earrings",
-    featuredRelic: true,
     hidden: false,
   },
   {
@@ -95,12 +89,11 @@ export const WORLD_FIELD_NOTES = Object.freeze([
     title: "Old iron waymarkers",
     excerpt:
       "The oldest paths through the Gloamweald were said to be marked by iron rings worked into branches and trunks, each one pointing toward the next before the forest could swallow the way behind you.",
-    storyHref: "product.html?product=waymarker-necklace#lore",
+    storyProductId: "waymarker-necklace",
     storyLabel: "Read the story",
-    relatedProductId: "waymarker-necklace",
+    relatedProductIds: ["waymarker-necklace"],
     relatedCollectionId: "",
     relationship: "Related necklace",
-    featuredRelic: true,
     hidden: false,
   },
   {
@@ -109,12 +102,24 @@ export const WORLD_FIELD_NOTES = Object.freeze([
     title: "The bone chain",
     excerpt:
       "One tale tells of a maiden who vanished into the Gloamweald at dusk and returned after the first snow carrying a chain of unknown little bones. Generations later, steel chains still remember the shape of that story.",
-    storyHref: "product.html?product=bonelink-wallet-chain#lore",
+    storyProductId: "bonelink-wallet-chain",
     storyLabel: "Read the story",
-    relatedProductId: "bonelink-wallet-chain",
+    relatedProductIds: ["bonelink-wallet-chain"],
     relatedCollectionId: "",
     relationship: "Related wallet chain",
-    featuredRelic: true,
+    hidden: false,
+  },
+  {
+    id: "placeholder-place",
+    category: "Place",
+    title: "Placeholder place",
+    excerpt:
+      "Placeholder field note for testing a place entry connected to more than one product. Replace this with established place lore when ready.",
+    storyProductId: "leoma-amulet",
+    storyLabel: "Read the story",
+    relatedProductIds: ["leoma-amulet", "waymarker-necklace"],
+    relatedCollectionId: "",
+    relationship: "Related products",
     hidden: false,
   },
 ]);
@@ -163,10 +168,27 @@ export function validateWorldContent({ products = [], collections = {} } = {}) {
     if (!entry?.title) issues.push(`${label} is missing a title.`);
     if (!categories.has(entry?.category)) issues.push(`${label} uses unknown category ${entry?.category}.`);
     if (!entry?.excerpt) issues.push(`${label} is missing an excerpt.`);
-    if (!entry?.storyHref) issues.push(`${label} is missing a storyHref.`);
+    if (entry?.storyProductId) {
+      const product = products.find((item) => item.id === entry.storyProductId);
+      if (!product) {
+        issues.push(`${label} references missing story product ${entry.storyProductId}.`);
+      } else if (typeof product.lore !== "string" || !product.lore.trim()) {
+        issues.push(`${label} uses story product ${entry.storyProductId}, which has no lore.`);
+      }
+    }
 
     if (entry?.relatedProductId && !productIds.has(entry.relatedProductId)) {
       issues.push(`${label} references missing product ${entry.relatedProductId}.`);
+    }
+
+    if (entry?.relatedProductIds && !Array.isArray(entry.relatedProductIds)) {
+      issues.push(`${label} relatedProductIds must be an array.`);
+    }
+
+    if (Array.isArray(entry?.relatedProductIds)) {
+      entry.relatedProductIds.forEach((productId) => {
+        if (!productIds.has(productId)) issues.push(`${label} references missing product ${productId}.`);
+      });
     }
 
     if (entry?.relatedCollectionId && !collectionIds.has(entry.relatedCollectionId)) {

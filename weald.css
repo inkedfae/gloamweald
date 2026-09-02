@@ -108,8 +108,7 @@
   margin: 0;
 }
 
-.field-note-grid,
-.relic-grid {
+.field-note-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
@@ -117,8 +116,7 @@
   background: var(--line);
 }
 
-.field-note-card,
-.relic-card {
+.field-note-card {
   display: flex;
   min-height: 21rem;
   flex-direction: column;
@@ -140,8 +138,7 @@
   text-transform: uppercase;
 }
 
-.field-note-card h3,
-.relic-card h3 {
+.field-note-card h3 {
   margin: 0 0 0.85rem;
   color: var(--bone);
   font-size: clamp(1.55rem, 3vw, 2.35rem);
@@ -150,22 +147,31 @@
   line-height: 0.98;
 }
 
-.field-note-card p,
-.relic-card p {
+.field-note-card p {
   line-height: 1.65;
 }
 
-.field-note-card > p:not(.field-note-card__category),
-.relic-card > p:not(.eyebrow) {
+.field-note-card > p:not(.field-note-card__category) {
   margin: 0;
 }
 
 .field-note-card__relationship {
-  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
   color: var(--steel);
   font-family: var(--sans);
   font-size: 0.75rem;
   letter-spacing: 0.02em;
+}
+
+.field-note-card__relationship-title {
+  margin: 0;
+  color: var(--steel);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .field-note-card__relationship a {
@@ -173,23 +179,69 @@
   text-underline-offset: 0.22em;
 }
 
-.field-note-card__actions,
-.relic-card__actions {
+.field-note-card__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: end;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.field-note-card__products {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: auto;
-  padding-top: 1.4rem;
+  gap: 0.65rem;
 }
 
-.relic-card {
-  min-height: 19rem;
+.field-note-card__product-link {
+  display: grid;
+  width: 4.8rem;
+  gap: 0.35rem;
+  color: var(--bone-dim);
+  font-family: var(--sans);
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
-.relic-card__actions .button,
-.relic-card__actions .quiet-button,
-.field-note-card__actions .quiet-button {
-  align-self: flex-start;
+.field-note-card__product-link:hover,
+.field-note-card__product-link:focus-visible {
+  color: var(--bone);
+}
+
+.field-note-card__thumbnail {
+  display: grid;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: #050605;
+}
+
+.field-note-card__thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.field-note-card__thumbnail-placeholder {
+  max-width: 3.3rem;
+  color: var(--steel-dark);
+  font-size: 0.5rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.field-note-card__product-name {
+  overflow-wrap: anywhere;
+}
+
+.field-note-card__story-button {
+  flex: 0 0 auto;
 }
 
 @media (max-width: 1040px) {
@@ -201,8 +253,7 @@
     max-width: 24rem;
   }
 
-  .field-note-grid,
-  .relic-grid {
+  .field-note-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -227,13 +278,16 @@
     justify-content: center;
   }
 
-  .field-note-grid,
-  .relic-grid {
+  .field-note-grid {
     grid-template-columns: 1fr;
   }
 
-  .field-note-card,
-  .relic-card {
+  .field-note-card {
     min-height: 0;
+  }
+
+  .field-note-card__actions {
+    flex-direction: column-reverse;
+    align-items: flex-start;
   }
 }

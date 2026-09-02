@@ -42,6 +42,7 @@
   letter-spacing: 0.08em;
   line-height: 1;
   text-align: center;
+  text-decoration: none;
   text-transform: uppercase;
 }
 
@@ -101,6 +102,10 @@
 .lore-button:hover .lore-button__hover,
 .lore-button:focus-visible .lore-button__hover {
   opacity: 1;
+}
+
+.lore-button--inline {
+  flex: 0 0 auto;
 }
 
 .product-actions:not(.product-actions--center) {
@@ -214,7 +219,7 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   max-height: min(86dvh, 48rem);
   padding: clamp(1.15rem, 4vw, 2rem);
   overflow: hidden;
@@ -334,6 +339,28 @@
 
 .lore-dialog__copy p + p {
   margin-top: 1rem;
+}
+
+.lore-dialog__weald-link {
+  margin: 1rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  color: var(--lore-accent-pale);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.lore-dialog__weald-link a {
+  color: inherit;
+  text-underline-offset: 0.3em;
+}
+
+.lore-dialog__weald-link a:hover,
+.lore-dialog__weald-link a:focus-visible {
+  color: var(--bone);
 }
 
 @media (max-width: 680px) {

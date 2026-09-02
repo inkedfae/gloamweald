@@ -4,13 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Weald | Gloamweald</title>
-  <meta name="description" content="Enter the Gloamweald: tales, beings, collections, and wearable lore from the world behind the work." />
+  <meta name="description" content="Enter the Gloamweald: tales, beings, and collections from the world behind the work." />
   <meta name="theme-color" content="#090b0a" />
   <link rel="icon" href="assets/images/many-eyed-raven-logo.jpg" type="image/jpeg" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="layout.css" />
   <link rel="stylesheet" href="lore.css" />
   <link rel="stylesheet" href="weald.css" />
+  <script src="products.js" defer></script>
+  <script src="script.js" defer></script>
   <script type="module" src="weald.js"></script>
 </head>
 <body>
@@ -51,7 +53,9 @@
         </div>
         <p>
           Short entries gathered from existing Gloamweald lore. Each note points
-          back to the product or collection where its full story belongs.
+          back to the product or collection where its full story belongs. To browse
+          only pieces with lore, use the <a href="shop.html?component=lore">Lore component</a>
+          in the shop filters.
         </p>
       </div>
       <div class="field-note-grid" data-field-notes></div>
@@ -61,28 +65,14 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Collections</p>
-          <h2 id="weald-collections-title">Three marked paths.</h2>
+          <h2 id="weald-collections-title">Current collections.</h2>
         </div>
         <p>
           Collections are small groups made for a shared story, place, or omen.
-          These are the three current routes through the Weald.
+          More collections can be added here as the Weald grows.
         </p>
       </div>
       <div class="collection-grid" data-weald-collections></div>
-    </section>
-
-    <section class="section weald-section weald-section--relics" id="relics" aria-labelledby="relics-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Relics from the shop</p>
-          <h2 id="relics-title">Wearable lore.</h2>
-        </div>
-        <p>
-          A few pieces carry stories openly. Read the tale first, or go straight
-          to the product page to inspect the object and its available options.
-        </p>
-      </div>
-      <div class="relic-grid" data-weald-relics></div>
     </section>
   </main>
 

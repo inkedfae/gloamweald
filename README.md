@@ -67,6 +67,10 @@ components: ["bone"]
 components: ["gemstone", "bone"]
 ```
 
+The shop also exposes a generated `Lore` component filter for products that
+already have a `lore` story. Do not add `"lore"` manually to product
+`components`.
+
 Most products should use:
 
 ```js
@@ -86,7 +90,9 @@ collection's page.
 
 World-hub notes, short excerpts, and collection-card metadata live in
 `src/world-content.js`. Product lore itself remains in `src/product-catalog.js`
-on the relevant product object.
+on the relevant product object. Field notes use `storyProductId` to open that
+existing product lore, and `relatedProductIds` to show clickable related-product
+thumbnails.
 
 ## Concept products
 

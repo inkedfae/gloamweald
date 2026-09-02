@@ -96,6 +96,12 @@
     `;
   }
 
+  function productComponentList(product) {
+    const components = [...(product?.components || [])];
+    if (productHasLore(product) && !components.includes("lore")) components.push("lore");
+    return components;
+  }
+
   function loreTextHtml(lore) {
     return String(lore)
       .split(/\n{2,}/)
@@ -390,7 +396,8 @@
   }
 
   function productCard(product) {
-    const componentTags = product.components
+    const components = productComponentList(product);
+    const componentTags = components
       .map((component) => `<span>${escapeHtml(component)}</span>`)
       .join("");
     const collection = product.collection ? collections[product.collection] : null;
@@ -408,7 +415,7 @@
         data-product-slug="${escapeHtml(productSlug(product))}"
         data-type="${escapeHtml(product.type)}"
         data-collection="${escapeHtml(product.collection || "")}"
-        data-components="${escapeHtml(product.components.join(" "))}"
+        data-components="${escapeHtml(components.join(" "))}"
         data-price-value="${price === null ? "" : escapeHtml(String(price))}"
         data-orderable="${product.orderable ? "true" : "false"}"
         data-made-to-order="${madeToOrder ? "true" : "false"}"
@@ -533,6 +540,9 @@
             <div class="lore-dialog__scroll" tabindex="0" data-lore-scroll>
               <div class="lore-dialog__copy" id="product-lore-copy" data-lore-copy></div>
             </div>
+            <p class="lore-dialog__weald-link">
+              <a href="weald.html">Read more about the Gloamweald</a>
+            </p>
           </div>
         </dialog>
       `,
@@ -551,6 +561,7 @@
     scrollX: 0,
     scrollY: 0,
   };
+  let productLoreGlowTimer = null;
 
   function lightboxElements() {
     return {
@@ -591,6 +602,36 @@
       element.focus({ preventScroll: true });
     } catch {
       element.focus();
+    }
+  }
+
+  function triggerProductLoreGlow(target = document.querySelector("#lore")) {
+    if (!target) return;
+    window.clearTimeout(productLoreGlowTimer);
+    target.classList.remove("is-lore-glowing");
+    void target.offsetWidth;
+    target.classList.add("is-lore-glowing");
+    productLoreGlowTimer = window.setTimeout(() => {
+      target.classList.remove("is-lore-glowing");
+    }, 4200);
+  }
+
+  function scrollToProductLore() {
+    const target = document.querySelector("#lore");
+    if (!target) return;
+
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    target.scrollIntoView({
+      block: "start",
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+    focusWithoutScroll(target);
+    triggerProductLoreGlow(target);
+
+    try {
+      history.replaceState(null, "", `${location.pathname}${location.search}#lore`);
+    } catch {
+      /* Keep the visual behavior even if history cannot be updated. */
     }
   }
 
@@ -1154,8 +1195,23 @@
 
   function productLoreSection(product) {
     if (!productHasLore(product)) return "";
+    const accent = loreCssValue(product.loreAccent);
+    const glow = loreCssValue(product.loreGlow);
+    const accentPale = loreCssValue(product.loreAccentPale);
+    const style = [
+      accent ? `--lore-accent: ${accent}` : "",
+      glow ? `--lore-glow: ${glow}` : "",
+      accentPale ? `--lore-accent-pale: ${accentPale}` : "",
+    ].filter(Boolean).join("; ");
+
     return `
-      <section class="product-page-lore" id="lore" aria-labelledby="product-page-lore-title">
+      <section
+        class="product-page-lore"
+        id="lore"
+        tabindex="-1"
+        aria-labelledby="product-page-lore-title"
+        ${style ? `style="${escapeHtml(style)}"` : ""}
+      >
         <p class="eyebrow">From the Gloamweald</p>
         <h2 id="product-page-lore-title">Lore</h2>
         <div class="product-page-lore__copy">${loreTextHtml(product.lore)}</div>
@@ -1170,7 +1226,18 @@
       <aside class="product-lore-teaser" aria-labelledby="product-lore-teaser-title">
         <p class="eyebrow">From the Gloamweald</p>
         <h2 id="product-lore-teaser-title">A story lives with this piece.</h2>
-        <a class="quiet-button" href="#lore">Read the story</a>
+        <div class="product-lore-teaser__actions">
+          <a
+            class="lore-button lore-button--inline"
+            href="#lore"
+            data-product-lore-jump
+            aria-label="Read the story for ${escapeHtml(product.name)}"
+          >
+            <span class="lore-button__label" aria-hidden="true">~ LORE ~</span>
+            <span class="lore-button__hover" aria-hidden="true">Read the story</span>
+          </a>
+          <a class="quiet-button" href="weald.html">More about the Gloamweald</a>
+        </div>
       </aside>
     `;
   }
@@ -1608,21 +1675,23 @@
     root.innerHTML = `
       <section class="section product-page">
         <a class="quiet-button product-back-link" href="${escapeHtml(continueShoppingUrl(product))}" data-continue-shopping>Continue shopping</a>
-        <div class="product-page-layout">
+        <div class="product-page-layout${productHasLore(product) ? " product-page-layout--has-lore" : ""}">
+          <div class="product-page__heading">
+            <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
+            <h1>${escapeHtml(product.name)}</h1>
+          </div>
           <div class="product-page__media">
             ${renderProductPageGallery(product)}
           </div>
           <div class="product-page__info">
-            <p class="eyebrow">${escapeHtml(typeLabels[product.type] || product.type)}</p>
-            <h1>${escapeHtml(product.name)}</h1>
             <p class="price product-page-price">${escapeHtml(productDisplayPrice(product))}</p>
             <p>${escapeHtml(product.description)}</p>
             ${renderProductSpecs(product)}
             ${productLoreTeaser(product)}
             ${renderCustomisationForm(product)}
           </div>
+          ${productLoreSection(product)}
         </div>
-        ${productLoreSection(product)}
       </section>
     `;
 
@@ -1631,6 +1700,9 @@
       updateProductPurchaseForm(form);
     });
     initialiseProductGalleries();
+    if (location.hash === "#lore") {
+      requestAnimationFrame(scrollToProductLore);
+    }
   }
 
   function installAddToCartDialog() {
@@ -1856,6 +1928,13 @@
     const productLink = event.target.closest("[data-product-link]");
     if (productLink) {
       saveCatalogueReturnState();
+      return;
+    }
+
+    const productLoreJump = event.target.closest("[data-product-lore-jump]");
+    if (productLoreJump) {
+      event.preventDefault();
+      scrollToProductLore();
       return;
     }
 

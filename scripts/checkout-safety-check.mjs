@@ -58,6 +58,11 @@ const script = read("script.js");
 const checkoutScript = read("checkout.js");
 const checkoutFrontend = `${script}\n${checkoutScript}`;
 const frontend = frontendText();
+const shopPage = read("shop.html");
+const wealdHtml = read("weald.html");
+const wealdJs = read("weald.js");
+const wealdCss = read("weald.css");
+const worldContent = read("src/world-content.js");
 const checkoutShared = read("src/checkout-shared.js");
 const checkoutOrder = read("src/checkout-order.js");
 const customerEmails = read("src/customer-order-emails.js");
@@ -179,6 +184,32 @@ check(
   worldContentIssues.length
     ? `World content issues: ${worldContentIssues.join("; ")}`
     : "World hub field notes and collection cards reference existing products and collections.",
+);
+
+check(
+  "Weald hub has no Relics section wiring",
+  !/data-weald-relics|weald-section--relics|id="relics"|href="#relics"|renderRelics|featuredRelic|relic-grid|relic-card|Relics from the shop/.test(
+    `${wealdHtml}\n${wealdJs}\n${wealdCss}\n${worldContent}`,
+  ),
+  "The separate Relics section, renderer, jump link, and old featuredRelic hooks are absent from the Weald hub sources.",
+);
+
+check(
+  "shop exposes lore as a generated component filter",
+  shopPage.includes('data-filter-value="lore"') &&
+    script.includes("function productComponentList") &&
+    script.includes('components.includes("lore")') &&
+    !worldContent.includes("featuredRelic"),
+  "The shop has a Lore component filter, and product cards add lore as a virtual component without changing product catalogue components.",
+);
+
+check(
+  "collection pages return to the saved Weald collection position",
+  wealdJs.includes("gloamweald-weald-return") &&
+    ["collection-morrigan.html", "collection-tenebris.html", "collection-wyrms-hoard.html"].every((file) =>
+      read(file).includes('href="weald.html#collections"'),
+    ),
+  "Collection card clicks save the Weald scroll state and collection breadcrumbs return to weald.html#collections.",
 );
 
 check(
