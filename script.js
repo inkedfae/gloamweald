@@ -983,11 +983,29 @@
     if (!filterButtons.length || !shopProducts.length || !status || !clearButton || !emptyState) return;
 
     const params = new URLSearchParams(location.search);
+    const validValuesByGroup = filterButtons.reduce((groups, button) => {
+      const { filterGroup, filterValue } = button.dataset;
+      if (!filterGroup || !filterValue || filterValue === "all") return groups;
+      if (!groups.has(filterGroup)) groups.set(filterGroup, new Set());
+      groups.get(filterGroup).add(filterValue);
+      return groups;
+    }, new Map());
     const selected = {
-      type: params.get("type") || "all",
-      component: params.get("component") || "all",
+      type: selectedValuesFromParams("type"),
+      component: selectedValuesFromParams("component"),
     };
     const defaultOrder = new Map(shopProducts.map((product, index) => [product, index]));
+
+    function selectedValuesFromParams(group) {
+      const validValues = validValuesByGroup.get(group) || new Set();
+      return new Set(
+        params
+          .getAll(group)
+          .flatMap((value) => value.split(","))
+          .map((value) => value.trim())
+          .filter((value) => value && value !== "all" && validValues.has(value)),
+      );
+    }
 
     function productSortPrice(card) {
       const rawPrice = card.dataset.priceValue;
@@ -1052,23 +1070,45 @@
       shopGrid.append(...sortedProducts);
     }
 
-    function setPressedState(group, value) {
-      const hasMatchingButton = filterButtons.some(
-        (button) => button.dataset.filterGroup === group && button.dataset.filterValue === value,
-      );
-      const safeValue = hasMatchingButton ? value : "all";
-      selected[group] = safeValue;
+    function selectedValuesInButtonOrder(group) {
+      const selectedValues = selected[group] || new Set();
+      return filterButtons
+        .filter((button) => button.dataset.filterGroup === group && button.dataset.filterValue !== "all")
+        .map((button) => button.dataset.filterValue)
+        .filter((value) => selectedValues.has(value));
+    }
+
+    function setPressedState(group) {
+      const selectedValues = selected[group] || new Set();
       filterButtons
         .filter((button) => button.dataset.filterGroup === group)
         .forEach((button) => {
-          button.setAttribute("aria-pressed", String(button.dataset.filterValue === safeValue));
+          const { filterValue } = button.dataset;
+          const isPressed = filterValue === "all" ? selectedValues.size === 0 : selectedValues.has(filterValue);
+          button.setAttribute("aria-pressed", String(isPressed));
         });
+    }
+
+    function toggleFilter(group, value) {
+      if (!(selected[group] instanceof Set)) selected[group] = new Set();
+
+      if (value === "all") {
+        selected[group].clear();
+      } else if (selected[group].has(value)) {
+        selected[group].delete(value);
+      } else {
+        selected[group].add(value);
+      }
+
+      setPressedState(group);
     }
 
     function updateShopUrl() {
       const next = new URLSearchParams(location.search);
-      selected.type === "all" ? next.delete("type") : next.set("type", selected.type);
-      selected.component === "all" ? next.delete("component") : next.set("component", selected.component);
+      const selectedTypes = selectedValuesInButtonOrder("type");
+      const selectedComponents = selectedValuesInButtonOrder("component");
+      selectedTypes.length ? next.set("type", selectedTypes.join(",")) : next.delete("type");
+      selectedComponents.length ? next.set("component", selectedComponents.join(",")) : next.delete("component");
       sortSelect?.value && sortSelect.value !== "default" ? next.set("sort", sortSelect.value) : next.delete("sort");
       const query = next.toString();
       history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
@@ -1080,10 +1120,12 @@
 
       shopProducts.forEach((product) => {
         const components = product.dataset.components.split(/\s+/).filter(Boolean);
+        const selectedTypes = selected.type;
+        const selectedComponents = selected.component;
         const matchesType =
-          selected.type === "all" || product.dataset.type === selected.type;
+          selectedTypes.size === 0 || selectedTypes.has(product.dataset.type);
         const matchesComponent =
-          selected.component === "all" || components.includes(selected.component);
+          selectedComponents.size === 0 || components.some((component) => selectedComponents.has(component));
         const matchesAvailability = !availabilityOnly || product.dataset.orderable === "true";
         const isVisible = matchesType && matchesComponent && matchesAvailability;
 
@@ -1092,7 +1134,7 @@
       });
 
       const filtersAreClear =
-        selected.type === "all" && selected.component === "all";
+        selected.type.size === 0 && selected.component.size === 0;
       const productSetIsClear = filtersAreClear && !availabilityOnly;
 
       clearButton.hidden = filtersAreClear;
@@ -1107,18 +1149,17 @@
     filterButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const { filterGroup, filterValue } = button.dataset;
-        selected[filterGroup] = filterValue;
-        setPressedState(filterGroup, filterValue);
+        toggleFilter(filterGroup, filterValue);
         updateShopUrl();
         updateProducts();
       });
     });
 
     clearButton.addEventListener("click", () => {
-      selected.type = "all";
-      selected.component = "all";
-      setPressedState("type", "all");
-      setPressedState("component", "all");
+      selected.type.clear();
+      selected.component.clear();
+      setPressedState("type");
+      setPressedState("component");
       updateShopUrl();
       updateProducts();
     });
@@ -1129,8 +1170,8 @@
       updateProducts();
     });
 
-    setPressedState("type", selected.type);
-    setPressedState("component", selected.component);
+    setPressedState("type");
+    setPressedState("component");
     if (sortSelect) {
       const requestedSort = params.get("sort") || "default";
       sortSelect.value = [...sortSelect.options].some((option) => option.value === requestedSort)

@@ -206,6 +206,19 @@ check(
 );
 
 check(
+  "shop type and component filters support multiple simultaneous selections",
+  script.includes("selectedValuesFromParams") &&
+    script.includes(".getAll(group)") &&
+    script.includes("selected[group].delete(value)") &&
+    script.includes("selected[group].add(value)") &&
+    script.includes('selectedTypes.join(",")') &&
+    script.includes('selectedComponents.join(",")') &&
+    script.includes("selectedTypes.size === 0 || selectedTypes.has(product.dataset.type)") &&
+    script.includes("selectedComponents.size === 0 || components.some((component) => selectedComponents.has(component))"),
+  "Shop type/component filters are Set-backed toggles, support comma-separated URL state, and match selected values as OR within each group.",
+);
+
+check(
   "collection pages return to the saved Weald collection position",
   wealdJs.includes("gloamweald-weald-return") &&
     ["collection-morrigan.html", "collection-tenebris.html", "collection-wyrms-hoard.html"].every((file) =>
@@ -231,6 +244,20 @@ check(
     );
   })(),
   "The Weald uses tale-card naming, card-level lore triggers, and no longer renders related thumbnails or a visible lore cue inside the card.",
+);
+
+check(
+  "Weald Begin here copy renders as a two-page book",
+  worldContent.includes("WORLD_BEGIN_HERE_TEXT") &&
+    wealdJs.includes("WORLD_BOOK_TARGET_CHARACTERS") &&
+    wealdJs.includes("buildWorldBookPages") &&
+    wealdJs.includes("data-weald-book-spread") &&
+    wealdJs.includes("data-weald-book-turn") &&
+    wealdCss.includes(".weald-book__spread") &&
+    wealdCss.includes("grid-template-columns: repeat(2") &&
+    wealdCss.includes("height: clamp(") &&
+    !wealdJs.includes("WORLD_BEGIN_HERE.paragraphs.map((paragraph)"),
+  "The World intro uses the attached long-form copy and keeps it inside a two-visible-page, click-to-turn book layout.",
 );
 
 check(

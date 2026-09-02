@@ -13,7 +13,10 @@ import {
 
 const WEALD_RETURN_STORAGE_KEY = "gloamweald-weald-return";
 const RETURN_STATE_TTL = 1000 * 60 * 60;
+const WORLD_BOOK_TARGET_CHARACTERS = 850;
 const productsById = new Map(GLOAMWEALD_PRODUCTS.map((product) => [product.id, product]));
+const worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
+let worldBookSpreadStart = 0;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -31,6 +34,82 @@ function productPageHref(product, hash = "") {
 
 function productHasLore(product) {
   return typeof product?.lore === "string" && product.lore.trim().length > 0;
+}
+
+function buildWorldBookPages(paragraphs) {
+  const pages = [];
+  let currentPage = [];
+  let currentLength = 0;
+
+  paragraphs.forEach((paragraph) => {
+    const copy = String(paragraph || "").trim();
+    if (!copy) return;
+
+    const nextLength = currentLength + copy.length + (currentPage.length ? 2 : 0);
+    if (currentPage.length && nextLength > WORLD_BOOK_TARGET_CHARACTERS) {
+      pages.push(currentPage);
+      currentPage = [];
+      currentLength = 0;
+    }
+
+    currentPage.push(copy);
+    currentLength += copy.length + (currentPage.length > 1 ? 2 : 0);
+  });
+
+  if (currentPage.length) pages.push(currentPage);
+  return pages.length ? pages : [[]];
+}
+
+function lastWorldBookSpreadStart() {
+  if (worldBookPages.length <= 2) return 0;
+  return worldBookPages.length % 2 === 0 ? worldBookPages.length - 2 : worldBookPages.length - 1;
+}
+
+function renderWorldBookPage(page, pageIndex, side) {
+  if (!page) {
+    return `
+      <div class="weald-book__page weald-book__page--blank" aria-hidden="true">
+        <span class="weald-book__number">&nbsp;</span>
+      </div>
+    `;
+  }
+
+  const turnDirection = side === "left" ? -1 : 1;
+  const disabled =
+    (turnDirection < 0 && worldBookSpreadStart === 0) ||
+    (turnDirection > 0 && worldBookSpreadStart >= lastWorldBookSpreadStart());
+  const label = turnDirection < 0 ? "Turn to previous pages" : "Turn to next pages";
+
+  return `
+    <button
+      type="button"
+      class="weald-book__page weald-book__page--${side}"
+      data-weald-book-turn="${turnDirection}"
+      aria-label="${escapeHtml(label)}"
+      ${disabled ? "disabled" : ""}
+    >
+      <span class="weald-book__copy">
+        ${page.map((paragraph) => `<span>${escapeHtml(paragraph)}</span>`).join("")}
+      </span>
+      <span class="weald-book__number">${pageIndex + 1}/${worldBookPages.length}</span>
+    </button>
+  `;
+}
+
+function renderWorldBookSpread() {
+  const spread = document.querySelector("[data-weald-book-spread]");
+  if (!spread) return;
+
+  spread.innerHTML = `
+    ${renderWorldBookPage(worldBookPages[worldBookSpreadStart], worldBookSpreadStart, "left")}
+    ${renderWorldBookPage(worldBookPages[worldBookSpreadStart + 1], worldBookSpreadStart + 1, "right")}
+  `;
+}
+
+function turnWorldBook(direction) {
+  const nextSpreadStart = worldBookSpreadStart + (direction > 0 ? 2 : -2);
+  worldBookSpreadStart = Math.min(Math.max(nextSpreadStart, 0), lastWorldBookSpreadStart());
+  renderWorldBookSpread();
 }
 
 function relatedProductsForEntry(entry) {
@@ -162,6 +241,7 @@ function renderWorldIntro() {
   const section = document.querySelector("[data-weald-world]");
   if (!section) return;
 
+  worldBookSpreadStart = 0;
   section.innerHTML = `
     <div class="section-heading section-heading--compact">
       <div>
@@ -169,10 +249,12 @@ function renderWorldIntro() {
         <h2 id="the-world-title">${escapeHtml(WORLD_BEGIN_HERE.title)}</h2>
       </div>
     </div>
-    <div class="weald-reading">
-      ${WORLD_BEGIN_HERE.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}
+    <div class="weald-reading weald-book" aria-label="The World book">
+      <p class="weald-book__hint">Click the right page to turn forward, or the left page to turn back.</p>
+      <div class="weald-book__spread" data-weald-book-spread></div>
     </div>
   `;
+  renderWorldBookSpread();
 }
 
 function renderLoreFromEdge() {
@@ -254,6 +336,12 @@ renderCollections();
 restoreWealdScrollWhenReady();
 
 document.addEventListener("click", (event) => {
+  const pageTurn = event.target.closest("[data-weald-book-turn]");
+  if (pageTurn) {
+    turnWorldBook(Number(pageTurn.dataset.wealdBookTurn));
+    return;
+  }
+
   if (event.target.closest("[data-weald-return-link]")) {
     saveWealdReturnState();
   }
