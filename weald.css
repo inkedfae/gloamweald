@@ -118,7 +118,7 @@
 .weald-book__spread {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  height: clamp(38rem, 70vw, 56rem);
+  height: clamp(26rem, 58svh, 34rem);
   gap: 1px;
   padding: 1px;
   overflow: hidden;
@@ -171,13 +171,16 @@
   cursor: default;
 }
 
+.weald-book__page--measure {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .weald-book__copy {
   display: block;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
   padding: 0 0.35rem 0.45rem 0;
-  scrollbar-gutter: stable;
   font-size: clamp(0.92rem, 1.2vw, 1.04rem);
   line-height: 1.58;
   white-space: pre-line;
@@ -356,7 +359,7 @@
   }
 
   .weald-book__spread {
-    height: clamp(38rem, 170vw, 58rem);
+    height: clamp(30rem, 78svh, 36rem);
   }
 
   .weald-book__page {

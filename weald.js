@@ -13,11 +13,12 @@ import {
 
 const WEALD_RETURN_STORAGE_KEY = "gloamweald-weald-return";
 const RETURN_STATE_TTL = 1000 * 60 * 60;
-const WORLD_BOOK_TARGET_CHARACTERS = 1000;
 const WORLD_BOOK_PARAGRAPH_BREAK = "\n\n";
+const WORLD_BOOK_RESIZE_DELAY = 120;
 const productsById = new Map(GLOAMWEALD_PRODUCTS.map((product) => [product.id, product]));
-const worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
+let worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
 let worldBookSpreadStart = 0;
+let worldBookResizeTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -42,35 +43,60 @@ function buildWorldBookPages(paragraphs) {
     .map((paragraph) => String(paragraph || "").trim())
     .filter(Boolean)
     .join(WORLD_BOOK_PARAGRAPH_BREAK);
-  return paginateWorldBookText(copy);
+  return copy ? [copy] : [""];
 }
 
-function paginateWorldBookText(copy) {
+function paginateWorldBookText(copy, measureCopy) {
   const pages = [];
   let remainingCopy = String(copy || "").trim();
 
-  while (remainingCopy.length > WORLD_BOOK_TARGET_CHARACTERS) {
-    const pageBreak = worldBookPageBreakIndex(remainingCopy);
+  while (remainingCopy) {
+    const pageBreak = fittedWorldBookPageBreak(remainingCopy, measureCopy);
     pages.push(cleanWorldBookPage(remainingCopy.slice(0, pageBreak)));
     remainingCopy = cleanWorldBookPage(remainingCopy.slice(pageBreak));
   }
 
-  if (remainingCopy) pages.push(remainingCopy);
   return pages.length ? pages : [""];
 }
 
-function worldBookPageBreakIndex(copy) {
-  const target = Math.min(WORLD_BOOK_TARGET_CHARACTERS, copy.length);
-  const searchFloor = Math.max(1, Math.floor(target * 0.9));
+function fittedWorldBookPageBreak(copy, measureCopy) {
+  if (!measureCopy || textFitsInBookPage(copy, measureCopy)) return copy.length;
 
-  for (let index = target; index >= searchFloor; index -= 1) {
-    if (/\s/.test(copy[index] || "")) {
-      return index + 1;
+  let low = 1;
+  let high = copy.length;
+  let bestFit = 1;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    if (textFitsInBookPage(copy.slice(0, middle), measureCopy)) {
+      bestFit = middle;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
     }
   }
 
-  const nextWhitespaceIndex = copy.slice(target).search(/\s/);
-  return nextWhitespaceIndex >= 0 ? target + nextWhitespaceIndex + 1 : target;
+  let pageBreak = readableWorldBookBreak(copy, bestFit);
+  while (pageBreak > 1 && !textFitsInBookPage(copy.slice(0, pageBreak), measureCopy)) {
+    pageBreak = readableWorldBookBreak(copy, pageBreak - 1);
+  }
+
+  return Math.max(1, pageBreak);
+}
+
+function textFitsInBookPage(copy, measureCopy) {
+  measureCopy.textContent = cleanWorldBookPage(copy);
+  return measureCopy.scrollHeight <= measureCopy.clientHeight + 1;
+}
+
+function readableWorldBookBreak(copy, maxLength) {
+  if (maxLength >= copy.length) return copy.length;
+
+  for (let index = Math.max(0, maxLength - 1); index > 0; index -= 1) {
+    if (/\s/.test(copy[index] || "")) return index + 1;
+  }
+
+  return maxLength;
 }
 
 function cleanWorldBookPage(copy) {
@@ -119,6 +145,49 @@ function renderWorldBookSpread() {
     ${renderWorldBookPage(worldBookPages[worldBookSpreadStart], worldBookSpreadStart, "left")}
     ${renderWorldBookPage(worldBookPages[worldBookSpreadStart + 1], worldBookSpreadStart + 1, "right")}
   `;
+}
+
+function createWorldBookMeasureCopy(spread) {
+  spread.innerHTML = `
+    <button
+      type="button"
+      class="weald-book__page weald-book__page--left weald-book__page--measure"
+      tabindex="-1"
+      disabled
+      aria-hidden="true"
+    >
+      <span class="weald-book__copy" data-world-book-measure></span>
+      <span class="weald-book__number">99/99</span>
+    </button>
+    <button
+      type="button"
+      class="weald-book__page weald-book__page--right weald-book__page--measure"
+      tabindex="-1"
+      disabled
+      aria-hidden="true"
+    >
+      <span class="weald-book__copy"></span>
+      <span class="weald-book__number">99/99</span>
+    </button>
+  `;
+
+  return spread.querySelector("[data-world-book-measure]");
+}
+
+function paginateAndRenderWorldBook() {
+  const spread = document.querySelector("[data-weald-book-spread]");
+  if (!spread) return;
+
+  const measureCopy = createWorldBookMeasureCopy(spread);
+  const sourcePages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
+  worldBookPages = paginateWorldBookText(sourcePages.join(WORLD_BOOK_PARAGRAPH_BREAK), measureCopy);
+  worldBookSpreadStart = Math.min(worldBookSpreadStart, lastWorldBookSpreadStart());
+  renderWorldBookSpread();
+}
+
+function queueWorldBookPagination() {
+  window.clearTimeout(worldBookResizeTimer);
+  worldBookResizeTimer = window.setTimeout(paginateAndRenderWorldBook, WORLD_BOOK_RESIZE_DELAY);
 }
 
 function turnWorldBook(direction) {
@@ -289,7 +358,7 @@ function renderWorldIntro() {
       <div class="weald-book__spread" data-weald-book-spread></div>
     </div>
   `;
-  renderWorldBookSpread();
+  paginateAndRenderWorldBook();
 }
 
 function renderLoreFromEdge() {
@@ -397,3 +466,5 @@ document.addEventListener("click", (event) => {
     saveWealdReturnState();
   }
 });
+
+window.addEventListener("resize", queueWorldBookPagination);
