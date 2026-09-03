@@ -13,7 +13,8 @@ import {
 
 const WEALD_RETURN_STORAGE_KEY = "gloamweald-weald-return";
 const RETURN_STATE_TTL = 1000 * 60 * 60;
-const WORLD_BOOK_TARGET_CHARACTERS = 760;
+const WORLD_BOOK_TARGET_CHARACTERS = 1000;
+const WORLD_BOOK_PARAGRAPH_BREAK = "\n\n";
 const productsById = new Map(GLOAMWEALD_PRODUCTS.map((product) => [product.id, product]));
 const worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
 let worldBookSpreadStart = 0;
@@ -37,78 +38,43 @@ function productHasLore(product) {
 }
 
 function buildWorldBookPages(paragraphs) {
-  const pages = [];
-  let currentPage = [];
-  let currentLength = 0;
-
-  paragraphs.flatMap(splitWorldBookParagraph).forEach((copy) => {
-    const nextLength = currentLength + copy.length + (currentPage.length ? 2 : 0);
-    if (currentPage.length && nextLength > WORLD_BOOK_TARGET_CHARACTERS) {
-      pages.push(currentPage);
-      currentPage = [];
-      currentLength = 0;
-    }
-
-    currentPage.push(copy);
-    currentLength += copy.length + (currentPage.length > 1 ? 2 : 0);
-  });
-
-  if (currentPage.length) pages.push(currentPage);
-  return pages.length ? pages : [[]];
-}
-
-function splitWorldBookParagraph(paragraph) {
-  const copy = String(paragraph || "").trim();
-  if (!copy) return [];
-  if (copy.length <= WORLD_BOOK_TARGET_CHARACTERS) return [copy];
-
-  const sentences = copy.match(/[^.!?]+[.!?]+(?:["”’])?|[^.!?]+$/g) || [copy];
-  const chunks = [];
-  let currentChunk = "";
-
-  sentences
-    .map((sentence) => sentence.trim())
+  const copy = paragraphs
+    .map((paragraph) => String(paragraph || "").trim())
     .filter(Boolean)
-    .forEach((sentence) => {
-      if (sentence.length > WORLD_BOOK_TARGET_CHARACTERS) {
-        if (currentChunk) {
-          chunks.push(currentChunk);
-          currentChunk = "";
-        }
-        chunks.push(...splitWorldBookSentence(sentence));
-        return;
-      }
-
-      const nextChunk = currentChunk ? `${currentChunk} ${sentence}` : sentence;
-      if (nextChunk.length > WORLD_BOOK_TARGET_CHARACTERS) {
-        chunks.push(currentChunk);
-        currentChunk = sentence;
-      } else {
-        currentChunk = nextChunk;
-      }
-    });
-
-  if (currentChunk) chunks.push(currentChunk);
-  return chunks;
+    .join(WORLD_BOOK_PARAGRAPH_BREAK);
+  return paginateWorldBookText(copy);
 }
 
-function splitWorldBookSentence(sentence) {
-  const words = sentence.split(/\s+/).filter(Boolean);
-  const chunks = [];
-  let currentChunk = "";
+function paginateWorldBookText(copy) {
+  const pages = [];
+  let remainingCopy = String(copy || "").trim();
 
-  words.forEach((word) => {
-    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word;
-    if (currentChunk && nextChunk.length > WORLD_BOOK_TARGET_CHARACTERS) {
-      chunks.push(currentChunk);
-      currentChunk = word;
-    } else {
-      currentChunk = nextChunk;
+  while (remainingCopy.length > WORLD_BOOK_TARGET_CHARACTERS) {
+    const pageBreak = worldBookPageBreakIndex(remainingCopy);
+    pages.push(cleanWorldBookPage(remainingCopy.slice(0, pageBreak)));
+    remainingCopy = cleanWorldBookPage(remainingCopy.slice(pageBreak));
+  }
+
+  if (remainingCopy) pages.push(remainingCopy);
+  return pages.length ? pages : [""];
+}
+
+function worldBookPageBreakIndex(copy) {
+  const target = Math.min(WORLD_BOOK_TARGET_CHARACTERS, copy.length);
+  const searchFloor = Math.max(1, Math.floor(target * 0.9));
+
+  for (let index = target; index >= searchFloor; index -= 1) {
+    if (/\s/.test(copy[index] || "")) {
+      return index + 1;
     }
-  });
+  }
 
-  if (currentChunk) chunks.push(currentChunk);
-  return chunks;
+  const nextWhitespaceIndex = copy.slice(target).search(/\s/);
+  return nextWhitespaceIndex >= 0 ? target + nextWhitespaceIndex + 1 : target;
+}
+
+function cleanWorldBookPage(copy) {
+  return String(copy || "").trim();
 }
 
 function lastWorldBookSpreadStart() {
@@ -117,7 +83,7 @@ function lastWorldBookSpreadStart() {
 }
 
 function renderWorldBookPage(page, pageIndex, side) {
-  if (!page) {
+  if (page == null) {
     return `
       <div class="weald-book__page weald-book__page--blank" aria-hidden="true">
         <span class="weald-book__number">&nbsp;</span>
@@ -139,9 +105,7 @@ function renderWorldBookPage(page, pageIndex, side) {
       aria-label="${escapeHtml(label)}"
       ${disabled ? "disabled" : ""}
     >
-      <span class="weald-book__copy">
-        ${page.map((paragraph) => `<span>${escapeHtml(paragraph)}</span>`).join("")}
-      </span>
+      <span class="weald-book__copy">${escapeHtml(page)}</span>
       <span class="weald-book__number">${pageIndex + 1}/${worldBookPages.length}</span>
     </button>
   `;

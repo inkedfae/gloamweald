@@ -249,15 +249,19 @@ check(
 check(
   "Weald Begin here copy renders as a two-page book",
   worldContent.includes("WORLD_BEGIN_HERE_TEXT") &&
-    wealdJs.includes("WORLD_BOOK_TARGET_CHARACTERS = 760") &&
+    wealdJs.includes("WORLD_BOOK_TARGET_CHARACTERS = 1000") &&
     wealdJs.includes("buildWorldBookPages") &&
+    wealdJs.includes("paginateWorldBookText") &&
+    wealdJs.includes("WORLD_BOOK_PARAGRAPH_BREAK") &&
     wealdJs.includes("data-weald-book-spread") &&
     wealdJs.includes("data-weald-book-turn") &&
     wealdCss.includes(".weald-book__spread") &&
     wealdCss.includes("grid-template-columns: repeat(2") &&
-    wealdCss.includes("height: clamp(28rem, 52vw, 38rem)") &&
-    !wealdJs.includes("WORLD_BEGIN_HERE.paragraphs.map((paragraph)"),
-  "The World intro uses the attached long-form copy and keeps it inside a taller two-visible-page, click-to-turn book layout.",
+    wealdCss.includes("height: clamp(38rem, 70vw, 56rem)") &&
+    wealdCss.includes("white-space: pre-line") &&
+    !wealdJs.includes("WORLD_BEGIN_HERE.paragraphs.map((paragraph)") &&
+    !wealdJs.includes("splitWorldBookParagraph"),
+  "The World intro uses the attached long-form copy as one continuous stream inside a taller two-visible-page, click-to-turn book layout.",
 );
 
 check(
