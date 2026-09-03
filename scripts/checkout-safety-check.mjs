@@ -249,15 +249,38 @@ check(
 check(
   "Weald Begin here copy renders as a two-page book",
   worldContent.includes("WORLD_BEGIN_HERE_TEXT") &&
-    wealdJs.includes("WORLD_BOOK_TARGET_CHARACTERS") &&
     wealdJs.includes("buildWorldBookPages") &&
+    wealdJs.includes("paginateWorldBookText") &&
+    wealdJs.includes("fittedWorldBookPageBreak") &&
+    wealdJs.includes("textFitsInBookPage") &&
+    wealdJs.includes("data-world-book-measure") &&
+    wealdJs.includes("WORLD_BOOK_PARAGRAPH_BREAK") &&
     wealdJs.includes("data-weald-book-spread") &&
     wealdJs.includes("data-weald-book-turn") &&
     wealdCss.includes(".weald-book__spread") &&
     wealdCss.includes("grid-template-columns: repeat(2") &&
-    wealdCss.includes("height: clamp(") &&
-    !wealdJs.includes("WORLD_BEGIN_HERE.paragraphs.map((paragraph)"),
-  "The World intro uses the attached long-form copy and keeps it inside a two-visible-page, click-to-turn book layout.",
+    wealdCss.includes("height: clamp(26rem, 58svh, 34rem)") &&
+    wealdCss.includes("overflow: hidden") &&
+    wealdCss.includes("white-space: pre-line") &&
+    !wealdJs.includes("WORLD_BOOK_TARGET_CHARACTERS") &&
+    !wealdJs.includes("WORLD_BEGIN_HERE.paragraphs.map((paragraph)") &&
+    !wealdJs.includes("splitWorldBookParagraph"),
+  "The World intro uses the attached long-form copy as one continuous stream inside a laptop-fit, measured two-visible-page book layout.",
+);
+
+check(
+  "Weald section jump links align sections to the viewport top",
+  wealdJs.includes("scrollTargetToTop") &&
+    wealdJs.includes(".weald-jump-nav a[href^='#']") &&
+    wealdJs.includes("history.pushState"),
+  "The Weald jump nav intercepts in-page section links and scrolls the target section to the top of the viewport.",
+);
+
+check(
+  "Weald tale cards use a consistent related-products label",
+  wealdJs.includes('<p class="tale-card__relationship-title">Related products</p>') &&
+    !/relationship: "Related (?!products")/.test(worldContent),
+  "Tale cards with product links always label the relationship group as Related products.",
 );
 
 check(

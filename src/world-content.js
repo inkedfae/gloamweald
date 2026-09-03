@@ -25,7 +25,7 @@
   //   storyLabel: "Read the story",
   //   relatedProductIds: ["product-id"],
   //   relatedCollectionId: "",
-  //   relationship: "Related product",
+  //   relationship: "Related products",
   //   hidden: false,
   // },
 */
@@ -206,7 +206,7 @@ export const WORLD_LORE_FROM_EDGE = Object.freeze([
     storyLabel: "Read the story",
     relatedProductIds: ["leoma-amulet"],
     relatedCollectionId: "",
-    relationship: "Related product",
+    relationship: "Related products",
     hidden: false,
   },
   {
@@ -219,7 +219,7 @@ export const WORLD_LORE_FROM_EDGE = Object.freeze([
     storyLabel: "Read the story",
     relatedProductIds: ["briar-imp-earrings"],
     relatedCollectionId: "",
-    relationship: "Related earrings",
+    relationship: "Related products",
     hidden: false,
   },
   {
@@ -232,7 +232,7 @@ export const WORLD_LORE_FROM_EDGE = Object.freeze([
     storyLabel: "Read the story",
     relatedProductIds: ["waymarker-necklace"],
     relatedCollectionId: "",
-    relationship: "Related necklace",
+    relationship: "Related products",
     hidden: false,
   },
   {
@@ -245,7 +245,7 @@ export const WORLD_LORE_FROM_EDGE = Object.freeze([
     storyLabel: "Read the story",
     relatedProductIds: ["bonelink-wallet-chain"],
     relatedCollectionId: "",
-    relationship: "Related wallet chain",
+    relationship: "Related products",
     hidden: false,
   },
   {

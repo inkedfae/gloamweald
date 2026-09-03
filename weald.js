@@ -13,10 +13,12 @@ import {
 
 const WEALD_RETURN_STORAGE_KEY = "gloamweald-weald-return";
 const RETURN_STATE_TTL = 1000 * 60 * 60;
-const WORLD_BOOK_TARGET_CHARACTERS = 420;
+const WORLD_BOOK_PARAGRAPH_BREAK = "\n\n";
+const WORLD_BOOK_RESIZE_DELAY = 120;
 const productsById = new Map(GLOAMWEALD_PRODUCTS.map((product) => [product.id, product]));
-const worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
+let worldBookPages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
 let worldBookSpreadStart = 0;
+let worldBookResizeTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -37,78 +39,68 @@ function productHasLore(product) {
 }
 
 function buildWorldBookPages(paragraphs) {
-  const pages = [];
-  let currentPage = [];
-  let currentLength = 0;
-
-  paragraphs.flatMap(splitWorldBookParagraph).forEach((copy) => {
-    const nextLength = currentLength + copy.length + (currentPage.length ? 2 : 0);
-    if (currentPage.length && nextLength > WORLD_BOOK_TARGET_CHARACTERS) {
-      pages.push(currentPage);
-      currentPage = [];
-      currentLength = 0;
-    }
-
-    currentPage.push(copy);
-    currentLength += copy.length + (currentPage.length > 1 ? 2 : 0);
-  });
-
-  if (currentPage.length) pages.push(currentPage);
-  return pages.length ? pages : [[]];
-}
-
-function splitWorldBookParagraph(paragraph) {
-  const copy = String(paragraph || "").trim();
-  if (!copy) return [];
-  if (copy.length <= WORLD_BOOK_TARGET_CHARACTERS) return [copy];
-
-  const sentences = copy.match(/[^.!?]+[.!?]+(?:["”’])?|[^.!?]+$/g) || [copy];
-  const chunks = [];
-  let currentChunk = "";
-
-  sentences
-    .map((sentence) => sentence.trim())
+  const copy = paragraphs
+    .map((paragraph) => String(paragraph || "").trim())
     .filter(Boolean)
-    .forEach((sentence) => {
-      if (sentence.length > WORLD_BOOK_TARGET_CHARACTERS) {
-        if (currentChunk) {
-          chunks.push(currentChunk);
-          currentChunk = "";
-        }
-        chunks.push(...splitWorldBookSentence(sentence));
-        return;
-      }
-
-      const nextChunk = currentChunk ? `${currentChunk} ${sentence}` : sentence;
-      if (nextChunk.length > WORLD_BOOK_TARGET_CHARACTERS) {
-        chunks.push(currentChunk);
-        currentChunk = sentence;
-      } else {
-        currentChunk = nextChunk;
-      }
-    });
-
-  if (currentChunk) chunks.push(currentChunk);
-  return chunks;
+    .join(WORLD_BOOK_PARAGRAPH_BREAK);
+  return copy ? [copy] : [""];
 }
 
-function splitWorldBookSentence(sentence) {
-  const words = sentence.split(/\s+/).filter(Boolean);
-  const chunks = [];
-  let currentChunk = "";
+function paginateWorldBookText(copy, measureCopy) {
+  const pages = [];
+  let remainingCopy = String(copy || "").trim();
 
-  words.forEach((word) => {
-    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word;
-    if (currentChunk && nextChunk.length > WORLD_BOOK_TARGET_CHARACTERS) {
-      chunks.push(currentChunk);
-      currentChunk = word;
+  while (remainingCopy) {
+    const pageBreak = fittedWorldBookPageBreak(remainingCopy, measureCopy);
+    pages.push(cleanWorldBookPage(remainingCopy.slice(0, pageBreak)));
+    remainingCopy = cleanWorldBookPage(remainingCopy.slice(pageBreak));
+  }
+
+  return pages.length ? pages : [""];
+}
+
+function fittedWorldBookPageBreak(copy, measureCopy) {
+  if (!measureCopy || textFitsInBookPage(copy, measureCopy)) return copy.length;
+
+  let low = 1;
+  let high = copy.length;
+  let bestFit = 1;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    if (textFitsInBookPage(copy.slice(0, middle), measureCopy)) {
+      bestFit = middle;
+      low = middle + 1;
     } else {
-      currentChunk = nextChunk;
+      high = middle - 1;
     }
-  });
+  }
 
-  if (currentChunk) chunks.push(currentChunk);
-  return chunks;
+  let pageBreak = readableWorldBookBreak(copy, bestFit);
+  while (pageBreak > 1 && !textFitsInBookPage(copy.slice(0, pageBreak), measureCopy)) {
+    pageBreak = readableWorldBookBreak(copy, pageBreak - 1);
+  }
+
+  return Math.max(1, pageBreak);
+}
+
+function textFitsInBookPage(copy, measureCopy) {
+  measureCopy.textContent = cleanWorldBookPage(copy);
+  return measureCopy.scrollHeight <= measureCopy.clientHeight + 1;
+}
+
+function readableWorldBookBreak(copy, maxLength) {
+  if (maxLength >= copy.length) return copy.length;
+
+  for (let index = Math.max(0, maxLength - 1); index > 0; index -= 1) {
+    if (/\s/.test(copy[index] || "")) return index + 1;
+  }
+
+  return maxLength;
+}
+
+function cleanWorldBookPage(copy) {
+  return String(copy || "").trim();
 }
 
 function lastWorldBookSpreadStart() {
@@ -117,7 +109,7 @@ function lastWorldBookSpreadStart() {
 }
 
 function renderWorldBookPage(page, pageIndex, side) {
-  if (!page) {
+  if (page == null) {
     return `
       <div class="weald-book__page weald-book__page--blank" aria-hidden="true">
         <span class="weald-book__number">&nbsp;</span>
@@ -139,9 +131,7 @@ function renderWorldBookPage(page, pageIndex, side) {
       aria-label="${escapeHtml(label)}"
       ${disabled ? "disabled" : ""}
     >
-      <span class="weald-book__copy">
-        ${page.map((paragraph) => `<span>${escapeHtml(paragraph)}</span>`).join("")}
-      </span>
+      <span class="weald-book__copy">${escapeHtml(page)}</span>
       <span class="weald-book__number">${pageIndex + 1}/${worldBookPages.length}</span>
     </button>
   `;
@@ -157,10 +147,73 @@ function renderWorldBookSpread() {
   `;
 }
 
+function createWorldBookMeasureCopy(spread) {
+  spread.innerHTML = `
+    <button
+      type="button"
+      class="weald-book__page weald-book__page--left weald-book__page--measure"
+      tabindex="-1"
+      disabled
+      aria-hidden="true"
+    >
+      <span class="weald-book__copy" data-world-book-measure></span>
+      <span class="weald-book__number">99/99</span>
+    </button>
+    <button
+      type="button"
+      class="weald-book__page weald-book__page--right weald-book__page--measure"
+      tabindex="-1"
+      disabled
+      aria-hidden="true"
+    >
+      <span class="weald-book__copy"></span>
+      <span class="weald-book__number">99/99</span>
+    </button>
+  `;
+
+  return spread.querySelector("[data-world-book-measure]");
+}
+
+function paginateAndRenderWorldBook() {
+  const spread = document.querySelector("[data-weald-book-spread]");
+  if (!spread) return;
+
+  const measureCopy = createWorldBookMeasureCopy(spread);
+  const sourcePages = buildWorldBookPages(WORLD_BEGIN_HERE.paragraphs);
+  worldBookPages = paginateWorldBookText(sourcePages.join(WORLD_BOOK_PARAGRAPH_BREAK), measureCopy);
+  worldBookSpreadStart = Math.min(worldBookSpreadStart, lastWorldBookSpreadStart());
+  renderWorldBookSpread();
+}
+
+function queueWorldBookPagination() {
+  window.clearTimeout(worldBookResizeTimer);
+  worldBookResizeTimer = window.setTimeout(paginateAndRenderWorldBook, WORLD_BOOK_RESIZE_DELAY);
+}
+
 function turnWorldBook(direction) {
   const nextSpreadStart = worldBookSpreadStart + (direction > 0 ? 2 : -2);
   worldBookSpreadStart = Math.min(Math.max(nextSpreadStart, 0), lastWorldBookSpreadStart());
   renderWorldBookSpread();
+}
+
+function targetForHash(hash) {
+  if (!hash?.startsWith("#") || hash.length <= 1) return null;
+
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return document.getElementById(hash.slice(1));
+  }
+}
+
+function scrollTargetToTop(target, behavior = "smooth") {
+  if (!target) return;
+
+  window.scrollTo({
+    left: window.scrollX,
+    top: target.getBoundingClientRect().top + window.scrollY,
+    behavior,
+  });
 }
 
 function relatedProductsForEntry(entry) {
@@ -199,7 +252,7 @@ function relationshipHtml(entry) {
   if (products.length) {
     return `
       <div class="tale-card__relationship">
-        <p class="tale-card__relationship-title">${escapeHtml(entry.relationship || (products.length > 1 ? "Related products" : "Related product"))}</p>
+        <p class="tale-card__relationship-title">Related products</p>
         <div class="tale-card__product-links">
           ${products.map(productTextLinkHtml).join("")}
         </div>
@@ -305,7 +358,7 @@ function renderWorldIntro() {
       <div class="weald-book__spread" data-weald-book-spread></div>
     </div>
   `;
-  renderWorldBookSpread();
+  paginateAndRenderWorldBook();
 }
 
 function renderLoreFromEdge() {
@@ -393,7 +446,25 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const sectionLink = event.target.closest(".weald-jump-nav a[href^='#']");
+  if (sectionLink) {
+    const target = targetForHash(sectionLink.hash);
+    if (target) {
+      event.preventDefault();
+      scrollTargetToTop(target);
+
+      try {
+        history.pushState(null, "", `${location.pathname}${location.search}${sectionLink.hash}`);
+      } catch {
+        /* Keep the scroll behavior even if history cannot be updated. */
+      }
+    }
+    return;
+  }
+
   if (event.target.closest("[data-weald-return-link]")) {
     saveWealdReturnState();
   }
 });
+
+window.addEventListener("resize", queueWorldBookPagination);
